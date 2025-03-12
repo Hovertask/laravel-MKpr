@@ -34,7 +34,7 @@ class AuthController extends Controller
             'avatar' => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
             'referal_code' => 'nullable|string|max:255',
-            'role_id' => 'required|string|max:255',
+            'role_id' => 'nullable|integer|max:255',
         ]);
 
         if ($validator->fails()) {
