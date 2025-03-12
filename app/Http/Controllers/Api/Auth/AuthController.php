@@ -34,7 +34,7 @@ class AuthController extends Controller
             'avatar' => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
             'referal_code' => 'nullable|string|max:255',
-            'role_id' => 'nullable|integer|max:255',
+            'role_id' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -51,12 +51,22 @@ class AuthController extends Controller
         $token = $user->createToken('API Token')->plainTextToken;
         Mail::to($user->email)->send(new WelcomeMail($user));
 
-        return response()->json([
-            'status' => true,
-            'message' => 'User registered successfully',
-            'data' => $user,
-            'token' => $token,
-        ], 201);
+       if($user)
+       {
+            return response()->json([
+                'status' => true,
+                'message' => 'User registered successfully',
+                'data' => $user,
+                'token' => $token,
+            ], 201);
+       }
+       else{
+            return response()->json([
+                'status' => false,
+                'message' => 'User registration failed',
+            ]);
+       }
+       
     }
 
     public function login(Request $request)
