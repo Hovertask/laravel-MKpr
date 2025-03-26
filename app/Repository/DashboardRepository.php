@@ -21,7 +21,12 @@ class DashboardRepository implements IDashboardRepository
         $resellers = ResellerLink::where('user_id', auth()->id())->get();
         $products = Product::where('user_id', auth()->id())->get(); 
         $totalCompletedTasks = count($completedTasks);
-        $totalOrders = count($orders);  
+        $totalOrders = count($orders); 
         return compact('wallet', 'tasks', 'totalCompletedTasks', 'totalOrders', 'resellers', 'products');
+    }
+
+    public function getUserData() {
+        $user = User::where('id', auth()->id())->first();
+        return $user;
     }
 }

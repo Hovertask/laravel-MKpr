@@ -19,4 +19,9 @@ class DashboardController extends Controller
     {
         return $this->DashboardRepository->getDashboardData();
     }
+
+    public function userData()
+    {
+        return $this->DashboardRepository->getUserData();
+    }
 }

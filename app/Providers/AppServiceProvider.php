@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use SocialConnectRepository;
 use App\Services\PaymentService;
 use App\Repository\CartRepository;
 use App\Repository\TaskRepository;
@@ -15,11 +16,13 @@ use App\Repository\FollowRepository;
 use App\Repository\IOrderRepository;
 use App\Repository\ReviewRepository;
 use App\Repository\WalletRepository;
+use App\Repository\ContactRepository;
 use App\Repository\IFollowRepository;
 use App\Repository\IReviewRepository;
 use App\Repository\IWalletRepository;
 use App\Repository\ProductRepository;
 use App\Repository\CategoryRepository;
+use App\Repository\IContactRepository;
 use App\Repository\IProductRepository;
 use App\Repository\WishlistRepository;
 use App\Repository\ICategoryRepository;
@@ -27,6 +30,7 @@ use App\Repository\IWishlistRepository;
 use Illuminate\Support\ServiceProvider;
 use App\Repository\TrendingProductRepository;
 use App\Repository\ITrendingProductRepository;
+use App\Repositories\Interfaces\ISocialConnectRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,7 +48,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IWalletRepository::class, WalletRepository::class);
         $this->app->bind(IOrderRepository::class, OrderRepository::class);
         $this->app->bind(ITrendingProductRepository::class, TrendingProductRepository::class);
-        $this->app->bind(IFollowRepository::class, FollowRepository::class);
+        $this->app->bind(ISocialConnectRepository::class, SocialConnectRepository::class);
+        $this->app->bind(IContactRepository::class, ContactRepository::class);
 
 
         $this->app->bind(IReviewRepository::class, ReviewRepository::class);

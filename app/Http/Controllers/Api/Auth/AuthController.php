@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Models\User;
 use App\Mail\WelcomeMail;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Repository\IUserRepository;
 use App\Http\Controllers\Controller;
@@ -33,7 +35,7 @@ class AuthController extends Controller
             'phone' => 'required|string|max:255',
             'avatar' => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
-            'referal_code' => 'nullable|string|max:255',
+            'referral_code' => 'nullable|string|max:255',
             'role_id' => 'required|string|max:255',
         ]);
 
@@ -46,6 +48,16 @@ class AuthController extends Controller
         }
 
         $validatedData = $validator->validated();
+
+        if (isset($validatedData['referral_code'])) {
+            $referrer = User::where('referral_code', $validatedData['referral_code'])->first();
+            if ($referrer) {
+                //dd($referrer);
+                $validatedData['referred_by'] = $referrer->id;
+            }
+        }
+
+        
         $user = $this->user->create($validatedData);
         $user->addRole($validatedData['role_id']);
         $token = $user->createToken('API Token')->plainTextToken;
@@ -132,6 +144,38 @@ class AuthController extends Controller
         'status' => false,
         'message' => 'Unable to send password reset link',
     ], 500);
+}
+
+public function showResetForm($token)
+{
+    return response()->json(['token' => $token]);
+}
+
+// Handle the password reset
+public function resetPasswordPost(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|confirmed|min:8',
+    ]);
+
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function ($user, $password) {
+            $user->forceFill([
+                'password' => Hash::make($password)
+            ])->setRememberToken(Str::random(60));
+
+            $user->save();
+
+            event(new PasswordReset($user));
+        }
+    );
+
+    return $status === Password::PASSWORD_RESET
+        ? response()->json(['message' => 'Password reset successfully'], 200)
+        : response()->json(['message' => 'Unable to reset password'], 400);
 }
 
 

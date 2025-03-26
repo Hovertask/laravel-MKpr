@@ -15,6 +15,15 @@ class Product extends Model
         'price',
         'category_id',
         'stock',
+        'currency',
+        'discount',
+        'payment_method',
+        'meet_up_preference',
+        'delivery_fee',
+        'estimated_delivery_date',
+        'phone_number',
+        'email',
+        'social_media_link',
         'image',
     ];
 
@@ -50,5 +59,10 @@ class Product extends Model
     public function carts()
     {
         return $this->hasMany(Cart::class);
+    }
+
+    public function productImages()
+    {
+        return $this->hasMany(ProductImages::class);
     }
 }

@@ -24,17 +24,29 @@ class ProductController extends Controller
     {
         return $this->product->showAll(Product::class);
     }
-
     public function store(Request $request)
     {
+        // Validate the request
         $validateProduct = Validator::make($request->all(), [
             'name' => 'required|string',
             'user_id' => 'required|integer|exists:users,id',
+            'category_id' => 'required|integer',
             'description' => 'required|string',
             'stock' => 'required|integer',
-            'price' => 'required|integer',
-            //'image' => 'required|string|',
-            'category_id' => 'required|integer',
+            'price' => 'required|numeric',
+            'currency' => 'required|string',
+            'discount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|max:255',
+            'meet_up_preference' => 'nullable|string|max:255',
+            'delivery_fee' => 'nullable|numeric|min:0',
+            'estimated_delivery_date' => 'nullable|date',
+            'phone_number' => 'nullable|string|max:255',
+            'email' => 'nullable|string|email|max:255',
+            'social_media_link' => 'nullable|string|max:255',
+            'file_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,mp4|max:2048', // Single file
+            'file_paths' => 'nullable|array', // Multiple files
+            'file_paths.*' => 'image|mimes:jpeg,png,jpg,gif,mp4|max:2048', // Each file validation
+            'media_type' => 'nullable|string|max:255',
         ]);
 
         if ($validateProduct->fails()) {
@@ -42,12 +54,13 @@ class ProductController extends Controller
                 'status' => false,
                 'message' => 'Validation failed',
                 'errors' => $validateProduct->errors(),
-            ], 422); 
+            ], 422);
         }
 
-        $product = $this->product->create($validateProduct->validated());
+        // Create the product using the repository
+        $product = $this->product->create($validateProduct->validated(), $request);
 
-        //at this point we may create a email and notification for both admin and user
+        // At this point, you may create an email and notification for both admin and user
 
         return response()->json([
             'status' => true,
@@ -56,29 +69,30 @@ class ProductController extends Controller
         ]);
     }
 
-    public function update($id, Request $request)
+    public function update(Request $request, $id)
     {
-        $validate = Validator::make($request->all(),[
-            'name' => 'required|string|max:255',
-            'user_id' => 'required|integer|exists:users,id',
-            'category_id' => 'required|integer|exists:categories,id',
-            'name' => 'required|string',
-            'description' => 'required|string',
-            'stock' => 'required|integer',
-            'price' => 'required|integer',
-            //'image' => 'required|string',
-
+        // Validate the request data
+        $validatedData = $request->validate([
+            'name' => 'sometimes|string',
+            'user_id' => 'sometimes|integer',
+            'category_id' => 'sometimes|integer',
+            'description' => 'sometimes|string',
+            'stock' => 'sometimes|integer',
+            'price' => 'sometimes|numeric',
+            'currency' => 'sometimes|string',
+            'discount' => 'sometimes|numeric',
+            'payment_method' => 'sometimes|string',
+            'meet_up_preference' => 'sometimes|string',
+            'delivery_fee' => 'sometimes|numeric',
+            'estimated_delivery_date' => 'sometimes|date',
+            'phone_number' => 'sometimes|string',
+            'email' => 'sometimes|email',
+            'social_media_link' => 'sometimes|url',
+            'file_path' => 'sometimes|file|mimes:jpeg,png,jpg,gif|max:2048',
+            'file_paths.*' => 'sometimes|file|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if ($validate->fails()) {
-            return response()->json([            
-                'status' => false,
-                'message' => 'Validation failed',
-                'errors' => $validate->errors(),
-            ], 422);
-        }
-
-        $product = $this->product->update($id, $validate->validated());
+        $product = $this->product->update($validatedData, $request, $id);
 
         return response()->json([
             'status' => true,
@@ -87,15 +101,14 @@ class ProductController extends Controller
         ]);
     }
 
-    // public function destroy($id)
-    // {
-    //     $product = $this->product->show(Product::class, $id);
-    //     $this->product->delete($product);
-    //     return response()->json([
-    //         'status' => true,
-    //         'message' => 'Product deleted successfully',
-    //     ]);
-    // }
+    public function destroy($id)
+    {
+        $this->product->delete($id);
+
+        return response()->json([
+            'message' => 'Product deleted successfully.',
+        ], 200);
+    }
 
     // public function show($id)
     // {

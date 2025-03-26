@@ -7,4 +7,6 @@ use App\Models\Task;
 interface IDashboardRepository
 {
     public function getDashboardData();
+
+    public function getUserData();
 }

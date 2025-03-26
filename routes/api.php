@@ -8,10 +8,12 @@ use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\V1\FollowController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\WalletController;
+use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\WishlistController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\SocialConnectController;
 
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -19,10 +21,15 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 //Route::post('/send-reset-link', [AuthController::class, 'resetPasswordRequest'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm']);
+Route::post('/password/reset', [AuthController::class, 'resetPasswordPost']);
+//Route::get('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
+
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
     Route::prefix('dashboard')->middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+        Route::get('/user', [DashboardController::class, 'userData'])->name('user.data');
     });
 });
 
@@ -84,8 +91,18 @@ Route::prefix('v1')->group(function () {
         Route::post('/follow/{user}', [FollowController::class, 'follow'])->name('follow');
         Route::post('/unfollow/{user}', [FollowController::class, 'unfollow'])->name('unfollow');
     });
+
+    Route::prefix('socials')->middleware('auth:sanctum')->group(function () {
+        //Route::get('/facebook-data', [SocialConnectController::class, 'getFacebookData']);
+        Route::get('/facebook', [SocialConnectController::class, 'redirectToFacebook']);
+        Route::get('/auth/facebook/callback', [SocialConnectController::class, 'handleFacebookCallback']);
+    });
     
     //Route::get('/get-product/{id}', [ProductController::class, 'show'])->name('product.show');
+    Route::prefix('contact')->middleware('auth:sanctum')->group(function () {
+        Route::post('/create-contact', [ContactController::class, 'createContact'])->name('contact.create');
+        Route::post('/create-group', [ContactController::class, 'createGroup'])->name('group.create');
+    });
 });
 
 

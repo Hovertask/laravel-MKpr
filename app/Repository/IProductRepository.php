@@ -4,12 +4,13 @@ namespace App\Repository;
 
 use App\Models\Product;
 use App\Models\ResellerLink;
+use Illuminate\Http\Request;
 
 interface IProductRepository
 {
-    public function create(array $data);
-    public function update($id, array $data);
-    public function delete(Product $product);
+    public function create(array $data, Request $request): Product;
+    public function update(array $data, Request $request, int $id): Product;
+    public function elete(int $id): bool;
     public function showAll();
     public function show(?int $productId, ?string $resellerId = null);
     //public function submitProduct(array $product, $id);

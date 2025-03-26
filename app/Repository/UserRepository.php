@@ -2,6 +2,8 @@
 namespace App\Repository;
 
 use App\Models\User;
+use App\Models\Referral;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -10,7 +12,17 @@ class UserRepository implements IUserRepository
 {
     public function create(array $data): User
     {
-        return User::create([
+        //this is for string, keeping for future use
+        // do {
+        //     $referralCode = Str::upper(Str::random(8));
+        // } while (User::where('referral_code', $referralCode)->exists());
+
+        do {
+            $referralCode = str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
+        } while (User::where('referral_code', $referralCode)->exists());
+
+
+        $user = User::create([
             'fname' => $data['fname'],
             'lname' => $data['lname'],
             'email' => $data['email'],
@@ -21,8 +33,24 @@ class UserRepository implements IUserRepository
             'currency' => $data['currency'],
             'phone' => $data['phone'],
             'avatar' => $data['avatar'] ?? null,
-            'referal_username' => $data['referal_username'] ?? null,
-            'referal_code' => $data['referal_code'] ?? null,
+            'referred_by' => $data['referred_by'] ?? null,
+            'referral_code' => $referralCode ?? null,
+        ]);
+        
+        if (isset($data['referred_by'])) {
+            $this->trackReferral($data['referred_by'], $user->id);
+        }
+
+        return $user;
+    }
+
+    
+    protected function trackReferral(int $referrerId, int $referreeId): void
+    {
+        Referral::create([
+            'referrer_id' => $referrerId,
+            'referee_id' => $referreeId,
+            'reward_status' => 'pending',
         ]);
     }
 
