@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use App\Repository\ProductRepository;
 use Illuminate\Support\Facades\Validator;
 use App\Repository\ITrendingProductRepository;
+use FFMpeg\FFMpeg;
+use FFMpeg\FFProbe;
 
 class ProductController extends Controller
 {
@@ -43,9 +45,9 @@ class ProductController extends Controller
             'phone_number' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'social_media_link' => 'nullable|string|max:255',
-            'file_path' => 'nullable|image|mimes:jpeg,png,jpg,gif,mp4|max:2048', // Single file
+            'file_path' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:10240', // Supports images & videos (max 10MB)
             'file_paths' => 'nullable|array', // Multiple files
-            'file_paths.*' => 'image|mimes:jpeg,png,jpg,gif,mp4|max:2048', // Each file validation
+            'file_paths.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:10240', // Each file validation
             'media_type' => 'nullable|string|max:255',
         ]);
 
@@ -55,6 +57,21 @@ class ProductController extends Controller
                 'message' => 'Validation failed',
                 'errors' => $validateProduct->errors(),
             ], 422);
+        }
+
+        // Check video duration
+        if ($request->hasFile('file_path')) {
+            $file = $request->file('file_path');
+            $path = $file->getPathname();
+
+            $ffprobe = FFProbe::create();
+            $duration = $ffprobe
+                ->format($path)
+                ->get('duration');
+
+            if ($duration > 30) {
+                return response()->json(['error' => 'The uploaded video must not exceed 30 seconds.'], 422);
+            }
         }
 
         // Create the product using the repository
