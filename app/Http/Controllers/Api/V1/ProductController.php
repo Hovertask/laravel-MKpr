@@ -213,4 +213,9 @@ class ProductController extends Controller
     {
         return $this->product->productByLocation($location);
     }
+
+    public function contactSeller($id)
+    {
+        return $this->product->contactSeller($id);
+    }
 }

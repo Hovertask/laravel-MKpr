@@ -181,5 +181,12 @@ class ProductRepository implements IProductRepository
     {
         return Product::where('location', $location)->get();
     }
+
+    public function contactSeller($id)
+    {
+        $product = Product::with('user')->findOrFail($id);
+    
+        return $product;
+    }
   
 }

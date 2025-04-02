@@ -12,6 +12,7 @@ interface IProductRepository
     public function update(array $data, Request $request, int $id): Product;
     public function delete(int $id): bool;
     public function showAll();
+    public function contactSeller($id);
     public function show(?int $productId, ?string $resellerId = null);
     //public function submitProduct(array $product, $id);
     public function approveProduct($id, $status);

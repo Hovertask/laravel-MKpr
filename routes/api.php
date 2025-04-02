@@ -58,7 +58,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/show-all-product', [ProductController::class, 'showAll'])->name('product.showAll');
         Route::get('/location/{location}', [ProductController::class, 'productByLocation'])->name('product.location');
         //generate link
-        Route::post('/reseller-link/{id}', [ProductController::class, 'resellerLink'])->name('product.resellerLink');    
+        Route::post('/reseller-link/{id}', [ProductController::class, 'resellerLink'])->name('product.resellerLink');
+        Route::post('/contact-seller/{id}', [ProductController::class, 'contactSeller'])->name('product.contactSeller');
     });
 
     Route::prefix('wishlists')->middleware('auth:sanctum')->group(function () {
