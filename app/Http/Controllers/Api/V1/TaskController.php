@@ -128,7 +128,7 @@ class TaskController extends Controller
             $now = now();
             $hoursDifference = $createdAt->diffInHours($now);
             
-            $newStatus = ($hoursDifference < 12) ? 'new' : '';
+            $newStatus = ($hoursDifference < 12) ? 'New Task' : '';
                 
             $task->posted_status = $newStatus;
         }
