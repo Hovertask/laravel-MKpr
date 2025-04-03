@@ -24,8 +24,8 @@
                     </tr>
                     <tr>
                         <td style="text-align:center;">
-                            <a href="https://rakeshmandal.com" title="logo" target="_blank">
-                            <img width="60" src="https://i.ibb.co/hL4XZp2/android-chrome-192x192.pn" title="logo" alt="HoverTask Logo">
+                            <a href="https://hovertask.com" title="logo" target="_blank">
+                            <img width="60" src="{{assets('assets/img/brand-logo.svg')}}" title="logo" alt="HoverTask Logo">
                           </a>
                         </td>
                     </tr>
