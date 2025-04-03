@@ -144,6 +144,20 @@ class TaskController extends Controller
             ], 404);
         }
 
+        $task->created_at = $task->created_at->diffForHumans();
+            
+            // Calculate completion percentage
+            $total_task = $task->task_count_total;
+            $task_completed = $total_task - $task->task_count_remaining;
+            
+            $completionPercentage = ($total_task > 0) 
+                ? round(($task_completed / $total_task) * 100, 2)
+                : 0;
+            
+            // Add the percentage to the task object
+            $task->completion_percentage = $completionPercentage;
+            $task->completed = ($task->completed == 1) ? 'Completed' : 'Available';
+
         return response()->json([
             'status' => true,
             'message' => 'Task retrieved successfully',
