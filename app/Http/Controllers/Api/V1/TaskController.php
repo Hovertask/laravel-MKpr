@@ -121,9 +121,16 @@ class TaskController extends Controller
             // Add the percentage to the task object
             $task->completion_percentage = $completionPercentage;
 
-           
-
             $task->completed = ($task->completed == 1) ? 'Completed' : 'Available';
+
+            //check if task is new or not
+            $createdAt = $task->created_at;
+            $now = now();
+            $hoursDifference = $createdAt->diffInHours($now);
+            
+            $newStatus = ($hoursDifference < 12) ? 'new' : '';
+                
+            $task->posted_status = $newStatus;
         }
 
         return response()->json([
@@ -144,9 +151,12 @@ class TaskController extends Controller
             ], 404);
         }
 
-        $task->created_at = $task->created_at->diffForHumans();
+            $createdAt = $task->created_at;
+            $now = now();
+            $hoursDifference = $createdAt->diffInHours($now);
             
-            // Calculate completion percentage
+            $newStatus = ($hoursDifference < 12) ? 'new' : '';
+                
             $total_task = $task->task_count_total;
             $task_completed = $total_task - $task->task_count_remaining;
             
@@ -157,6 +167,8 @@ class TaskController extends Controller
             // Add the percentage to the task object
             $task->completion_percentage = $completionPercentage;
             $task->completed = ($task->completed == 1) ? 'Completed' : 'Available';
+
+            $task->posted_status = $newStatus;
 
         return response()->json([
             'status' => true,
