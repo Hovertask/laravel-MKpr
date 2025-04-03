@@ -57,8 +57,9 @@ class AuthController extends Controller
             }
         }
 
-        
+
         $user = $this->user->create($validatedData);
+        $user->sendEmailVerificationNotification();
         $user->addRole($validatedData['role_id']);
         $token = $user->createToken('API Token')->plainTextToken;
         Mail::to($user->email)->send(new WelcomeMail($user));
@@ -67,7 +68,7 @@ class AuthController extends Controller
        {
             return response()->json([
                 'status' => true,
-                'message' => 'User registered successfully',
+                'message' => 'User registered successfully, Kindly verify your email',
                 'data' => $user,
                 'token' => $token,
             ], 201);

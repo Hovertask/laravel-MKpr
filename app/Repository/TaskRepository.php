@@ -160,7 +160,7 @@ public function submitTask(array $data, $id)
      * @return \App\Models\Task
      */
     public function approveCompletedTask($id) {
-        $userId = auth()->id();
+        //$userId = auth()->id();
     
         try {
             DB::beginTransaction();
@@ -169,18 +169,20 @@ public function submitTask(array $data, $id)
                 DB::rollBack();
                 return null;
             }
+
+            $taskOwnerId = $task->user_id;
             $task->update(['status' => 'approved']);
     
             // Fund the user's wallet
             $wallet = Wallet::firstOrCreate(
-                ['user_id' => $userId],
+                ['user_id' => $taskOwnerId],
                 ['balance' => 0]
             );
     
             $wallet->increment('balance', $task->task->task_amount);
 
             FundsRecord::updateOrCreate(
-                ['user_id' => $userId,
+                ['user_id' => $taskOwnerId,
                 'pending' => $task->task->task_amount, 'type' => 'task'],
                 ['pending' => 0,
                     'earned' => $task->task->task_amount,
