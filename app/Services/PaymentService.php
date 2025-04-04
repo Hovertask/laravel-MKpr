@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use App\Repository\TrendingProductRepository;
 use App\Repository\ITrendingProductRepository;
 
 class PaymentService
@@ -47,7 +48,7 @@ class PaymentService
      * @return array The verified payment data.
      * @throws Exception If payment verification fails or payment is not successful.
      */
-    public function verifyPayment(string $reference, ITrendingProductRepository $trendingRepository)
+    public function verifyPayment(string $reference, TrendingProductRepository $trendingRepository)
     {
         DB::beginTransaction();
         try {
@@ -70,18 +71,20 @@ class PaymentService
             $metadata = $responseData['data']['metadata'];
             $userId = $metadata['user_id'];
             $orderId = $metadata['order_id'] ?? null;
+            //dd($orderId);
 
             // Update the order status to 'paid' if order_id is present
             if ($orderId) {
                 $order = Order::find($orderId);
                 if ($order) {
+                    //dd($order);
                     $order->update(['status' => 'paid']);
 
                     // bullshit the cart
                     Cart::where('user_id', $userId)->where('status', 'pending')->delete();
 
                     // Update the stock lets get a clean record for HoverTask users😘
-                    foreach ($order->items as $item) {
+                    foreach ($order->orderItems as $item) {
                         $product = Product::find($item->product_id);
                         if ($product) {
                             $product->stock -= $item->quantity;

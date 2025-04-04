@@ -12,7 +12,8 @@
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.9",
         "php-ffmpeg/php-ffmpeg": "^1.3",
-        "santigarcor/laratrust": "^8.4"
+        "santigarcor/laratrust": "^8.4",
+        "socialiteproviders/facebook": "^4.1"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

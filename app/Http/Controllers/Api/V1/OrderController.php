@@ -10,16 +10,21 @@ use Illuminate\Support\Facades\DB;
 use App\Repository\OrderRepository;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Repository\TrendingProductRepository;
+use App\Repository\ITrendingProductRepository;
 
 class OrderController extends Controller
 {
     protected $orderRepository;
     protected $paymentService;
+    protected $trendingRepository;
 
-    public function __construct(OrderRepository $orderRepository, PaymentService $paymentService)
+
+    public function __construct(OrderRepository $orderRepository, PaymentService $paymentService, TrendingProductRepository $trendingRepository)
     {
         $this->orderRepository = $orderRepository;
         $this->paymentService = $paymentService;
+        $this->trendingRepository = $trendingRepository;
     }
 
     public function createOrder(Request $request)
@@ -64,6 +69,8 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
+
+            //dd($request->all());
             
             //$metadata = $request->input('metadata', []);
 
@@ -109,7 +116,7 @@ class OrderController extends Controller
     {
         try {
             // Verify the payment
-            $responseData = $this->paymentService->verifyPayment($reference);
+            $responseData = $this->paymentService->verifyPayment($reference, $this->trendingRepository);
 
             return response()->json([
                 'success' => true,

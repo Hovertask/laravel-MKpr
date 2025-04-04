@@ -14,4 +14,11 @@ interface ISocialConnectRepository
     public function storeAccessToken(string $token);
     public function getAccessToken(): ?string;
     public function storeOrUpdatePosts(int $userId, array $posts);
+
+    //tiktok
+    public function redirectToTikTok();
+    public function handleTikTokCallback();
+    public function getTikTokUserProfile($accessToken);
+    public function getTikTokVideos($accessToken, $limit = 10);
+    public function revokeTikTokAccess($userId);
 }

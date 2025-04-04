@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use Exception;
 use App\Models\User;
+use App\Models\Wallet;
 use Illuminate\Support\Facades\Http;
 
 class WalletRepository implements IWalletRepository

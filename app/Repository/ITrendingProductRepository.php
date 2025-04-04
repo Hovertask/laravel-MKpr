@@ -7,6 +7,6 @@ use App\Models\Product;
 interface ITrendingProductRepository
 {    
     public function getTrendingProducts($limit = 10);
-    public function incrementSalesCount($product);
-    public function incrementViewCount($product);
+    public function incrementSalesCount($product, $quantity);
+    public function incrementViewCount($product, $quantity);
 }

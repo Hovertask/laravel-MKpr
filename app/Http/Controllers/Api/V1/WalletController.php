@@ -37,6 +37,7 @@ class WalletController extends Controller
         try {
             $paymentData = $this->walletRepository->initializePayment($userId, $amount);
             //yo man, lets go to space 🚀 with KolozJNR
+            //d($paymentData);
             $transaction = InitializeDeposit::create([
                 'user_id' => $userId,
                 'reference' => $paymentData['data']['reference'],
@@ -57,17 +58,13 @@ class WalletController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function verifyPayment(Request $request)
+    public function verifyPayment($reference)
     {
-        $request->validate([
-            'reference' => 'required|string',
-        ]);
-
-        $reference = $request->input('reference');
+        //dd($reference);
 
         try {
             $paymentData = $this->walletRepository->verifyPayment($reference);
-            InitializeDeposit::where('trx', $reference)->update([
+            InitializeDeposit::where('reference', $reference)->update([
                 'status' => 'successful',
                 'reference' => $paymentData['data']['reference'],
                 'token' => $paymentData['data']['authorization']['authorization_code'],
@@ -77,7 +74,7 @@ class WalletController extends Controller
             ]);
             return response()->json(['message' => 'Payment verified and wallet funded successfully!', 'data' => $paymentData], 200);
         } catch (Exception $e) {
-            initializeDeposit::where('trx', $reference)->update(['status' => 'failed']);
+            initializeDeposit::where('reference', $reference)->update(['status' => 'failed']);
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
