@@ -3,6 +3,7 @@ namespace App\Repository;
 
 use App\Models\User;
 use App\Models\Referral;
+use Laratrust\Models\Role;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -90,5 +91,10 @@ class UserRepository implements IUserRepository
     {
         $user->tokens()->delete();
         return true;
+    }
+
+    public function roles()
+    {
+        return Role::pluck('name')->all();
     }
 }

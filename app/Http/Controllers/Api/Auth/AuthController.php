@@ -229,4 +229,12 @@ public function resetPasswordPost(Request $request)
             'message' => 'Logout successful',
         ], 200);
     }
+
+    public function roles()
+    {
+        return response()->json([
+            'status' => true,
+            'data' => $this->user->roles(),
+        ], 200);
+    }
 }

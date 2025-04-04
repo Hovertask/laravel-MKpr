@@ -11,5 +11,6 @@ interface IUserRepository
     public function login(array $credentials);
     public function resetPassword(array $data);
     public function logout(User $user);
+    public function roles();
 }
 
