@@ -38,6 +38,7 @@ class TaskRepository implements ITaskRepository
             'user_id' => auth()->id(),
             'status' => $data['status'],
             'priority' => $data['priority'],
+            'category' => $data['category'],
         ]);
 
         //dd($task);

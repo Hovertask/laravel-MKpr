@@ -150,6 +150,17 @@ Route::prefix('v1')->group(function () {
         //Route::get('/facebook-data', [SocialConnectController::class, 'getFacebookData']);
         Route::get('/facebook', [SocialConnectController::class, 'redirectToFacebook']);
         Route::get('/auth/facebook/callback', [SocialConnectController::class, 'handleFacebookCallback']);
+        
+        // TikTok routes
+        Route::get('/auth/tiktok/url', [SocialConnectController::class, 'getTikTokAuthUrl']);
+        Route::post('/auth/tiktok/callback', [SocialConnectController::class, 'handleTikTokCallback']);
+
+        Route::get('/auth/tiktok', [SocialConnectController::class, 'connectTikTok'])->name('tiktok.connect');
+        Route::get('/auth/tiktok/callback', [SocialConnectController::class, 'tiktokCallback'])->name('tiktok.callback');
+        Route::get('/tiktok/profile', [SocialConnectController::class, 'getTikTokProfile'])->name('tiktok.profile');
+        Route::get('/tiktok/videos', [SocialConnectController::class, 'getTikTokVideos'])->name('tiktok.videos');
+        Route::post('/tiktok/disconnect', [SocialConnectController::class, 'disconnectTikTok'])->name('tiktok.disconnect');
+        
     });
     
     //Route::get('/get-product/{id}', [ProductController::class, 'show'])->name('product.show');

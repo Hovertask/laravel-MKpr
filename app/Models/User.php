@@ -35,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'email',
         'password',
+        'is_member',
     ];
 
     public function task(){

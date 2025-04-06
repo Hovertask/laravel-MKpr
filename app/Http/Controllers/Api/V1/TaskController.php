@@ -23,7 +23,7 @@ class TaskController extends Controller
             'title' => 'required|string',
             'description' => 'required|string',
             'status' => 'required|string',
-            'priority' => 'required|string',
+            'priority' => 'required|string|in:low,low,medium',
             'location' => 'nullable|string',
             'religion' => 'nullable|string',
             'gender' => 'nullable|string',
@@ -39,6 +39,7 @@ class TaskController extends Controller
             'task_count_total' => 'nullable|integer',
             'task_count_remaining' => 'nullable|integer',
             'platforms' => 'nullable|string',
+            'category' => 'required|string|in:social_media,onlinvideo_markettinge,micro_influence,promotion,telegram',
         ]);
 
 

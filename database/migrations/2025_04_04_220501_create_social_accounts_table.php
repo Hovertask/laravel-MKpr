@@ -21,6 +21,10 @@ return new class extends Migration
             $table->string('refresh_token')->nullable();
             $table->string('expires_in')->nullable();
             $table->string('username')->nullable();
+            $table->string('tiktok_username')->nullable();
+            $table->string('instagram_username')->nullable();
+            $table->string('facebook_username')->nullable();
+            $table->string('avatar')->nullable();
             $table->timestamps();
         });
     }

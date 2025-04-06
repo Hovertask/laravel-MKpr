@@ -21,6 +21,7 @@ use App\Repository\IFollowRepository;
 use App\Repository\IReviewRepository;
 use App\Repository\IWalletRepository;
 use App\Repository\ProductRepository;
+use Illuminate\Support\Facades\Event;
 use App\Repository\CategoryRepository;
 use App\Repository\IContactRepository;
 use App\Repository\IProductRepository;
@@ -59,6 +60,22 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(FileUploadService::class, function ($app) {
             return new FileUploadService();
         });
+
+          // Register Socialite drivers
+          $this->app->extend(SocialiteFactory::class, function ($service, $app) {
+            $socialite = $service;
+            
+            // Register TikTok driver
+            $socialite->extend('tiktok', function ($app) use ($socialite) {
+                $config = $app['config']['services.tiktok'];
+                return $socialite->buildProvider(
+                    \SocialiteProviders\TikTok\Provider::class,
+                    $config
+                );
+            });
+            
+            return $socialite;
+        });
         
     }
 
@@ -67,6 +84,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Event::listen(function (\SocialiteProviders\Manager\SocialiteWasCalled $event) {
+            $event->extendSocialite('tiktok', \SocialiteProviders\TikTok\Provider::class);
+        });
     }
 }

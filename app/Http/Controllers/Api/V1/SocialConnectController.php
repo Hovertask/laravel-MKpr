@@ -40,19 +40,42 @@ class SocialConnectController extends Controller
     }
 
     //TikTok
+    public function getTikTokAuthUrl()
+    {
+        return response()->json($this->SocialConnectRepository->connectTikTok());
+    }
     public function connectTikTok()
     {
-        return $this->facebookRepository->redirectToTikTok();
+        return $this->SocialConnectRepository->redirectToTikTok();
     }
 
-    public function tiktokCallback()
+    public function handleTikTokCallback(Request $request)
     {
-        $success = $this->facebookRepository->handleTikTokCallback();
-        
-        return redirect()->route('profile')
-            ->with($success ? 'success' : 'error', 
-                $success ? 'TikTok connected successfully!' : 'Failed to connect TikTok.');
+        $request->validate([
+            'code' => 'required|string',
+            'state' => 'required|string'
+        ]);
+
+        $result = $this->SocialConnectRepository->handleTikTokCallback(
+            $request->code,
+            $request->state
+        );
+
+        if (!$result) {
+            return response()->json(['error' => 'Authentication failed'], 400);
+        }
+
+        // Here you would typically create/update user in your database
+        // and return your own API token (JWT, Sanctum, etc.)
+
+        return response()->json([
+            'user' => $result['user_info'],
+            'access_token' => $result['tokens']['access_token'],
+            'refresh_token' => $result['tokens']['refresh_token']
+        ]);
     }
+
+    
 
     public function getTikTokProfile()
     {
@@ -63,7 +86,7 @@ class SocialConnectController extends Controller
             return back()->with('error', 'Please connect your TikTok account first.');
         }
         
-        $profile = $this->facebookRepository->getTikTokUserProfile($account->token);
+        $profile = $this->SocialConnectRepository->getTikTokUserProfile($account->token);
         
         return view('tiktok.profile', compact('profile'));
     }
@@ -77,14 +100,14 @@ class SocialConnectController extends Controller
             return back()->with('error', 'Please connect your TikTok account first.');
         }
         
-        $videos = $this->facebookRepository->getTikTokVideos($account->token);
+        $videos = $this->SocialConnectRepository->getTikTokVideos($account->token);
         
         return view('tiktok.videos', compact('videos'));
     }
 
     public function disconnectTikTok()
     {
-        $this->facebookRepository->revokeTikTokAccess(auth()->id());
+        $this->SocialConnectRepository->revokeTikTokAccess(auth()->id());
         
         return back()->with('success', 'TikTok disconnected successfully.');
     }
