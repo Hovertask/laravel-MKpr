@@ -25,7 +25,7 @@
                     <tr>
                         <td style="text-align:center;">
                             <a href="https://hovertask.com" title="logo" target="_blank">
-                            <img width="60" src="{{assets('assets/img/brand-logo.svg')}}" title="logo" alt="HoverTask Logo">
+                            <img width="60" src="{{ asset('assets/img/brand-logo.svg') }}" title="logo" alt="HoverTask Logo">
                           </a>
                         </td>
                     </tr>
