@@ -217,6 +217,25 @@ public function submitTask(array $data, $id)
         return $task;
     }
 
+    public function pendingTask() {
+        $task = CompletedTask::with('user')->where('status', 'pending')->count();
+        return $task;
+    }
+    public function CompletedTask() {
+        $task = CompletedTask::with('user')->where('status', 'approved')->count();
+        return $task;
+    }
+
+    public function rejectedTask() {
+        $task = CompletedTask::with('user')->where('status', 'rejected')->count();
+        return $task;
+    }
+    
+    public function TaskHistory() {
+        $task = CompletedTask::with('user')->get();
+        return $task;
+    }
+
     public function delete($id) {
         $task = Task::find($id);
         $task->delete();

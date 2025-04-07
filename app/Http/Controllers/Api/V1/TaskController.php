@@ -254,4 +254,75 @@ class TaskController extends Controller
             'data' => $task,
         ], 200);
     }
+
+    public function pendingTask() {
+        $task = $this->task->pendingTask();
+        if($task > 0) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Task retrieved successfully',
+                'data' => $task,
+            ]);
+        }
+        else{
+            return response()->json([
+                'status' => false,
+                'message' => 'No Pending Tasks found at the moment',
+            ]);
+        }
+        
+    }
+
+    public function completedTask() {
+        $task = $this->task->completedTask();
+        if($task > 0) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Task retrieved successfully',
+                'data' => $task,
+            ]);
+        }
+        else{
+            return response()->json([
+                'status' => false,
+                'message' => 'No Completed Tasks found at the moment',
+            ]);
+        }
+        
+    }
+
+    public function rejectTask() {
+        $task = $this->task->rejectedTask();
+       if($task > 0) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Task retrieved successfully',
+                'data' => $task,
+            ]);
+        }
+        else{
+            return response()->json([
+                'status' => false,
+                'message' => 'No Rejected Tasks found at the moment',
+            ]);
+        }
+    }
+
+    public function taskHistory() {
+        $tasks = $this->task->taskHistory();
+        $task = count($tasks);
+        if($task > 0) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Task retrieved successfully',
+                'data' => $tasks,
+            ]);
+        }
+        else{
+            return response()->json([
+                'status' => false,
+                'message' => 'No Task History found at the moment',
+            ]);
+        }
+    }
 }

@@ -96,6 +96,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/submit-task/{id}', [TaskController::class, 'submitTask'])->name('submit.task');
         Route::post('/approve-task/{id}', [TaskController::class, 'approveTask'])->name('approve.task');
         Route::post('/approve-completed-task/{id}', [TaskController::class, 'approveCompletedTask'])->name('approve.completed.task');
+        Route::get('/pending-task', [TaskController::class, 'pendingTask'])->name('pending.task');
+        Route::get('/completed-task', [TaskController::class, 'completedTask'])->name('completed.task');
+        Route::get('/rejected-task', [TaskController::class, 'rejectTask'])->name('reject.task');
+        Route::get('/task-history', [TaskController::class, 'taskHistory'])->name('task.history');
         Route::delete('/delete-task/{id}', [TaskController::class, 'deleteTask'])->name('delete.task');
     });
 });
