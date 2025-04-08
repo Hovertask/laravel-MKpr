@@ -50,6 +50,12 @@ class ProductRepository implements IProductRepository
             $product->productImages()->create(['file_path' => $path]);
         }
 
+        if ($request->hasFile('video_path')) {
+            $image = $request->file('video_path');
+            $path = $image->store('product_images', 'public');
+            $product->productImages()->create(['video_path' => $path]);
+        }
+
         // Handle multiple file uploads
         if ($request->hasFile('file_paths')) {
             foreach ($request->file('file_paths') as $image) {
