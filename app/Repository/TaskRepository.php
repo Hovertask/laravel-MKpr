@@ -221,6 +221,7 @@ public function submitTask(array $data, $id)
         $task = CompletedTask::with('user')->where('status', 'pending')->count();
         return $task;
     }
+
     public function CompletedTask() {
         $task = CompletedTask::with('user')->where('status', 'approved')->count();
         return $task;
@@ -241,8 +242,5 @@ public function submitTask(array $data, $id)
         $task->delete();
         return $task;
     }
-
-    
-    
 
 }

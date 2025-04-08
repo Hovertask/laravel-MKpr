@@ -45,9 +45,12 @@ class ProductController extends Controller
             'phone_number' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'social_media_link' => 'nullable|string|max:255',
-            'file_path' => 'nullable|file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:10240', // Supports images & videos (max 10MB)
-            'file_paths' => 'nullable|array', // Multiple files
-            'file_paths.*' => 'file|mimes:jpeg,png,jpg,gif,mp4,mov,avi|max:10240', // Each file validation
+            
+            'images' => 'nullable|array',
+            'images.*' => 'file|mimes:jpeg,png,jpg|max:10240',
+        
+            'video_path' => 'nullable|array',
+            'video_path.*' => 'file|mimes:mp4,mov,avi,gif|max:10240',
             'media_type' => 'nullable|string|max:255',
         ]);
 
@@ -60,8 +63,8 @@ class ProductController extends Controller
         }
 
         // Check video duration
-        if ($request->hasFile('file_path')) {
-            $file = $request->file('file_path');
+        if ($request->hasFile('video_path')) {
+            $file = $request->file('video_path');
             $path = $file->getPathname();
 
             $ffprobe = FFProbe::create();
@@ -105,8 +108,9 @@ class ProductController extends Controller
             'phone_number' => 'sometimes|string',
             'email' => 'sometimes|email',
             'social_media_link' => 'sometimes|url',
-            'file_path' => 'sometimes|file|mimes:jpeg,png,jpg,gif|max:2048',
-            'file_paths.*' => 'sometimes|file|mimes:jpeg,png,jpg,gif|max:2048',
+            'images' => 'sometimes|file|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'sometimes|file|mimes:jpeg,png,jpg,gif|max:2048',
+            'video_path' => 'sometimes|file|mimes:mp4,mov,avi,gif|max:10240',
         ]);
 
         $product = $this->product->update($validatedData, $request, $id);
