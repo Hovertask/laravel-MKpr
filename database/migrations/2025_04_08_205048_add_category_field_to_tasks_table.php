@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('tasks', function (Blueprint $table) {
             $table->json('file_path')->nullable()->after('gender');
             $table->json('video_path')->nullable()->after('gender');
-            $table->string('category')->after('due_date')->nullable();
         });
 
         Schema::table('products', function (Blueprint $table) {
@@ -27,7 +26,6 @@ return new class extends Migration
         Schema::table('tasks', function (Blueprint $table) {
             $table->dropColumn('file_path');
             $table->dropColumn('video_path');
-            $table->dropColumn('category');
         });
 
         Schema::table('products', function (Blueprint $table) {
