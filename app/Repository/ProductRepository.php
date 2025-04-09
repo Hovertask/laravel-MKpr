@@ -55,33 +55,70 @@ class ProductRepository implements IProductRepository
         // $filePath = $uploadedFile->getSecurePath();
         // dd($filePath);
 
+        // Handle single image upload
         if ($request->hasFile('file_path')) {
-            foreach ($request->file('file_path') as $file) {
-                $uploadedFile = Cloudinary::upload($file->getRealPath(), [
+            // Single image upload
+            if ($request->file('file_path')->isValid()) {
+                $uploadedFile = Cloudinary::upload($request->file('file_path')->getRealPath(), [
                     'folder' => 'product_images'
                 ]);
                 
                 $product->productImages()->create([
                     'file_path' => $uploadedFile->getSecurePath(),
-                    'public_id' => $uploadedFile->getPublicId()
+                    'public_id' => $uploadedFile->getPublicId() // Storing Cloudinary public_id
                 ]);
             }
         }
         
         if ($request->hasFile('video_path')) {
-            foreach ($request->file('video_path') as $file) {
-                $uploadedFile = Cloudinary::upload($file->getRealPath(), [
+            // Single video upload
+            if ($request->file('video_path')->isValid()) {
+                $uploadedFile = Cloudinary::upload($request->file('video_path')->getRealPath(), [
                     'folder' => 'product_videos',
                     'resource_type' => 'video'
                 ]);
                 
                 $product->productImages()->create([
                     'video_path' => $uploadedFile->getSecurePath(),
-                    'public_id' => $uploadedFile->getPublicId()
+                    'public_id' => $uploadedFile->getPublicId() // Storing Cloudinary public_id
                 ]);
             }
         }
         
+        if ($request->hasFile('file_paths')) {
+            // Multiple image uploads
+            foreach ($request->file('file_paths') as $file) {
+                if ($file->isValid()) {
+                    $uploadedFile = Cloudinary::upload($file->getRealPath(), [
+                        'folder' => 'product_images'
+                    ]);
+                    
+                    $product->productImages()->create([
+                        'file_path' => $uploadedFile->getSecurePath(),
+                        'public_id' => $uploadedFile->getPublicId() // Storing Cloudinary public_id
+                    ]);
+                }
+            }
+        }
+        
+        if ($request->hasFile('video_paths')) {
+            // Multiple video uploads
+            foreach ($request->file('video_paths') as $file) {
+                if ($file->isValid()) {
+                    $uploadedFile = Cloudinary::upload($file->getRealPath(), [
+                        'folder' => 'product_videos',
+                        'resource_type' => 'video'
+                    ]);
+                    
+                    $product->productImages()->create([
+                        'video_path' => $uploadedFile->getSecurePath(),
+                        'public_id' => $uploadedFile->getPublicId() // Storing Cloudinary public_id
+                    ]);
+                }
+            }
+        }
+        
+
 
         // Handle single file upload
         // if ($request->hasFile('file_path')) {
