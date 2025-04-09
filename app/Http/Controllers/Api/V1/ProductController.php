@@ -41,7 +41,7 @@ class ProductController extends Controller
             'payment_method' => 'nullable|string|max:255',
             'meet_up_preference' => 'nullable|string|max:255',
             'delivery_fee' => 'nullable|numeric|min:0',
-            'estimated_delivery_date' => 'nullable|date',
+            'estimated_delivery_date' => 'nullable|string|max:255',
             'phone_number' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'social_media_link' => 'nullable|string|max:255',
