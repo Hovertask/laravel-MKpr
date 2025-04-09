@@ -186,6 +186,7 @@ Route::prefix('v1')->group(function () {
 Route::prefix('v1')->group(function () {
     Route::prefix('categories')->middleware('auth:sanctum', 'verified')->group(function () {
         Route::post('/create', [CategoryController::class, 'create'])->name('category.create');
+        Route::get('/all-categories', [CategoryController::class, 'index'])->name('category.index');
         //Route::post('/create-product', [CategoryController::class, 'store'])->name('product.store');
     });
 });

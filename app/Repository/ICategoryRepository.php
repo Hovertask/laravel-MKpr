@@ -6,6 +6,6 @@ use App\Repository\ICategoryRepository;
 
 interface ICategoryRepository
 {
-    public function showAll(Category $category);
+    public function showAll();
     public function create($data);
 }

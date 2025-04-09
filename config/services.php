@@ -44,12 +44,12 @@ return [
     'client_id' => env('FACEBOOK_CLIENT_ID'),
     'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
     'redirect' => env('FACEBOOK_REDIRECT_URI'),
-],
+    ],
 
-'tiktok' => [
-    'client_id' => env('TIKTOK_CLIENT_ID'),
-    'client_secret' => env('TIKTOK_CLIENT_SECRET'),
-    'redirect' => env('TIKTOK_REDIRECT_URI'),
-],
+    'tiktok' => [
+        'client_id' => env('TIKTOK_CLIENT_ID'),
+        'client_secret' => env('TIKTOK_CLIENT_SECRET'),
+        'redirect' => env('TIKTOK_REDIRECT_URI'),
+    ],
 
 ];

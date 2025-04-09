@@ -18,7 +18,7 @@ class CategoryController extends Controller
 
     public function index()
     {
-        return $this->category->showAll(Category::class);
+        return $this->category->showAll();
     }
 
     public function create(Request $request)

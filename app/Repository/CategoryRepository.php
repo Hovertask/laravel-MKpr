@@ -6,9 +6,9 @@ use App\Repository\ICategoryRepository;
 
 class CategoryRepository implements ICategoryRepository
 {
-    public function showAll(Category $category)
+    public function showAll()
     {
-        return $category->all();
+        return Category::all();
     }
 
     public function create($data)
