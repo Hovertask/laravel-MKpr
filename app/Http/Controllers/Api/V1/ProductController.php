@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use FFMpeg\FFMpeg;
+use FFMpeg\FFProbe;
 use App\Models\Product;
 use App\Models\ResellerLink;
 use Illuminate\Http\Request;
@@ -9,8 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Repository\ProductRepository;
 use Illuminate\Support\Facades\Validator;
 use App\Repository\ITrendingProductRepository;
-use FFMpeg\FFMpeg;
-use FFMpeg\FFProbe;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ProductController extends Controller
 {
@@ -46,13 +47,26 @@ class ProductController extends Controller
             'email' => 'nullable|string|email|max:255',
             'social_media_link' => 'nullable|string|max:255',
             
-            //'file_path' => 'nullable|array',
-            'file_path.*' => 'file|mimes:jpeg,png,jpg|max:10240',
-        
-            //'video_path' => 'nullable|array',
-            'video_path.*' => 'file|mimes:mp4,mov,avi,gif|max:10240',
-            'media_type' => 'nullable|string|max:255',
+           'file_path' => 'nullable|array',  // file_path can be an array
+            'file_path.*' => 'file|mimes:jpeg,png,jpg|max:10240',  // Each file must be an image
+            
+            'video_path' => 'nullable|array',  // video_path can be an array
+            'video_path.*' => 'file|mimes:mp4,mov,avi,gif|max:10240',  // Each file must be a video
+            
+            'media_type' => 'nullable|string|max:255',  // Additional validation for media_type
         ]);
+
+        //$filePath = $request['file_path']->storeOnCloudinaryAs(‘lambogini’, ‘prosper’)->getSecurePath();
+
+
+        // if ($request->hasFile('file_path')) {
+        //     try {
+        //         $uploadedFileUrl = Cloudinary::upload($request->file('file_path')->getRealPath())->getSecurePath();
+        //         return response()->json(['cloudinary_url' => $uploadedFileUrl]);
+        //     } catch (\Exception $e) {
+        //         return response()->json(['error' => $e->getMessage()], 500);
+        //     }
+        // }
 
         if ($validateProduct->fails()) {
             return response()->json([

@@ -2,6 +2,7 @@
 namespace App\Repository;
 
 use App\Models\Product;
+//use Cloudinary\Cloudinary;
 use Illuminate\Support\Str;
 use App\Models\ResellerLink;
 use Illuminate\Http\Request;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\URL;
 use App\Repository\IProductRepository;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Collection;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+
 
 class ProductRepository implements IProductRepository
 {
@@ -43,26 +46,63 @@ class ProductRepository implements IProductRepository
             'social_media_link' => $data['social_media_link'],
         ]);
 
-        // Handle single file upload
+        // $uploadedFile = Cloudinary::upload($data['file_path']->getRealPath(), [
+        //     'folder' => 'lambogini',  // Optional: specify a folder in Cloudinary
+        //     'public_id' => 'prosper',  // Optional: specify the public ID for the file
+        // ]);
+        
+        // // Get the secure URL of the uploaded file
+        // $filePath = $uploadedFile->getSecurePath();
+        // dd($filePath);
+
         if ($request->hasFile('file_path')) {
-            $image = $request->file('file_path');
-            $path = $image->store('product_images', 'public');
-            $product->productImages()->create(['file_path' => $path]);
-        }
-
-        if ($request->hasFile('video_path')) {
-            $image = $request->file('video_path');
-            $path = $image->store('product_images', 'public');
-            $product->productImages()->create(['video_path' => $path]);
-        }
-
-        // Handle multiple file uploads
-        if ($request->hasFile('file_paths')) {
-            foreach ($request->file('file_paths') as $image) {
-                $path = $image->store('product_images', 'public');
-                $product->productImages()->create(['file_path' => $path]);
+            foreach ($request->file('file_path') as $file) {
+                $uploadedFile = Cloudinary::upload($file->getRealPath(), [
+                    'folder' => 'product_images'
+                ]);
+                
+                $product->productImages()->create([
+                    'file_path' => $uploadedFile->getSecurePath(),
+                    'public_id' => $uploadedFile->getPublicId()
+                ]);
             }
         }
+        
+        if ($request->hasFile('video_path')) {
+            foreach ($request->file('video_path') as $file) {
+                $uploadedFile = Cloudinary::upload($file->getRealPath(), [
+                    'folder' => 'product_videos',
+                    'resource_type' => 'video'
+                ]);
+                
+                $product->productImages()->create([
+                    'video_path' => $uploadedFile->getSecurePath(),
+                    'public_id' => $uploadedFile->getPublicId()
+                ]);
+            }
+        }
+        
+
+        // Handle single file upload
+        // if ($request->hasFile('file_path')) {
+        //     $image = $request->file('file_path');
+        //     $path = $image->store('product_images', 'public');
+        //     $product->productImages()->create(['file_path' => $path]);
+        // }
+
+        // if ($request->hasFile('video_path')) {
+        //     $image = $request->file('video_path');
+        //     $path = $image->store('product_images', 'public');
+        //     $product->productImages()->create(['video_path' => $path]);
+        // }
+
+        // // Handle multiple file uploads
+        // if ($request->hasFile('file_paths')) {
+        //     foreach ($request->file('file_paths') as $image) {
+        //         $path = $image->store('product_images', 'public');
+        //         $product->productImages()->create(['file_path' => $path]);
+        //     }
+        // }
 
         return $product;
     }
