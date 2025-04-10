@@ -47,10 +47,10 @@ class ProductController extends Controller
             'email' => 'nullable|string|email|max:255',
             'social_media_link' => 'nullable|string|max:255',
             
-            'file_path' => 'nullable|array',
+            'file_path' => 'nullable',
             'file_path.*' => 'file|mimes:jpeg,png,jpg|max:2040',
         
-            'video_path' => 'nullable|array',
+            'video_path' => 'nullable',
             'video_path.*' => 'file|mimes:mp4,mov,avi,gif|max:3040',
             'media_type' => 'nullable|string|max:255',
         ]);
