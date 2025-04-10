@@ -5,8 +5,10 @@ use DB;
 use App\Models\Task;
 use App\Models\Wallet;
 use App\Models\FundsRecord;
+use Illuminate\Http\Request;
 use App\Models\CompletedTask;
 use App\Services\FileUploadService;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 //use Illuminate\Support\Facades\DB;
 
 class TaskRepository implements ITaskRepository
@@ -81,7 +83,7 @@ class TaskRepository implements ITaskRepository
     }
 
 
-public function submitTask(array $data, $id)
+public function submitTask(Request $request, $id)
 {
     DB::beginTransaction();
 
@@ -115,11 +117,13 @@ public function submitTask(array $data, $id)
         $screenshotPath = null;
 
         // 🔹 Handle file upload
-        if (isset($data['screenshot']) && $data['screenshot'] instanceof \Illuminate\Http\UploadedFile) {
-            $folderName = 'tasks';
-            $screenshotPath = $this->fileUploadService->upload($data['screenshot'], $folderName);
+        if ($request->hasFile('screenshot') && $request->file('screenshot')->isValid()) {
+            $upload = Cloudinary::upload($request->file('screenshot')->getRealPath(), [
+                'folder' => 'tasks',
+            ]);
+            $screenshotPath = $upload->getSecurePath();
         }
-
+    
         CompletedTask::create([
             'user_id' => $userId,
             'task_id' => $task->id,

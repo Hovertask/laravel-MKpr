@@ -195,7 +195,8 @@ class TaskController extends Controller
                 'errors' => $validate->errors(),
             ], 422);
         }
-        $task = $this->task->submitTask($request->all(), $id);        
+        $validated = $validate->validated();
+        $task = $this->task->submitTask($request, $id);        
         return response()->json([
             'status' => true,
             'message' => 'Task submitted successfully, kindly wait for approval',

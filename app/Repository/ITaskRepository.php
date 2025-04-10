@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Models\Task;
+use Illuminate\Http\Request;
 
 interface ITaskRepository
 {
@@ -11,7 +12,7 @@ interface ITaskRepository
     public function delete($id);
     public function showAll();
     public function show($id);
-    public function submitTask(array $data, $id);
+    public function submitTask(Request $request, $id);
     public function approveTask($id);
     public function approveCompletedTask($id);
     public function pendingTask();
