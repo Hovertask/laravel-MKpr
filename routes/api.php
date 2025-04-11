@@ -129,13 +129,13 @@ Route::prefix('v1')->group(function () {
         Route::delete('/remove/{product}', [CartController::class, 'removeFromCart'])->name('cart.remove');
         Route::get('/cartitems', [CartController::class, 'index'])->name('cart.index');
     });
-    Route::prefix('wallet')->middleware('auth:sanctum', 'verified')->group(function () {
+    Route::prefix('wallet')->middleware('auth:sanctum')->group(function () {
         Route::post('/initialize-payment', [WalletController::class, 'initializePayment'])->name('wallet.initialize');
         Route::get('/verify-payment/{reference}', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
         Route::get('/balance', [WalletController::class, 'getBalance'])->name('wallet.balance');
     });
 
-    Route::prefix('payment')->middleware('auth:sanctum', 'verified')->group(function () {
+    Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
         Route::post('/initialize-payment', [OrderController::class, 'pay']);
         Route::get('/verify-payment/{reference}', [OrderController::class, 'verify']);
     });
