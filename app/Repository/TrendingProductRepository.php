@@ -32,14 +32,14 @@ class TrendingProductRepository implements ITrendingProductRepository
         }
     }
 
-    public function incrementViewCount($productId, $quantity)
+    public function incrementViewCount($productId)
     {
         $trendingProduct = TrendingProduct::where('product_id', $productId)->first();
 
         if (!$trendingProduct) {
             TrendingProduct::create([
                 'product_id' => $productId,
-                'views' => $quantity,
+                'views' => 1,
                 'sales' => 0,
             ]);
         } else {
