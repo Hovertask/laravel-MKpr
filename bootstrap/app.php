@@ -12,7 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->validateCsrfTokens(except: [
+            'wallet/initialize-payment',
+            'wallet/verify-payment/*', // For your verify-payment route
+            'webhook/paystack',        // Example for Paystack webhook
+        ]);
+        
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
