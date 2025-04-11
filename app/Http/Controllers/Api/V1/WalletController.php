@@ -27,7 +27,9 @@ class WalletController extends Controller
     
      public function initializePayment(Request $request)
     {
-        dd($request->all());
+        \Log::info('Method:', [request()->method()]);
+
+        //dd($request->all());
         $request->validate([
             'amount' => 'required|numeric|min:100', 
         ]);
