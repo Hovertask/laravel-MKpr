@@ -66,6 +66,12 @@ class WalletController extends Controller
         //dd($reference);
 
         try {
+            if (InitializeDeposit::where('reference', $reference)->where('status', 'successful')->exists()) {
+                throw new Exception("Transaction already processed.");
+            }else{
+
+           
+    
             $paymentData = $this->walletRepository->verifyPayment($reference);
             InitializeDeposit::where('reference', $reference)->update([
                 'status' => 'successful',
@@ -76,6 +82,7 @@ class WalletController extends Controller
                 'amount' => $paymentData['data']['amount'],
             ]);
             return response()->json(['message' => 'Payment verified and wallet funded successfully!', 'data' => $paymentData], 200);
+        }
         } catch (Exception $e) {
             initializeDeposit::where('reference', $reference)->update(['status' => 'failed']);
             return response()->json(['error' => $e->getMessage()], 400);

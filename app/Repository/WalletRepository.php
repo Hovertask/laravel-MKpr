@@ -5,7 +5,9 @@ namespace App\Repository;
 use Exception;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\InitializeDeposit;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
 class WalletRepository implements IWalletRepository
@@ -114,7 +116,8 @@ class WalletRepository implements IWalletRepository
         $amount = $responseData['data']['amount'] / 100;
         $reference = $responseData['data']['reference'];
 
-
+        // Optional: Check if already processed
+        
         DB::beginTransaction();
 
         $user = User::findOrFail($userId);
@@ -130,6 +133,15 @@ class WalletRepository implements IWalletRepository
         $user->balance += $amount;
         $user->save();
 
+        // Optional: Record transaction
+        // Transaction::create([
+        //     'user_id' => $userId,
+        //     'reference' => $reference,
+        //     'amount' => $amount,
+        //     'status' => 'success',
+        //     'channel' => $responseData['data']['channel'],
+        //     'paid_at' => $responseData['data']['paid_at'],
+        // ]);
 
         DB::commit();
 
