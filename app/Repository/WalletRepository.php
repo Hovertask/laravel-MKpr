@@ -5,6 +5,7 @@ namespace App\Repository;
 use Exception;
 use App\Models\User;
 use App\Models\Wallet;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class WalletRepository implements IWalletRepository
@@ -44,43 +45,103 @@ class WalletRepository implements IWalletRepository
         }
     }
 
+    // public function verifyPayment(string $reference)
+    // {
+    //     try {
+    //         $response = Http::withHeaders([
+    //             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+    //             'Content-Type' => 'application/json',
+    //         ])->get("https://api.paystack.co/transaction/verify/{$reference}");
+
+    //         $responseData = $response->json();
+
+    //         //dd($responseData);
+
+    //         if (!$response->successful() || !$responseData['status']) {
+    //             throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+    //         }
+
+    //         if ($responseData['data']['status'] !== 'success') {
+    //             throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+    //         }
+
+    //         $userId = $responseData['data']['metadata']['user_id'];
+    //         $amount = $responseData['data']['amount'] / 100;
+
+    //         $user = User::find($userId);
+    //         // Fund the user's wallet
+    //         $wallet = Wallet::firstOrCreate(
+    //             ['user_id' => $userId],
+    //             ['balance' => 0]
+    //         );
+
+    //         DB::beginTransaction();
+
+    //         $wallet->balance += $amount;
+    //         $wallet->save();
+
+    //         //we are passing the balance to users table because the FE said he needs, however wallet balance is same as user->getBalance
+    //         $user->balance += $amount;
+    //         $user->save();
+
+    //         DB::commit();
+    //         return $responseData;
+
+    //     } catch (Exception $e) {
+    //         throw new Exception("Failed to verify payment: " . $e->getMessage());
+    //     }
+    // }
+
     public function verifyPayment(string $reference)
-    {
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-                'Content-Type' => 'application/json',
-            ])->get("https://api.paystack.co/transaction/verify/{$reference}");
+{
+    try {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+            'Content-Type' => 'application/json',
+        ])->get("https://api.paystack.co/transaction/verify/{$reference}");
 
-            $responseData = $response->json();
+        $responseData = $response->json();
 
-            //dd($responseData);
-
-            if (!$response->successful() || !$responseData['status']) {
-                throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
-            }
-
-            if ($responseData['data']['status'] !== 'success') {
-                throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
-            }
-
-            $userId = $responseData['data']['metadata']['user_id'];
-            $amount = $responseData['data']['amount'] / 100;
-
-            // Fund the user's wallet
-            $wallet = Wallet::firstOrCreate(
-                ['user_id' => $userId],
-                ['balance' => 0]
-            );
-
-            $wallet->balance += $amount;
-            $wallet->save();
-
-            return $responseData;
-        } catch (Exception $e) {
-            throw new Exception("Failed to verify payment: " . $e->getMessage());
+        if (!$response->successful() || !$responseData['status']) {
+            throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
         }
+
+        if ($responseData['data']['status'] !== 'success') {
+            throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+        }
+
+        $userId = $responseData['data']['metadata']['user_id'];
+        $amount = $responseData['data']['amount'] / 100;
+        $reference = $responseData['data']['reference'];
+
+
+        DB::beginTransaction();
+
+        $user = User::findOrFail($userId);
+
+        $wallet = Wallet::lockForUpdate()->firstOrCreate(
+            ['user_id' => $userId],
+            ['balance' => 0]
+        );
+
+        $wallet->balance += $amount;
+        $wallet->save();
+
+        $user->balance += $amount;
+        $user->save();
+
+
+        DB::commit();
+
+        return $responseData;
+
+    } catch (Exception $e) {
+        DB::rollBack();
+        Log::error('Payment verification failed: ' . $e->getMessage());
+        throw new Exception("Failed to verify payment: " . $e->getMessage());
     }
+}
+
 
     public function getBalance(int $userId)
     {
