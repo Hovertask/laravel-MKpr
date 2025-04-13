@@ -6,6 +6,7 @@ use Exception;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\PaymentService;
+use App\Models\InitializeDeposit;
 use Illuminate\Support\Facades\DB;
 use App\Repository\OrderRepository;
 use App\Http\Controllers\Controller;
@@ -96,6 +97,15 @@ class OrderController extends Controller
                 ['user_id' => $userId, 'order_id' => $order->id]
             );
 
+            $transaction = InitializeDeposit::create([
+                'user_id' => $userId,
+                'reference' => $authorizationUrl['data']['reference'],
+                'amount' => $totalAmount,
+                'status' => 'pending',
+                'trx' => InitializeDeposit::generateTrx(10),
+            ]);
+
+
             DB::commit();
 
             return response()->json([
@@ -116,13 +126,27 @@ class OrderController extends Controller
     {
         try {
             // Verify the payment
+            if (InitializeDeposit::where('reference', $reference)->where('status', 'successful')->exists()) {
+                throw new Exception("Transaction already processed.");
+            }else{
             $responseData = $this->paymentService->verifyPayment($reference, $this->trendingRepository);
+
+            InitializeDeposit::where('reference', $reference)->update([
+                'status' => 'successful',
+                'reference' => $responseData['data']['reference'],
+                'token' => $responseData['data']['authorization']['authorization_code'],
+                'method' => $responseData['data']['channel'],
+                'currency' => $responseData['data']['currency'],
+                'amount' => $responseData['data']['amount'],
+            ]);
+        
 
             return response()->json([
                 'success' => true,
                 'message' => 'Payment verified successfully.',
                 'data' => $responseData,
             ]);
+        }
 
         } catch (Exception $e) {
             return response()->json([
