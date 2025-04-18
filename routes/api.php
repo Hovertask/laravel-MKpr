@@ -1,16 +1,18 @@
 <?php
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\TaskController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\V1\FollowController;
 use App\Http\Controllers\Api\V1\ReviewController;
 use App\Http\Controllers\Api\V1\WalletController;
+use App\Http\Controllers\Api\V1\AddMeUpController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\CategoryController;
@@ -171,6 +173,22 @@ Route::prefix('v1')->group(function () {
     Route::prefix('contact')->middleware('auth:sanctum', 'verified')->group(function () {
         Route::post('/create-contact', [ContactController::class, 'createContact'])->name('contact.create');
         Route::post('/create-group', [ContactController::class, 'createGroup'])->name('group.create');
+    });
+
+    Route::prefix('chat')->middleware('auth:sanctum', 'verified')->group(function () {
+        Route::get('/conversations', [ChatController::class, 'index']);
+        Route::get('/conversations/{recipientId}/messages', [ChatController::class, 'getMessages']);
+        Route::post('/messages', [ChatController::class, 'sendMessage']);
+    });
+
+    Route::prefix('addmeup')->middleware('auth:sanctum', 'verified')->group(function () {
+        Route::get('/all', [AddMeUpController::class, 'index'])->name('addmeup.index');
+        Route::post('/create', [AddMeUpController::class, 'create'])->name('addmeup.create');
+        Route::get('/mylist', [AddMeUpController::class, 'myList'])->name('addmeup.list');
+        Route::post('/listcontact', [AddMeUpController::class, 'listContact'])->name('addmeup.listcontact');
+        Route::post('/listgroup', [AddMeUpController::class, 'listGroup'])->name('addmeup.listgroup');
+        Route::post('/addmeup/{added_user_id}', [AddMeUpController::class, 'addMeUp'])->name('addmeup.addmeup');
+
     });
 });
 
