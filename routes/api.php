@@ -28,6 +28,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/roles', [AuthController::class, 'roles']);
 
+
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm']);
 Route::post('/password/reset', [AuthController::class, 'resetPasswordPost']);
 //Route::get('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
@@ -82,6 +83,8 @@ Route::get('/email/check', function (Request $request) {
 
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
+    Route::get('/wallet/verify-payment', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
+    Route::get('/payment/verify-payment', [OrderController::class, 'verify']);
     Route::prefix('dashboard')->middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/user', [DashboardController::class, 'userData'])->name('user.data');
@@ -133,13 +136,12 @@ Route::prefix('v1')->group(function () {
     });
     Route::prefix('wallet')->middleware('auth:sanctum')->group(function () {
         Route::post('/initialize-payment', [WalletController::class, 'initializePayment'])->name('wallet.initialize');
-        Route::get('/verify-payment/{reference}', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
+        //Route::get('/verify-payment', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
         Route::get('/balance', [WalletController::class, 'getBalance'])->name('wallet.balance');
     });
 
     Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
         Route::post('/initialize-payment', [OrderController::class, 'pay']);
-        Route::get('/verify-payment/{reference}', [OrderController::class, 'verify']);
     });
 
     Route::prefix('reviews')->middleware('auth:sanctum', 'verified')->group(function () {

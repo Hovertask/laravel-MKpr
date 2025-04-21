@@ -32,9 +32,9 @@ class AddMeUpController extends Controller
 
         $data = $this->AddMeUpRepository->create($request->whatsapp_number);
 
-        if(!$data) {
-            return response()->json(['error' => 'User already added'], 400);
-        }
+        // if(!$data) {
+        //     return response()->json(['error' => 'User already added'], 400);
+        // }
 
         return response()->json(['message' => 'User added successfully', 'data' => $data]);
     }

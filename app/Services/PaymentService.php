@@ -28,6 +28,7 @@ class PaymentService
             'Content-Type' => 'application/json',
         ])->post('https://api.paystack.co/transaction/initialize', [
             'email' => $email,
+            'callback_url' => config('app.url') . '/api/v1/wallet/verify-paystack',
             'amount' => $amount * 100,
             'metadata' => $metadata,
         ]);
