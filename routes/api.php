@@ -81,11 +81,11 @@ Route::get('/email/check', function (Request $request) {
     return response()->json(['verified' => $request->user()->hasVerifiedEmail()]);
 })->middleware(['auth:sanctum']);
 
-
+Route::get('/wallet/verify-payment/{reference}', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
+    Route::get('/payment/verify-payment/{reference}', [OrderController::class, 'verify']);
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
-    Route::get('/wallet/verify-payment/{reference}', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
-    Route::get('/payment/verify-payment/{reference}', [OrderController::class, 'verify']);
+    
     Route::prefix('dashboard')->middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/user', [DashboardController::class, 'userData'])->name('user.data');
