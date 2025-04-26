@@ -178,20 +178,68 @@ class ProductRepository implements IProductRepository
             'social_media_link' => $data['social_media_link'],
         ]);
 
-        // Handle single file upload
         if ($request->hasFile('file_path')) {
-            $image = $request->file('file_path');
-            $path = $image->store('product_images', 'public');
-            $product->productImages()->updateOrCreate(['file_path' => $path]);
-        }
-
-        // Handle multiple file uploads
-        if ($request->hasFile('file_paths')) {
-            foreach ($request->file('file_paths') as $image) {
-                $path = $image->store('product_images', 'public');
-                $product->productImages()->updateOrCreate(['file_path' => $path]);
+            //dd($request->file('file_path'));
+            $files = $request->file('file_path');
+        
+            // Normalize to array (even if it's one file)
+            $files = is_array($files) ? $files : [$files];
+        
+            foreach ($files as $file) {
+                if ($file->isValid()) {
+                    $uploadedFile = Cloudinary::upload($file->getRealPath(), [
+                        'folder' => 'product_images'
+                    ]);
+        
+                    $product->productImages()->updateorCreate([
+                        'product_id' => $product->id,
+                    ],
+                        [
+                        'file_path' => $uploadedFile->getSecurePath(),
+                        'public_id' => $uploadedFile->getPublicId()
+                    ]);
+                }
             }
         }
+        
+        
+        if ($request->hasFile('video_path')) {
+            $videos = $request->file('video_path');
+            $videos = is_array($videos) ? $videos : [$videos];
+        
+            foreach ($videos as $video) {
+                if ($video->isValid()) {
+                    $uploadedFile = Cloudinary::upload($video->getRealPath(), [
+                        'folder' => 'product_videos',
+                        'resource_type' => 'video'
+                    ]);
+        
+                    $product->productImages()->updareorCreate([
+                        'product_id' => $product->id
+                    ],
+                    [
+                        'video_path' => $uploadedFile->getSecurePath(),
+                        'public_id' => $uploadedFile->getPublicId()
+                    ]);
+                }
+            }
+        }
+        
+
+        // Handle single file upload
+        // if ($request->hasFile('file_path')) {
+        //     $image = $request->file('file_path');
+        //     $path = $image->store('product_images', 'public');
+        //     $product->productImages()->updateOrCreate(['file_path' => $path]);
+        // }
+
+        // // Handle multiple file uploads
+        // if ($request->hasFile('file_paths')) {
+        //     foreach ($request->file('file_paths') as $image) {
+        //         $path = $image->store('product_images', 'public');
+        //         $product->productImages()->updateOrCreate(['file_path' => $path]);
+        //     }
+        // }
 
         return $product;
     }
@@ -210,7 +258,7 @@ class ProductRepository implements IProductRepository
 
     public function showAll(): Collection
     {
-        return Product::with('productImages')->get();	
+        return Product::with('productImages')->latest()->get();	
     }
 
     public function show(?int $productId, ?string $resellerId = null)
@@ -221,6 +269,10 @@ class ProductRepository implements IProductRepository
         }
 
         return $product;
+    }
+
+    public function authUserProducts(){
+        return Product::where('user_id', auth()->user()->id)->latest()->get();
     }
 
     // public function submitProduct(array $product, $id): Product

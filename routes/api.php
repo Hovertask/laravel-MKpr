@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\WishlistController;
+use App\Http\Controllers\Api\V1\AdvertiseController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\SocialConnectController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -89,6 +90,8 @@ Route::prefix('v1')->group(function () {
     Route::prefix('dashboard')->middleware('auth:sanctum')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/user', [DashboardController::class, 'userData'])->name('user.data');
+        Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change.password');
+        Route::post('/bank', [AuthController::class, 'banks'])->name('change.bank');
     });
 });
 
@@ -115,6 +118,7 @@ Route::prefix('v1')->group(function () {
     Route::prefix('products')->middleware('auth:sanctum', 'verified')->group(function () {
         Route::get('/', [ProductController::class, 'index'])->name('product.index');
         Route::post('/create-product', [ProductController::class, 'store'])->name('product.store');
+        Route::get('/auth-user-product', [ProductController::class, 'authUserProducts'])->name('product.authUserProduct');
         Route::post('/update-product/{id}', [ProductController::class, 'update'])->name('product.update');
         Route::post('/approve-product/{id}', [ProductController::class, 'approveProduct'])->name('product.approve');
         Route::get('/show-product/{id}', [ProductController::class, 'show'])->name('product.show');
@@ -192,6 +196,16 @@ Route::prefix('v1')->group(function () {
         Route::post('/listgroup', [AddMeUpController::class, 'listGroup'])->name('addmeup.listgroup');
         Route::post('/addmeup/{added_user_id}', [AddMeUpController::class, 'addMeUp'])->name('addmeup.addmeup');
 
+    });
+
+    Route::prefix('advertise')->middleware('auth:sanctum', 'verified')->group(function () {
+        Route::get('/all', [AdvertiseController::class, 'index'])->name('advertise.index');
+        Route::get('/show/{id}', [AdvertiseController::class, 'show'])->name('advertise.show');
+        Route::post('/create', [AdvertiseController::class, 'create'])->name('advertise.create');
+        Route::put('/update/{id}', [AdvertiseController::class, 'updateAds'])->name('advertise.update');
+        Route::get('/authuserads', [AdvertiseController::class, 'authUserAds'])->name('advertise.authUserAds');
+        Route::put('/approveads/{id}', [AdvertiseController::class, 'approveAds'])->name('advertise.approveAds');
+        Route::delete('/deleteAds/{id}', [AdvertiseController::class, 'destroy'])->name('advertise.deleteAds');
     });
 });
 

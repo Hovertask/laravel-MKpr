@@ -30,9 +30,11 @@ use App\Repository\IAddMeUpRepository;
 use App\Repository\IContactRepository;
 use App\Repository\IProductRepository;
 use App\Repository\WishlistRepository;
+use App\Repository\AdvertiseRepository;
 use App\Repository\ICategoryRepository;
 use App\Repository\IWishlistRepository;
 use Illuminate\Support\ServiceProvider;
+use App\Repository\IAdvertiseRepository;
 use App\Repository\TrendingProductRepository;
 use App\Repository\ITrendingProductRepository;
 use App\Repositories\Interfaces\ISocialConnectRepository;
@@ -57,6 +59,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IContactRepository::class, ContactRepository::class);
         $this->app->bind(IChatRepository::class, ChatRepository::class);
         $this->app->bind(IAddMeUpRepository::class, AddMeUpRepository::class);
+        $this->app->bind(IAdvertiseRepository::class, AdvertiseRepository::class);
+
 
 
         $this->app->bind(IReviewRepository::class, ReviewRepository::class);

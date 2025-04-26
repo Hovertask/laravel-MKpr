@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use App\Notifications\ChangePasswordNotification;
 
 class UserRepository implements IUserRepository
 {
@@ -87,6 +88,35 @@ class UserRepository implements IUserRepository
 
         return $status;
     }
+    public function changePassword(array $data)
+    {
+        $user = Auth::user();
+        if (!Hash::check($data['current_password'], $user->password)) {
+            return false;
+        }
+
+        if ($data['new_password'] !== $data['confirm_password']) {
+            return false;
+        }
+        $user->update([
+            'password' => Hash::make($data['new_password']),
+        ]);
+        $user->notify(new ChangePasswordNotification());
+        return $user;
+    }
+
+    public function banks(array $data)
+    {
+        $user = Auth::user();
+        $user->update([
+            'bank_name' => $data['bank_name'],
+            'account_name' => $data['account_name'],
+            'account_number' => $data['account_number'],
+        ]);
+        return $user;
+    }
+
+
     public function logout(User $user)
     {
         $user->tokens()->delete();

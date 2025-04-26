@@ -177,6 +177,16 @@ class ProductController extends Controller
             ], 404);
         }
     }
+
+    public function authUserProducts(){
+        $products = $this->product->authUserProducts();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Products fetched successfully',
+            'data' => $products,
+        ]);
+    }
     
 
     public function approveProduct($id, Request $request)

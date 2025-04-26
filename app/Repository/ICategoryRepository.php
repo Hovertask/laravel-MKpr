@@ -7,5 +7,5 @@ use App\Repository\ICategoryRepository;
 interface ICategoryRepository
 {
     public function showAll();
-    public function create($data);
+    public function create($data, $slug);
 }

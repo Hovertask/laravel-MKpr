@@ -8,10 +8,12 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Repository\IUserRepository;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
+use App\Notifications\BankInfomationUpdatedNotification;
 
 class AuthController extends Controller
 {
@@ -177,6 +179,71 @@ public function resetPasswordPost(Request $request)
     return $status === Password::PASSWORD_RESET
         ? response()->json(['message' => 'Password reset successfully'], 200)
         : response()->json(['message' => 'Unable to reset password'], 400);
+}
+
+public function changePassword(Request $request)
+{
+    $user = Auth::user();
+    $validator = Validator::make($request->all(), [
+        'current_password' => 'required|string|min:6',
+        'new_password' => 'required|string|min:6|confirmed',
+        'confirm_password' => 'required|string|min:6',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,   
+            'message' => 'Validation error',
+            'errors' => $validator->errors()
+        ], 400);
+    }
+
+    $validatedData = $validator->validated();
+
+    $changePass = $this->user->changePassword($validatedData);
+
+    if ($changePass) {
+        return response()->json([
+            'status' => true,
+            'message' => 'Password changed successfully',
+        ]);
+        
+    } else {
+        return response()->json([
+            'status' => false,
+            'message' => 'Unable to change password',
+        ], 500);
+    }
+}
+
+public function banks(Request $request)
+{
+    $user = Auth::user();
+    $validator = Validator::make($request->all(),[
+        'bank_name' => 'required|string|max:140',
+        'account_name' => 'nullable|string',
+        'account_number' => 'required|numeric'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,   
+            'message' => 'Validation error',
+            'errors' => $validator->errors()
+        ], 400);
+    }
+
+    $validatedData = $validator->validated();
+
+    $banks = $this->user->banks($validatedData);
+
+    $user->notify(new BankInfomationUpdatedNotification($user));
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Bank details updated successfully'
+    ]);
+    
 }
 
 

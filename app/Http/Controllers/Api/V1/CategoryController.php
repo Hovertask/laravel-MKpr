@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Repository\ICategoryRepository;
@@ -27,6 +28,8 @@ class CategoryController extends Controller
             'name' => 'required|string',
         ]);
 
+        $slug = Str::slug($request->name);
+
         if ($validateCategory->fails()) {
             return response()->json([
                 'status' => false,
@@ -35,13 +38,11 @@ class CategoryController extends Controller
             ], 422);
         }
 
-        $category = $this->category->create($validateCategory->validated());
+        $category = $this->category->create($validateCategory->validated(), $slug);
         return response()->json([
             'status' => true,
             'message' => 'Category created successfully',
-            'data' => $this->category->create([
-                'name' => $request->name
-            ])
+            'data' => $category
         ], 201);
     }
 }

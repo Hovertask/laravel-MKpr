@@ -13,6 +13,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Repository\TrendingProductRepository;
 use App\Repository\ITrendingProductRepository;
+use App\Notifications\OrderPaymentNotification;
 
 class OrderController extends Controller
 {
@@ -124,6 +125,7 @@ class OrderController extends Controller
 
     public function verify($reference)
     {
+        $user = Auth::user();
         try {
             // Verify the payment
             if (InitializeDeposit::where('reference', $reference)->where('status', 'successful')->exists()) {
@@ -139,6 +141,8 @@ class OrderController extends Controller
                 'currency' => $responseData['data']['currency'],
                 'amount' => $responseData['data']['amount'],
             ]);
+            $user->notify(new OrderPaymentNotification($responseData));
+
         
 
             return response()->json([

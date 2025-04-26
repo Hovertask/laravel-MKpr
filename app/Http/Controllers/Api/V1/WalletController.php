@@ -8,6 +8,7 @@ use App\Models\InitializeDeposit;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Repository\IWalletRepository;
+use App\Notifications\WalletFundedNotification;
 
 class WalletController extends Controller
 {
@@ -65,6 +66,8 @@ class WalletController extends Controller
     {
         //dd($reference);
 
+        $user = Auth::user();
+
         try {
             if (InitializeDeposit::where('reference', $reference)->where('status', 'successful')->exists()) {
                 throw new Exception("Transaction already processed.");
@@ -82,6 +85,9 @@ class WalletController extends Controller
                 'amount' => $paymentData['data']['amount'],
             ]);
             return response()->json(['message' => 'Payment verified and wallet funded successfully!', 'data' => $paymentData], 200);
+
+            $user->notify(new WalletFundedNotification($paymentData));
+
         }
         } catch (Exception $e) {
             initializeDeposit::where('reference', $reference)->update(['status' => 'failed']);

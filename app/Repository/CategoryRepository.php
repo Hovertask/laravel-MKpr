@@ -11,9 +11,13 @@ class CategoryRepository implements ICategoryRepository
         return Category::all();
     }
 
-    public function create($data)
+    public function create($data, $slug)
     {
-        return Category::create($data);
+        //dd($slug);
+        return Category::create([
+            'name' => $data['name'],
+            'slug' => $slug
+        ]);
     }
 
 }
