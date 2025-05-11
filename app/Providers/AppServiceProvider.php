@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use SocialConnectRepository;
 use App\Services\PaymentService;
+use App\Repository\KYCRepository;
 use App\Repository\CartRepository;
 use App\Repository\ChatRepository;
+use App\Repository\IKYCRepository;
 use App\Repository\TaskRepository;
 use App\Repository\UserRepository;
 use App\Repository\ICartRepository;
@@ -60,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(IChatRepository::class, ChatRepository::class);
         $this->app->bind(IAddMeUpRepository::class, AddMeUpRepository::class);
         $this->app->bind(IAdvertiseRepository::class, AdvertiseRepository::class);
+        $this->app->bind(IKYCRepository::class, KYCRepository::class);
 
 
 

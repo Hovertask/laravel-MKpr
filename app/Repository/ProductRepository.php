@@ -95,62 +95,6 @@ class ProductRepository implements IProductRepository
                 }
             }
         }
-        
-        // if ($request->hasFile('file_paths')) {
-        //     // Multiple image uploads
-        //     foreach ($request->file('file_paths') as $file) {
-        //         if ($file->isValid()) {
-        //             $uploadedFile = Cloudinary::upload($file->getRealPath(), [
-        //                 'folder' => 'product_images'
-        //             ]);
-                    
-        //             $product->productImages()->create([
-        //                 'file_path' => $uploadedFile->getSecurePath(),
-        //                 'public_id' => $uploadedFile->getPublicId() // Storing Cloudinary public_id
-        //             ]);
-        //         }
-        //     }
-        // }
-        
-        // if ($request->hasFile('video_paths')) {
-        //     // Multiple video uploads
-        //     foreach ($request->file('video_paths') as $file) {
-        //         if ($file->isValid()) {
-        //             $uploadedFile = Cloudinary::upload($file->getRealPath(), [
-        //                 'folder' => 'product_videos',
-        //                 'resource_type' => 'video'
-        //             ]);
-                    
-        //             $product->productImages()->create([
-        //                 'video_path' => $uploadedFile->getSecurePath(),
-        //                 'public_id' => $uploadedFile->getPublicId() // Storing Cloudinary public_id
-        //             ]);
-        //         }
-        //     }
-        // }
-        
-
-
-        // Handle single file upload
-        // if ($request->hasFile('file_path')) {
-        //     $image = $request->file('file_path');
-        //     $path = $image->store('product_images', 'public');
-        //     $product->productImages()->create(['file_path' => $path]);
-        // }
-
-        // if ($request->hasFile('video_path')) {
-        //     $image = $request->file('video_path');
-        //     $path = $image->store('product_images', 'public');
-        //     $product->productImages()->create(['video_path' => $path]);
-        // }
-
-        // // Handle multiple file uploads
-        // if ($request->hasFile('file_paths')) {
-        //     foreach ($request->file('file_paths') as $image) {
-        //         $path = $image->store('product_images', 'public');
-        //         $product->productImages()->create(['file_path' => $path]);
-        //     }
-        // }
 
         return $product;
     }

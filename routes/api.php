@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\KYCController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\ChatController;
 use App\Http\Controllers\Api\V1\TaskController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\WishlistController;
 use App\Http\Controllers\Api\V1\AdvertiseController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SocialConnectController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -206,6 +208,21 @@ Route::prefix('v1')->group(function () {
         Route::get('/authuserads', [AdvertiseController::class, 'authUserAds'])->name('advertise.authUserAds');
         Route::put('/approveads/{id}', [AdvertiseController::class, 'approveAds'])->name('advertise.approveAds');
         Route::delete('/deleteAds/{id}', [AdvertiseController::class, 'destroy'])->name('advertise.deleteAds');
+    });
+
+        Route::prefix('notification')->group(function () {
+            Route::get('/notifications', [NotificationController::class, 'index']);
+            Route::get('/notifications/{id}', [NotificationController::class, 'show']);
+            Route::post('/notifications/read/{id}', [NotificationController::class, 'viewNotification']);
+        });
+
+
+    Route::prefix('kyc')->middleware('auth:sanctum', 'verified')->group(function () {
+        Route::post('/create', [KYCController::class, 'submit'])->name('kyc.create');
+        Route::get('/show/{id}', [KYCController::class, 'show'])->name('kyc.show');
+        Route::put('/update/{id}', [KYCController::class, 'update'])->name('kyc.update');
+        Route::put('/approve/{id}', [KYCController::class, 'approve'])->name('kyc.approve');
+        Route::put('/reject/{id}', [KYCController::class, 'reject'])->name('kyc.reject');
     });
 });
 
