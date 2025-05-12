@@ -19,6 +19,7 @@ class KYCRepository
     }
     public function submit(Request $request, int $id)
     {
+        dd($request->all());
         DB::beginTransaction();
         try {
             $check = KYC::where(['user_id' => $id])->exists();

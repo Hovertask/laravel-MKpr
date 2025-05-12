@@ -10,7 +10,7 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        dd($user);
+        //dd($user);
 
         return response()->json([
             'status' => true,

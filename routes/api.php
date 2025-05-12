@@ -210,7 +210,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('/deleteAds/{id}', [AdvertiseController::class, 'destroy'])->name('advertise.deleteAds');
     });
 
-        Route::prefix('notification')->group(function () {
+        Route::prefix('notification')->middleware('auth:sanctum', 'verified')->group(function () {
             Route::get('/notifications', [NotificationController::class, 'index']);
             Route::get('/notifications/{id}', [NotificationController::class, 'show']);
             Route::post('/notifications/read/{id}', [NotificationController::class, 'viewNotification']);
