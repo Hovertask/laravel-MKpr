@@ -48,6 +48,12 @@ Route::get('/test-db', function() {
     }
 });
 
+Route::get('/ping', function() {
+   return response()->json([
+       
+   ], 200);
+});
+
 
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm']);
 Route::post('/password/reset', [AuthController::class, 'resetPasswordPost']);
