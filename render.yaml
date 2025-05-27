@@ -1,12 +1,39 @@
+# services:
+#   - type: web
+#     name: smile-logistics
+#     env: docker
+#     plan: free
+#     region: oregon
+#     dockerfilePath: ./Dockerfile
+#     envVars:
+#       - key: APP_ENV
+#         value: production
+#       - key: APP_KEY
+#         value: # leave empty initially
+
 services:
   - type: web
     name: smile-logistics
     env: docker
     plan: free
     region: oregon
-    dockerfilePath: ./Dockerfile
+    repo: https://github.com/kolozjnr/laravel-MKpr
+    buildCommand: composer install --no-dev --optimize-autoloader
+    startCommand: php artisan serve --host=0.0.0.0 --port=$PORT
     envVars:
-      - key: APP_ENV
-        value: production
       - key: APP_KEY
-        value: # leave empty initially
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: db.rurlakuxsflxtvmcjimc.supabase.co
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        value: postgres
+      - key: DB_PASSWORD
+        value: tDKMe4arnS1gnqDS
+        sync: false
+        
