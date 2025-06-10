@@ -31,6 +31,29 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/roles', [AuthController::class, 'roles']);
 
+Route::get('/test-db', function() {
+    try {
+        DB::connection()->getPdo();
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database connected successfully',
+            'database' => DB::connection()->getDatabaseName()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Database connection failed',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
+Route::get('/ping', function() {
+   return response()->json([
+       
+   ], 200);
+});
+
 
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm']);
 Route::post('/password/reset', [AuthController::class, 'resetPasswordPost']);
@@ -210,7 +233,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('/deleteAds/{id}', [AdvertiseController::class, 'destroy'])->name('advertise.deleteAds');
     });
 
-        Route::prefix('notification')->group(function () {
+        Route::prefix('notification')->middleware('auth:sanctum', 'verified')->group(function () {
             Route::get('/notifications', [NotificationController::class, 'index']);
             Route::get('/notifications/{id}', [NotificationController::class, 'show']);
             Route::post('/notifications/read/{id}', [NotificationController::class, 'viewNotification']);

@@ -17,7 +17,7 @@ class KYCController extends Controller
     }
     public function show($id)
     {
-
+        return $this->kycRepository->show($id);
     }
 
     public function submit(Request $request)
@@ -67,6 +67,7 @@ class KYCController extends Controller
     {
         $user = auth()->user();
         //dd($id);
+        //dd($request->all());
         $validator = Validator::make($request->all(), [
             'full_name' => 'sometimes|string',
             'country' => 'sometimes|string',
@@ -76,7 +77,7 @@ class KYCController extends Controller
             'document_front_image' => 'sometimes|mimes:jpeg,png,jpg,pdf',
             'document_back_image' => 'sometimes|mimes:jpeg,png,jpg,pdf',
             'user_selfie_image' => 'sometimes|mimes:jpeg,png,jpg,pdf',
-
+apache_child_terminate
         ]);
 
         if ($validator->fails()) {
@@ -98,8 +99,9 @@ class KYCController extends Controller
         ]);
     }
 
-    public function approve(int $id, int $userId)
+    public function approve(int $id)
     {
+        $userId = auth()->user()->id;
         $kyc = $this->kycRepository->approve($id, $userId);
         return response()->json([
             'status' => true,
