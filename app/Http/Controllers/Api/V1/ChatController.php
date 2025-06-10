@@ -41,7 +41,7 @@ class ChatController extends Controller
        // dd($request->all());
         $validate = Validator::make($request->all(), [
             'recipient_id' => 'required|exists:users,id',
-            'product_id' => 'nullable|exists:products,id',
+            'product_id' => 'required|exists:products,id',
             'content' => 'required|string'
         ]);
         // $data = $request->validate([
