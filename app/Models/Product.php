@@ -65,4 +65,14 @@ class Product extends Model
     {
         return $this->hasMany(ProductImages::class);
     }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function participants()
+    {
+        return $this->hasMany(Participant::class);
+    }   
 }

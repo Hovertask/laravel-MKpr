@@ -184,7 +184,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/create-group', [ContactController::class, 'createGroup'])->name('group.create');
     });
 
-    Route::prefix('chat')->middleware('auth:sanctum', 'verified')->group(function () {
+    Route::prefix('chat')->middleware('auth:sanctum')->group(function () {
         Route::get('/conversations', [ChatController::class, 'index']);
         Route::get('/conversations/{recipientId}/messages', [ChatController::class, 'getMessages']);
         Route::post('/messages', [ChatController::class, 'sendMessage']);
