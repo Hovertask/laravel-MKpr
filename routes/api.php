@@ -121,8 +121,8 @@ Route::prefix('v1')->group(function () {
 });
 
 //protected routes TASK
-Route::prefix('v1')->group(function () {
-    Route::prefix('tasks')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum', 'verified')->group(function () {
+    Route::prefix('tasks')->group(function () {
         Route::post('/create-task', [TaskController::class, 'createTask'])->name('create.task');
         Route::post('/update-task/{id}', [TaskController::class, 'updateTask'])->name('update.task');
         Route::get('/show-all-task', [TaskController::class, 'showAll'])->name('show.all');
@@ -136,11 +136,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/task-history', [TaskController::class, 'taskHistory'])->name('task.history');
         Route::delete('/delete-task/{id}', [TaskController::class, 'deleteTask'])->name('delete.task');
     });
-});
 
 //product routes
-Route::prefix('v1')->group(function () {
-    Route::prefix('products')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('products')->group(function () {
         Route::get('/', [ProductController::class, 'index'])->name('product.index');
         Route::post('/create-product', [ProductController::class, 'store'])->name('product.store');
         Route::get('/auth-user-product', [ProductController::class, 'authUserProducts'])->name('product.authUserProduct');
@@ -154,17 +152,17 @@ Route::prefix('v1')->group(function () {
         Route::post('/contact-seller/{id}', [ProductController::class, 'contactSeller'])->name('product.contactSeller');
     });
 
-    Route::prefix('wishlists')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('wishlists')->group(function () {
         Route::post('/add/{product}', [WishlistController::class, 'add'])->name('wishlist.add');
         Route::delete('/remove/{product}', [WishlistController::class, 'remove'])->name('wishlist.remove');
         Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     });
-    Route::prefix('cart')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('cart')->group(function () {
         Route::post('/add/{product}', [CartController::class, 'addToCart'])->name('cart.add');
         Route::delete('/remove/{product}', [CartController::class, 'removeFromCart'])->name('cart.remove');
         Route::get('/cartitems', [CartController::class, 'index'])->name('cart.index');
     });
-    Route::prefix('wallet')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('wallet')->group(function () {
         Route::post('/initialize-payment', [WalletController::class, 'initializePayment'])->name('wallet.initialize');
         //Route::get('/verify-payment', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
         Route::get('/balance', [WalletController::class, 'getBalance'])->name('wallet.balance');
@@ -174,17 +172,17 @@ Route::prefix('v1')->group(function () {
         Route::post('/initialize-payment', [OrderController::class, 'pay']);
     });
 
-    Route::prefix('reviews')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('reviews')->group(function () {
         Route::post('/reviews', [ReviewController::class, 'store']);
         Route::get('/reviews/{productId}', [ReviewController::class, 'getReviews']);
     });
 
-    Route::prefix('follow')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('follow')->group(function () {
         Route::post('/follow/{user}', [FollowController::class, 'follow'])->name('follow');
         Route::post('/unfollow/{user}', [FollowController::class, 'unfollow'])->name('unfollow');
     });
 
-    Route::prefix('socials')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('socials')->group(function () {
         //Route::get('/facebook-data', [SocialConnectController::class, 'getFacebookData']);
         Route::get('/facebook', [SocialConnectController::class, 'redirectToFacebook']);
         Route::get('/auth/facebook/callback', [SocialConnectController::class, 'handleFacebookCallback']);
@@ -202,18 +200,18 @@ Route::prefix('v1')->group(function () {
     });
     
     //Route::get('/get-product/{id}', [ProductController::class, 'show'])->name('product.show');
-    Route::prefix('contact')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('contact')->group(function () {
         Route::post('/create-contact', [ContactController::class, 'createContact'])->name('contact.create');
         Route::post('/create-group', [ContactController::class, 'createGroup'])->name('group.create');
     });
 
-    Route::prefix('chat')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('chat')->group(function () {
         Route::get('/conversations', [ChatController::class, 'index']);
         Route::get('/conversations/{recipientId}/messages', [ChatController::class, 'getMessages']);
         Route::post('/messages', [ChatController::class, 'sendMessage']);
     });
 
-    Route::prefix('addmeup')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('addmeup')->group(function () {
         Route::get('/all', [AddMeUpController::class, 'index'])->name('addmeup.index');
         Route::post('/create', [AddMeUpController::class, 'create'])->name('addmeup.create');
         Route::get('/mylist', [AddMeUpController::class, 'myList'])->name('addmeup.list');
@@ -223,7 +221,7 @@ Route::prefix('v1')->group(function () {
 
     });
 
-    Route::prefix('advertise')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('advertise')->group(function () {
         Route::get('/all', [AdvertiseController::class, 'index'])->name('advertise.index');
         Route::get('/show/{id}', [AdvertiseController::class, 'show'])->name('advertise.show');
         Route::post('/create', [AdvertiseController::class, 'create'])->name('advertise.create');
@@ -233,21 +231,20 @@ Route::prefix('v1')->group(function () {
         Route::delete('/deleteAds/{id}', [AdvertiseController::class, 'destroy'])->name('advertise.deleteAds');
     });
 
-        Route::prefix('notification')->middleware('auth:sanctum')->group(function () {
+        Route::prefix('notification')->group(function () {
             Route::get('/notifications', [NotificationController::class, 'index']);
             Route::get('/notifications/{id}', [NotificationController::class, 'show']);
             Route::post('/notifications/read/{id}', [NotificationController::class, 'viewNotification']);
         });
 
 
-    Route::prefix('kyc')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('kyc')->group(function () {
         Route::post('/create', [KYCController::class, 'submit'])->name('kyc.create');
         Route::get('/show/{id}', [KYCController::class, 'show'])->name('kyc.show');
         Route::put('/update/{id}', [KYCController::class, 'update'])->name('kyc.update');
         Route::put('/approve/{id}', [KYCController::class, 'approve'])->name('kyc.approve');
         Route::put('/reject/{id}', [KYCController::class, 'reject'])->name('kyc.reject');
     });
-});
 
 
 
@@ -258,8 +255,7 @@ Route::prefix('v1')->group(function () {
 
 
 //Categories routes
-Route::prefix('v1')->group(function () {
-    Route::prefix('categories')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('categories')->group(function () {
         Route::post('/create', [CategoryController::class, 'create'])->name('category.create');
         Route::get('/all-categories', [CategoryController::class, 'index'])->name('category.index');
         //Route::post('/create-product', [CategoryController::class, 'store'])->name('product.store');
@@ -267,13 +263,7 @@ Route::prefix('v1')->group(function () {
 });
 
 
-
-
-
-
-
 //product routes
-
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
