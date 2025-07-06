@@ -30,7 +30,6 @@ class UserRepository implements IUserRepository
             'email' => $data['email'],
             'username' => $data['username'],
             'password' => Hash::make($data['password']),
-            'how_you_want_to_use' => $data['how_you_want_to_use'],
             'country' => $data['country'],
             'currency' => $data['currency'],
             'phone' => $data['phone'],

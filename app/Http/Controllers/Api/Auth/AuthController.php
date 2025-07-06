@@ -31,7 +31,6 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            // 'how_you_want_to_use' => 'nullable|string|max:255',
             'country' => 'required|string|max:255',
             'currency' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
