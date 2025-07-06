@@ -196,6 +196,8 @@ Route::prefix('v1')->middleware('auth:sanctum', 'verified')->group(function () {
         Route::get('/tiktok/profile', [SocialConnectController::class, 'getTikTokProfile'])->name('tiktok.profile');
         Route::get('/tiktok/videos', [SocialConnectController::class, 'getTikTokVideos'])->name('tiktok.videos');
         Route::post('/tiktok/disconnect', [SocialConnectController::class, 'disconnectTikTok'])->name('tiktok.disconnect');
+
+        Route::post('/manual-connect', [SocialConnectController::class, 'manualconnection'])->name('manual.connect');
         
     });
     

@@ -111,4 +111,36 @@ class SocialConnectController extends Controller
         
         return back()->with('success', 'TikTok disconnected successfully.');
     }
+
+    //manual Connection
+
+    public function manualconnection()
+    {
+        $validator = Validator::make($request->all(), [
+            'facebook_profile' => 'nullable|string',
+            'facebook_uname' => 'nullable|string',
+            'tiktok_profile' => 'nullable|string',
+            'tiktok_uname' => 'nullable|string',
+            'instagram_profile' => 'nullable|string',
+            'instagram_uname' => 'nullable|string',
+            'x_profile' => 'nullable|string',
+            'x_uname' => 'nullable|string',
+        ]);
+        
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+      $sendData =  $this->SocialConnectRepository->manualconnection($validator->validated());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data Stored Successfully!',
+            'data' => $sendData,
+        ], 200);
+    }
 }

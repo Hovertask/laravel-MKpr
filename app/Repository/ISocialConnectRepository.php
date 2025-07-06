@@ -21,4 +21,7 @@ interface ISocialConnectRepository
     public function getTikTokUserProfile($accessToken);
     public function getTikTokVideos($accessToken, $limit = 10);
     public function revokeTikTokAccess($userId);
+
+    //manuak connection
+    public function manualConnection(array $request);
 }

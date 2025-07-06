@@ -5,6 +5,7 @@ use Facebook\Facebook;
 use App\Models\FacebookUser;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
+use App\Models\ManualSocialAccountLinking;
 use App\Repository\ISocialConnectRepository;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 //use App\Models\SocialConnect;
@@ -244,5 +245,27 @@ class SocialConnectRepository implements ISocialConnectRepository
             Log::error('TikTok token refresh error: ' . $e->getMessage());
             return null;
         }
+    }
+
+    //manuak connection
+    public function manualConnection(array $request)
+    {
+        $user = auth()->user();
+
+        $socials = ManualSocialAccountLinking::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'facebook_profile'   => $request['facebook_profile'],
+                'facebook_uname'     => $request['facebook_uname'],
+                'tiktok_profile'     => $request['tiktok_profile'],
+                'tiktok_uname'       => $request['tiktok_uname'],
+                'instagram_profile'  => $request['instagram_profile'],
+                'instagram_uname'    => $request['instagram_uname'],
+                'x_profile'          => $request['x_profile'],
+                'x_uname'            => $request['x_uname'],
+            ]
+        );
+
+        return $socials;
     }
 }
