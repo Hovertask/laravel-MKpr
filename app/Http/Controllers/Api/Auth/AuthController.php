@@ -31,14 +31,14 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
-            'how_you_want_to_use' => 'required|string|max:255',
+            'how_you_want_to_use' => 'nullable|string|max:255',
             'country' => 'required|string|max:255',
             'currency' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
             'avatar' => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
             'referral_code' => 'nullable|string|max:255',
-            'role_id' => 'nullable|string|max:255',
+            'role_id' => 'required|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -62,7 +62,7 @@ class AuthController extends Controller
 
         $user = $this->user->create($validatedData);
         $user->sendEmailVerificationNotification();
-        $user->addRole($validatedData['how_you_want_to_use']);
+        $user->addRole($validatedData['role_id']);
         $token = $user->createToken('API Token')->plainTextToken;
         Mail::to($user->email)->send(new WelcomeMail($user));
 
