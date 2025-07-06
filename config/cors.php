@@ -1,14 +1,29 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie'], // Define routes that should allow CORS
+    'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => ['*'],  // You can specify a domain instead of '*'
+    'allowed_origins' => [
+        'http://localhost:5173',
+        'https://hovertask.com',
+        'https://backend.hovertask.com',
+    ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],
     'max_age' => 0,
     'supports_credentials' => true,
-    //'allowed_headers' => ['Authorization', 'Content-Type', 'X-Requested-With'],
-
 ];
+
+
+// return [
+//     'paths' => ['api/*', 'login', 'logout', 'sanctum/csrf-cookie'], // Define routes that should allow CORS
+//     'allowed_methods' => ['*'],
+//     'allowed_origins' => ['*'],  // You can specify a domain instead of '*'
+//     'allowed_origins_patterns' => [],
+//     'allowed_headers' => ['*'],
+//     'exposed_headers' => [],
+//     'max_age' => 0,
+//     'supports_credentials' => true,
+
+// ];
