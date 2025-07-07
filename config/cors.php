@@ -7,6 +7,7 @@ return [
         'http://localhost:5173',
         'https://hovertask.com',
         'https://backend.hovertask.com',
+        'https://app.hovertask.com/',
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
