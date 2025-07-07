@@ -8,6 +8,7 @@ return [
         'https://hovertask.com',
         'https://backend.hovertask.com',
         'https://app.hovertask.com/',
+        'http://app.hovertask.com',
     ],
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
