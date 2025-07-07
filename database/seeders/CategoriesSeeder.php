@@ -15,13 +15,13 @@ class CategoriesSeeder extends Seeder
     {
         $categories = [
             ['slug' => 'all', 'name' => 'all'],
-            ['slug' => 'phones_and_tablets', 'name' => 'phones and tablets'],
-            ['slug' => 'health_and_beauty', 'name' => 'health and beauty'],
-            ['slug' => 'computing', 'name' => 'computing'],
-            ['slug' => 'home_and_office', 'name' => 'home and office'],
-            ['slug' => 'fashion', 'name' => 'fashion'],
-            ['slug' => 'electronic', 'name' => 'electronic'],
-            ['slug' => 'baby_products', 'name' => 'baby products'],
+            ['slug' => 'phones_and_tablets', 'name' => 'Phones and Tablets'],
+            ['slug' => 'health_and_beauty', 'name' => 'Health and Beauty'],
+            ['slug' => 'computing', 'name' => 'Computing'],
+            ['slug' => 'home_and_office', 'name' => 'Home and Office'],
+            ['slug' => 'fashion', 'name' => 'Fashion'],
+            ['slug' => 'electronic', 'name' => 'Electronic'],
+            ['slug' => 'baby_products', 'name' => 'Baby Products'],
         ];
 
         foreach ($categories as $category) {
