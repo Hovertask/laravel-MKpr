@@ -117,6 +117,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/user', [DashboardController::class, 'userData'])->name('user.data');
         Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change.password');
         Route::post('/bank', [AuthController::class, 'banks'])->name('change.bank');
+        Route::post('/update-profile', [AuthController::class, 'updateProfile'])->name('update.profile');
+        Route::put('/update-password', [AuthController::class, 'updatePassword'])->name('update.password');
     });
 });
 
@@ -137,7 +139,7 @@ Route::prefix('v1')->middleware('auth:sanctum', 'verified')->group(function () {
         Route::delete('/delete-task/{id}', [TaskController::class, 'deleteTask'])->name('delete.task');
     });
 
-//product routes
+    //product routes
     Route::prefix('products')->group(function () {
         Route::get('/', [ProductController::class, 'index'])->name('product.index');
         Route::post('/create-product', [ProductController::class, 'store'])->name('product.store');
@@ -251,12 +253,12 @@ Route::prefix('v1')->middleware('auth:sanctum', 'verified')->group(function () {
 
 
 
-// Route::middleware('auth:sanctum')->prefix('api/v1')->group(function () {
-//     Route::get('/products/show-product/{id}', [ProductController::class, 'show']);
-// });
+    // Route::middleware('auth:sanctum')->prefix('api/v1')->group(function () {
+    //     Route::get('/products/show-product/{id}', [ProductController::class, 'show']);
+    // });
 
 
-//Categories routes
+    //Categories routes
     Route::prefix('categories')->group(function () {
         Route::post('/create', [CategoryController::class, 'create'])->name('category.create');
         Route::get('/all-categories', [CategoryController::class, 'index'])->name('category.index');

@@ -45,6 +45,22 @@ class UserRepository implements IUserRepository
         return $user;
     }
 
+    public function updateProfile(array $data)
+    {
+        try {
+            $user = Auth::user();
+            $updated = $user->update($data);
+            
+            if (!$updated) {
+                throw new \Exception("Update failed");
+            }
+            
+            return $user;
+        } catch (\Exception $e) {
+            \Log::error("Profile update failed: " . $e->getMessage());
+            throw $e;
+        }
+    }
     
     protected function trackReferral(int $referrerId, int $referreeId): void
     {

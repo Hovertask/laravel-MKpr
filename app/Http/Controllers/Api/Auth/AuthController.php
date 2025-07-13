@@ -116,6 +116,119 @@ class AuthController extends Controller
         ], 200);
     }
 
+//     public function updateProfile(Request $request)
+// {
+//     $user = auth()->user();
+
+//     $validator = Validator::make($request->all(), [
+//         'fname' => 'sometimes|string|max:255',
+//         'lname' => 'sometimes|string|max:255',
+//         'email' => 'sometimes|string|email|max:255',
+//         'country' => 'sometimes|string|max:255',
+//         'currency' => 'sometimes|string|max:255',
+//         'phone' => 'sometimes|string|max:255',
+//         'avatar' => 'nullable|string|max:255',
+//     ]);
+
+//     if ($validator->fails()) {
+//         return response()->json([
+//             'status' => false,
+//             'message' => 'Validation error',
+//             'errors' => $validator->errors()
+//         ], 400);
+//     }
+
+//     $validatedData = $validator->validated();
+//     //dd($validatedData); 
+
+//     $update = $user->update($validatedData);
+
+//     if ($update) {
+//         return response()->json([
+//             'success' => true,
+//             'message' => 'Profile updated successfully'
+//         ]);
+//     }
+
+//     return response()->json([
+//         'success' => false,
+//         'message' => 'Profile update failed'
+//     ], 500);
+// }
+
+    public function updateProfile(Request $request)
+    {
+       // dd($request->all)
+        $validator = Validator::make($request->all(), [
+             'fname' => 'sometimes|string|max:255',
+            'lname' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|max:255',
+            'country' => 'sometimes|string|max:255',
+            'currency' => 'sometimes|string|max:255',
+            'phone' => 'sometimes|string|max:255',
+            'avatar' => 'nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $validatedData = $validator->validated();
+
+        //dd($validatedData);
+
+        $user = $this->user->updateProfile($validatedData);
+
+        //dd($user);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Profile updated successfully',
+            'data' => $user
+        ], 200);
+    }
+
+
+public function updatePassword(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'password' => 'required|string|min:6|confirmed',
+        'old_password' => 'required|string|min:6',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 400);
+    }
+
+    $user = auth()->user();
+
+    // ✅ Check if old password is correct
+    if (!Hash::check($request->old_password, $user->password)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Old password is incorrect',
+        ], 403);
+    }
+
+    $user->update([
+        'password' => Hash::make($request->password),
+    ]);
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Password updated successfully',
+    ], 200);
+}
+
+
 
     public function resetPassword(Request $request)
 {
