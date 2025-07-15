@@ -31,22 +31,15 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/roles', [AuthController::class, 'roles']);
 
-Route::get('/test-db', function() {
-    try {
-        DB::connection()->getPdo();
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Database connected successfully',
-            'database' => DB::connection()->getDatabaseName()
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Database connection failed',
-            'error' => $e->getMessage()
-        ], 500);
-    }
+Route::get('/test-mail', function () {
+    \Mail::raw('This is a test email', function ($message) {
+        $message->to('barnabas.ykolo@gmail.com')
+                ->subject('Test Email');
+    });
+
+    return 'Test email sent!';
 });
+
 
 Route::get('/ping', function() {
    return response()->json([
