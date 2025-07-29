@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Repository\IUserRepository;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +49,9 @@ class AuthController extends Controller
             ], 400);
         }
 
+        
+        DB::beginTransaction();
+
         $validatedData = $validator->validated();
 
         if (isset($validatedData['referral_code'])) {
@@ -65,6 +69,7 @@ class AuthController extends Controller
         $token = $user->createToken('API Token')->plainTextToken;
         Mail::to($user->email)->send(new WelcomeMail($user));
 
+        DB::commit();
        if($user)
        {
             return response()->json([
