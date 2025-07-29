@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Redirect;
 use App\Http\Controllers\Api\V1\KYCController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\ChatController;
@@ -90,7 +91,8 @@ Route::get('/email/verify/{id}/{hash}', function (Request $request, $id, $hash) 
     $user->markEmailAsVerified();
     event(new Verified($user));
 
-    return response()->json(['message' => 'Email verified successfully.']);
+    //return response()->json(['message' => 'Email verified successfully.']);
+    return Redirect::to('https://app.hovertask.com?verified=1');
 })->middleware(['signed'])->name('verification.verify');
 
 
