@@ -53,7 +53,7 @@ return [
     */
 
     'url' => env('APP_URL', 'https://hovertask-dashboard.vercel.app'),
-    'dashboard' => env('APP_DASHBOARD_UR', 'https://app.hovertask.com'),
+    'dashboard' => env('APP_DASHBOARD_URL', 'https://app.hovertask.com'),
 
     /*
     |--------------------------------------------------------------------------

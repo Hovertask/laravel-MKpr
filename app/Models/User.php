@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\Task;
 use Laravel\Sanctum\HasApiTokens;
-use App\Notifications\CustomVerifyEmail;
+//use App\Notifications\CustomVerifyEmail;
 use Illuminate\Notifications\Notifiable;
 use Laratrust\Traits\HasRolesAndPermissions;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -39,10 +39,12 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_member',
     ];
 
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new CustomVerifyEmail);
-    }
+    
+
+    // public function sendEmailVerificationNotification()
+    // {
+    //     $this->notify(new CustomVerifyEmail);
+    // }
 
     public function task(){
         return $this->hasMany(Task::class);
