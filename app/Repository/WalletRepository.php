@@ -95,64 +95,87 @@ class WalletRepository implements IWalletRepository
     // }
 
     public function verifyPayment(string $reference)
-{
-    try {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-            'Content-Type' => 'application/json',
-        ])->get("https://api.paystack.co/transaction/verify/{$reference}");
-
-        $responseData = $response->json();
-
-        if (!$response->successful() || !$responseData['status']) {
-            throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
-        }
-
-        if ($responseData['data']['status'] !== 'success') {
-            throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
-        }
-
-        $userId = $responseData['data']['metadata']['user_id'];
-        $amount = $responseData['data']['amount'] / 100;
-        $reference = $responseData['data']['reference'];
-
-        // Optional: Check if already processed
+    {
         
-        DB::beginTransaction();
+            try {
+                $response = Http::withHeaders([
+                    'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+                    'Content-Type' => 'application/json',
+                ])->get("https://api.paystack.co/transaction/verify/{$reference}");
 
-        $user = User::findOrFail($userId);
+                $responseData = $response->json();
 
-        $wallet = Wallet::lockForUpdate()->firstOrCreate(
-            ['user_id' => $userId],
-            ['balance' => 0]
-        );
+                if (!$response->successful() || !$responseData['status']) {
+                    throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+                }
 
-        $wallet->balance += $amount;
-        $wallet->save();
+                if ($responseData['data']['status'] !== 'success') {
+                    throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+                }
 
-        $user->balance += $amount;
-        $user->save();
+                $userId = $responseData['data']['metadata']['user_id'];
+                $amount = $responseData['data']['amount'] / 100;
+                $reference = $responseData['data']['reference'];
 
-        // Optional: Record transaction
-        // Transaction::create([
-        //     'user_id' => $userId,
-        //     'reference' => $reference,
-        //     'amount' => $amount,
-        //     'status' => 'success',
-        //     'channel' => $responseData['data']['channel'],
-        //     'paid_at' => $responseData['data']['paid_at'],
-        // ]);
+                DB::beginTransaction();
 
-        DB::commit();
+                $user = User::findOrFail($userId);
 
-        return $responseData;
+                $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                    ['user_id' => $userId],
+                    ['balance' => 0]
+                );
 
-    } catch (Exception $e) {
-        DB::rollBack();
-        Log::error('Payment verification failed: ' . $e->getMessage());
-        throw new Exception("Failed to verify payment: " . $e->getMessage());
+                if (!$user->is_member && $user->referred_by) {
+                    //dd('is here');
+                    $referer = $user->referred_by;
+                    $refUser = User::find($referer);
+
+
+                    if ($refUser && $refUser->is_member) {
+                        $half = $amount / 2;
+
+                        $refWallet = Wallet::firstOrCreate(['user_id' => $referer], ['balance' => 0]);
+                        $refWallet->balance += $half;
+                        $refWallet->save();
+
+                        $refUser->balance += $half;
+                        $refUser->save();
+
+                        $user->is_member = true;
+                        $user->save();
+
+                        //dd($user->is_member);
+                    //dd($refUser);
+                    }
+                } elseif ($user->is_member) {
+                    $wallet->balance += $amount;
+                    $wallet->save();
+
+                    $user->balance += $amount;
+                    $user->save();
+                }
+
+            // Optional: Record transaction
+            // Transaction::create([
+            //     'user_id' => $userId,
+            //     'reference' => $reference,
+            //     'amount' => $amount,
+            //     'status' => 'success',
+            //     'channel' => $responseData['data']['channel'],
+            //     'paid_at' => $responseData['data']['paid_at'],
+            // ]);
+
+            DB::commit();
+
+            return $responseData;
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Payment verification failed: ' . $e->getMessage());
+            throw new Exception("Failed to verify payment: " . $e->getMessage());
+        }
     }
-}
 
 
     public function getBalance(int $userId)

@@ -230,6 +230,7 @@ class SocialConnectRepository implements ISocialConnectRepository
             ->where('provider', 'tiktok')
             ->delete();
     }
+
     public function refreshTikTokToken($refreshToken)
     {
         try {

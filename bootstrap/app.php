@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'wallet/verify-payment/*', // For your verify-payment route
             'webhook/paystack',        // Example for Paystack webhook
         ]);
+        $middleware->alias([
+            'check.membership' => \App\Http\Middleware\CheckMembership::class,
+        ]);
         
     })
     ->withExceptions(function (Exceptions $exceptions) {

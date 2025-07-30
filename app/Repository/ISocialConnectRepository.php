@@ -16,11 +16,13 @@ interface ISocialConnectRepository
     public function storeOrUpdatePosts(int $userId, array $posts);
 
     //tiktok
+    public function connectTikTok();
     public function redirectToTikTok();
-    public function handleTikTokCallback();
+    public function handleTikTokCallback(string $code);
     public function getTikTokUserProfile($accessToken);
     public function getTikTokVideos($accessToken, $limit = 10);
     public function revokeTikTokAccess($userId);
+    public function refreshTikTokToken($refreshToken);
 
     //manuak connection
     public function manualConnection(array $request);

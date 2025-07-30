@@ -115,10 +115,20 @@ Route::prefix('v1')->group(function () {
         Route::post('/update-profile', [AuthController::class, 'updateProfile'])->name('update.profile');
         Route::put('/update-password', [AuthController::class, 'updatePassword'])->name('update.password');
     });
+
+     Route::prefix('wallet')->middleware('auth:sanctum')->group(function () {
+        Route::post('/initialize-payment', [WalletController::class, 'initializePayment'])->name('wallet.initialize');
+        //Route::get('/verify-payment', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
+        Route::get('/balance', [WalletController::class, 'getBalance'])->name('wallet.balance');
+    });
+
+    Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
+        Route::post('/initialize-payment', [OrderController::class, 'pay']);
+    });
 });
 
 //protected routes TASK
-Route::prefix('v1')->middleware('auth:sanctum', 'verified')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum', 'verified', 'check.membership')->group(function () {
     Route::prefix('tasks')->group(function () {
         Route::post('/create-task', [TaskController::class, 'createTask'])->name('create.task');
         Route::post('/update-task/{id}', [TaskController::class, 'updateTask'])->name('update.task');
@@ -159,15 +169,7 @@ Route::prefix('v1')->middleware('auth:sanctum', 'verified')->group(function () {
         Route::delete('/remove/{product}', [CartController::class, 'removeFromCart'])->name('cart.remove');
         Route::get('/cartitems', [CartController::class, 'index'])->name('cart.index');
     });
-    Route::prefix('wallet')->group(function () {
-        Route::post('/initialize-payment', [WalletController::class, 'initializePayment'])->name('wallet.initialize');
-        //Route::get('/verify-payment', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
-        Route::get('/balance', [WalletController::class, 'getBalance'])->name('wallet.balance');
-    });
-
-    Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
-        Route::post('/initialize-payment', [OrderController::class, 'pay']);
-    });
+   
 
     Route::prefix('reviews')->group(function () {
         Route::post('/reviews', [ReviewController::class, 'store']);

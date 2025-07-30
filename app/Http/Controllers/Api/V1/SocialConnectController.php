@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Validator;
 use App\Repository\SocialConnectRepository;
 
 class SocialConnectController extends Controller
@@ -114,7 +115,7 @@ class SocialConnectController extends Controller
 
     //manual Connection
 
-    public function manualconnection()
+    public function manualconnection(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'facebook_profile' => 'nullable|string',
