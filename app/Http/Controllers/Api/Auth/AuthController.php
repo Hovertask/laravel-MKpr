@@ -37,7 +37,7 @@ class AuthController extends Controller
             'phone' => 'required|string|max:255',
             'avatar' => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
-            'referral_code' => 'nullable|string|max:255',
+            //'referral_code' => 'nullable|string|max:255',
             'role_id' => 'required|string|max:255',
         ]);
 
@@ -54,13 +54,14 @@ class AuthController extends Controller
 
         $validatedData = $validator->validated();
 
-        if (isset($validatedData['referral_code'])) {
-            $referrer = User::where('referral_code', $validatedData['referral_code'])->first();
-            if ($referrer) {
-                //dd($referrer);
-                $validatedData['referred_by'] = $referrer->id;
-            }
-        }
+        // if (isset($validatedData['referral_code'])) {
+        //     $referrer = User::where('referral_code', $validatedData['referral_code'])->first();
+        //     if ($referrer) {
+        //         //dd($referrer);
+        //         $validatedData['referred_by'] = $referrer->id;
+        //         $validatedData['referral_username'] = $referrer->username;
+        //     }
+        // }
 
 
         $user = $this->user->create($validatedData);

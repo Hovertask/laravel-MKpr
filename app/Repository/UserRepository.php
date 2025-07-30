@@ -34,12 +34,15 @@ class UserRepository implements IUserRepository
             'currency' => $data['currency'],
             'phone' => $data['phone'],
             'avatar' => $data['avatar'] ?? null,
-            'referred_by' => $data['referred_by'] ?? null,
+            'referal_username' => $data['referal_username'] ?? null,
+            //'referred_by' => $data['referred_by'] ?? null,
             'referral_code' => $referralCode ?? null,
         ]);
         
-        if (isset($data['referred_by'])) {
-            $this->trackReferral($data['referred_by'], $user->id);
+        if (isset($data['referal_username'])) {
+            $runame = User::where('username', $data['referal_username'])->first();
+            $this->trackReferral($runame->id, $user->id);
+           // $this->trackReferral($data['referred_by'], $user->id);
         }
 
         return $user;

@@ -5,6 +5,7 @@ namespace App\Repository;
 use Exception;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\Referral;
 use App\Models\InitializeDeposit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -126,9 +127,11 @@ class WalletRepository implements IWalletRepository
                     ['balance' => 0]
                 );
 
-                if (!$user->is_member && $user->referred_by) {
+                $referred_by = Referral::where('referee_id', $user->id)->first();
+                //dd($referred_by->referrer_id);
+                if (!$user->is_member && $referred_by->referrer_id && $referred_by->reward_status == 'pending') {
                     //dd('is here');
-                    $referer = $user->referred_by;
+                    $referer = $referred_by->referrer_id;
                     $refUser = User::find($referer);
 
 
@@ -141,6 +144,9 @@ class WalletRepository implements IWalletRepository
 
                         $refUser->balance += $half;
                         $refUser->save();
+
+                        $referred_by->reward_status = 'paid';
+                        $referred_by->save();
 
                         $user->is_member = true;
                         $user->save();
