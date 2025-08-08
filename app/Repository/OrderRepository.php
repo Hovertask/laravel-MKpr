@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Models\Cart;
 use App\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
+use App\Repository\IOrderRepository;
 
 class OrderRepository implements IOrderRepository
 {
@@ -18,6 +19,7 @@ class OrderRepository implements IOrderRepository
 
     public function createOrder(int $userId, float $totalAmount): Order
     {
+        //dd($totalAmount);
         return Order::create([
             'user_id' => $userId,
             'total_amount' => $totalAmount,
@@ -36,5 +38,9 @@ class OrderRepository implements IOrderRepository
             ]);
         }
     }
+
+   public function payWithWallet(Request $request, int $userId, float $amount){
+
+   }
     
 }

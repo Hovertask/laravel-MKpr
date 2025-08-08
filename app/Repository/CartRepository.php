@@ -38,4 +38,15 @@ class CartRepository implements ICartRepository
             throw new Exception("Failed to remove product from cart: " . $e->getMessage());
         }
     }
+
+    public function getCartItems(int $userId)
+    {
+        try {
+            return Cart::with('product')
+                       ->where('user_id', $userId)
+                       ->get();
+        } catch (Exception $e) {
+            throw new Exception("Failed to fetch cart items: " . $e->getMessage());
+        }
+    }
 }

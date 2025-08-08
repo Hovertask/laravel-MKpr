@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use Exception;
+use App\Models\Cart;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Services\PaymentService;
@@ -92,15 +93,15 @@ class OrderController extends Controller
             // Create order items
             $this->orderRepository->createOrderItems($order, $cartItems);
             $user = User::findOrFail($userId);
-            $authorizationUrl = $this->paymentService->initializePayment(
+            $paymentResponse = $this->paymentService->initializePayment(
                 $user->email,
                 $totalAmount,
                 ['user_id' => $userId, 'order_id' => $order->id]
             );
-
+            //dd($paymentResponse);
             $transaction = InitializeDeposit::create([
                 'user_id' => $userId,
-                'reference' => $authorizationUrl['data']['reference'],
+                'reference' => $paymentResponse['reference'],
                 'amount' => $totalAmount,
                 'status' => 'pending',
                 'trx' => InitializeDeposit::generateTrx(10),
@@ -111,7 +112,8 @@ class OrderController extends Controller
 
             return response()->json([
                 'success' => true,
-                'authorization_url' => $authorizationUrl,
+                'authorization_url' => $paymentResponse
+
             ]);
 
         } catch (Exception $e) {
@@ -125,8 +127,9 @@ class OrderController extends Controller
 
     public function verify($reference)
     {
-        $user = Auth::user();
+        //$user = Auth::user();
         try {
+            DB::beginTransaction();
             // Verify the payment
             if (InitializeDeposit::where('reference', $reference)->where('status', 'successful')->exists()) {
                 throw new Exception("Transaction already processed.");
@@ -141,8 +144,12 @@ class OrderController extends Controller
                 'currency' => $responseData['data']['currency'],
                 'amount' => $responseData['data']['amount'],
             ]);
-            $user->notify(new OrderPaymentNotification($responseData));
 
+            $userBuying = User::findOrFail($responseData['data']['metadata']['user_id']);
+            //dd($userBuying);
+            $userBuying->notify(new OrderPaymentNotification($responseData));
+
+            DB::commit();
         
 
             return response()->json([

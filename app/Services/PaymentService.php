@@ -4,12 +4,14 @@ namespace App\Services;
 use DB;
 use Exception;
 use App\Models\Cart;
+use App\Models\User;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Repository\TrendingProductRepository;
+use App\Notifications\ProductSoldNotification;
 use App\Repository\ITrendingProductRepository;
 
 class PaymentService
@@ -38,8 +40,8 @@ class PaymentService
         if (!$response->successful() || !$responseData['status']) {
             throw new Exception("Failed to initialize payment: " . ($responseData['message'] ?? 'Unknown error'));
         }
-
-        return $responseData['data']['authorization_url'];
+            //dd($responseData['data']);
+        return $responseData['data'];
     }
 
        /**
@@ -85,15 +87,31 @@ class PaymentService
                     Cart::where('user_id', $userId)->where('status', 'pending')->delete();
 
                     // Update the stock lets get a clean record for HoverTask users😘
+                    // foreach ($order->orderItems as $item) {
+                    //     $product = Product::find($item->product_id);
+                    //     if ($product) {
+                    //         $product->stock -= $item->quantity;
+                    //         $product->save();
+
+                    //         $trendingRepository->incrementViewCount($product->id, $item->quantity);
+                    //     }
+                    // }
                     foreach ($order->orderItems as $item) {
                         $product = Product::find($item->product_id);
+
                         if ($product) {
                             $product->stock -= $item->quantity;
                             $product->save();
 
-                            $trendingRepository->incrementViewCount($product->id, $item->quantity);
+                            $trendingRepository->incrementSalesCount($product->id, $item->quantity);
+
+                            $owner = User::find($product->user_id);
+                            if ($owner) {
+                                $owner->notify(new ProductSoldNotification($product, $item->quantity));
+                            }
                         }
                     }
+
                 }
             }
 

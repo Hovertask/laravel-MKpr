@@ -9,4 +9,5 @@ interface IOrderRepository
    public function getCartItem(int $userId);
    public function createOrder(int $userId, float $totalAmount): Order;
    public function createOrderItems(Order $order, Collection $cartItems): void;
+   public function payWithWallet(Request $request, int $userId, float $amount);
 }

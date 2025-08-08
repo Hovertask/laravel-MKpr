@@ -124,7 +124,14 @@ Route::prefix('v1')->group(function () {
 
     Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
         Route::post('/initialize-payment', [OrderController::class, 'pay']);
+        //Route::post('/create-order', [OrderController::class, 'createOrder']);
     });
+
+    //create order is automated when pay is called
+
+    // Route::prefix('order')->middleware('auth:sanctum')->group(function (){
+    //     Route::post('/create-order', [OrderController::class, 'createOrder']);
+    // });
 });
 
 //protected routes TASK
@@ -167,7 +174,7 @@ Route::prefix('v1')->middleware('auth:sanctum', 'verified', 'check.membership')-
     Route::prefix('cart')->group(function () {
         Route::post('/add/{product}', [CartController::class, 'addToCart'])->name('cart.add');
         Route::delete('/remove/{product}', [CartController::class, 'removeFromCart'])->name('cart.remove');
-        Route::get('/cartitems', [CartController::class, 'index'])->name('cart.index');
+        Route::get('/cartitems', [CartController::class, 'getCartItems'])->name('cart.getCartItems');
     });
    
 

@@ -170,21 +170,6 @@ class ProductRepository implements IProductRepository
         }
         
 
-        // Handle single file upload
-        // if ($request->hasFile('file_path')) {
-        //     $image = $request->file('file_path');
-        //     $path = $image->store('product_images', 'public');
-        //     $product->productImages()->updateOrCreate(['file_path' => $path]);
-        // }
-
-        // // Handle multiple file uploads
-        // if ($request->hasFile('file_paths')) {
-        //     foreach ($request->file('file_paths') as $image) {
-        //         $path = $image->store('product_images', 'public');
-        //         $product->productImages()->updateOrCreate(['file_path' => $path]);
-        //     }
-        // }
-
         return $product;
     }
 

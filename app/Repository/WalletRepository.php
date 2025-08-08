@@ -97,80 +97,69 @@ class WalletRepository implements IWalletRepository
 
     public function verifyPayment(string $reference)
     {
-        
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-                    'Content-Type' => 'application/json',
-                ])->get("https://api.paystack.co/transaction/verify/{$reference}");
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+                'Content-Type' => 'application/json',
+            ])->get("https://api.paystack.co/transaction/verify/{$reference}");
 
-                $responseData = $response->json();
+            $responseData = $response->json();
 
-                if (!$response->successful() || !$responseData['status']) {
-                    throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
-                }
+            if (!$response->successful() || !$responseData['status']) {
+                throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+            }
 
-                if ($responseData['data']['status'] !== 'success') {
-                    throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
-                }
+            if ($responseData['data']['status'] !== 'success') {
+                throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+            }
 
-                $userId = $responseData['data']['metadata']['user_id'];
-                $amount = $responseData['data']['amount'] / 100;
-                $reference = $responseData['data']['reference'];
+            $userId = $responseData['data']['metadata']['user_id'];
+            $amount = $responseData['data']['amount'] / 100;
+            $reference = $responseData['data']['reference'];
 
-                DB::beginTransaction();
+            DB::beginTransaction();
 
-                $user = User::findOrFail($userId);
+            $user = User::findOrFail($userId);
+            $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                ['user_id' => $userId],
+                ['balance' => 0]
+            );
 
-                $wallet = Wallet::lockForUpdate()->firstOrCreate(
-                    ['user_id' => $userId],
-                    ['balance' => 0]
-                );
+            // Check if user has a referral
+            $referral = Referral::where('referee_id', $user->id)->first();
 
-                $referred_by = Referral::where('referee_id', $user->id)->first();
-                //dd($referred_by->referrer_id);
-                if (!$user->is_member && $referred_by->referrer_id && $referred_by->reward_status == 'pending') {
-                    //dd('is here');
-                    $referer = $referred_by->referrer_id;
-                    $refUser = User::find($referer);
+            // Case 1: User is not a member AND has a referral with pending reward
+            if (!$user->is_member && $referral && $referral->reward_status == 'pending') {
+                $referrer = User::find($referral->referrer_id);
 
+                if ($referrer && $referrer->is_member) {
+                    $halfAmount = $amount / 2;
 
-                    if ($refUser && $refUser->is_member) {
-                        $half = $amount / 2;
+                    // Update referrer's wallet
+                    $referrerWallet = Wallet::firstOrCreate(
+                        ['user_id' => $referrer->id],
+                        ['balance' => 0]
+                    );
+                    $referrerWallet->balance += $halfAmount;
+                    $referrerWallet->save();
 
-                        $refWallet = Wallet::firstOrCreate(['user_id' => $referer], ['balance' => 0]);
-                        $refWallet->balance += $half;
-                        $refWallet->save();
+                    // Update referral status
+                    $referral->reward_status = 'paid';
+                    $referral->save();
 
-                        $refUser->balance += $half;
-                        $refUser->save();
-
-                        $referred_by->reward_status = 'paid';
-                        $referred_by->save();
-
-                        $user->is_member = true;
-                        $user->save();
-
-                        //dd($user->is_member);
-                    //dd($refUser);
-                    }
-                } elseif ($user->is_member) {
-                    $wallet->balance += $amount;
-                    $wallet->save();
-
-                    $user->balance += $amount;
+                    // Update user status
+                    $user->is_member = true;
                     $user->save();
                 }
+            }
 
-            // Optional: Record transaction
-            // Transaction::create([
-            //     'user_id' => $userId,
-            //     'reference' => $reference,
-            //     'amount' => $amount,
-            //     'status' => 'success',
-            //     'channel' => $responseData['data']['channel'],
-            //     'paid_at' => $responseData['data']['paid_at'],
-            // ]);
+            // Case 2: User is already a member (or referral doesn't exist)
+            $wallet->balance += $amount;
+            $wallet->save();
+
+            $user->balance += $amount;
+            $user->is_member = true;
+            $user->save();
 
             DB::commit();
 
@@ -182,6 +171,97 @@ class WalletRepository implements IWalletRepository
             throw new Exception("Failed to verify payment: " . $e->getMessage());
         }
     }
+
+
+
+    // public function verifyPayment(string $reference)
+    // {
+        
+    //         try {
+    //             $response = Http::withHeaders([
+    //                 'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+    //                 'Content-Type' => 'application/json',
+    //             ])->get("https://api.paystack.co/transaction/verify/{$reference}");
+
+    //             $responseData = $response->json();
+
+    //             if (!$response->successful() || !$responseData['status']) {
+    //                 throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+    //             }
+
+    //             if ($responseData['data']['status'] !== 'success') {
+    //                 throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+    //             }
+
+    //             $userId = $responseData['data']['metadata']['user_id'];
+    //             $amount = $responseData['data']['amount'] / 100;
+    //             $reference = $responseData['data']['reference'];
+
+    //             DB::beginTransaction();
+
+    //             $user = User::findOrFail($userId);
+
+    //             $wallet = Wallet::lockForUpdate()->firstOrCreate(
+    //                 ['user_id' => $userId],
+    //                 ['balance' => 0]
+    //             );
+                
+
+    //             $referred_by = Referral::where('referee_id', $user->id)->first();
+    //             //dd($referred_by->referrer_id);
+    //             if (!$user->is_member && $referred_by->referrer_id && $referred_by->reward_status == 'pending') {
+    //                 //dd('is here');
+    //                 $referer = $referred_by->referrer_id;
+    //                 $refUser = User::find($referer);
+
+
+    //                 if ($refUser && $refUser->is_member) {
+    //                     $half = $amount / 2;
+
+    //                     $refWallet = Wallet::firstOrCreate(['user_id' => $referer], ['balance' => 0]);
+    //                     $refWallet->balance += $half;
+    //                     $refWallet->save();
+
+    //                     $refUser->balance += $half;
+    //                     $refUser->save();
+
+    //                     $referred_by->reward_status = 'paid';
+    //                     $referred_by->save();
+
+    //                     $user->is_member = true;
+    //                     $user->save();
+
+    //                     //dd($user->is_member);
+    //                 //dd($refUser);
+    //                 }
+    //             } elseif ($user->is_member) {
+    //                 $wallet->balance += $amount;
+    //                 $wallet->save();
+
+    //                 $user->balance += $amount;
+    //                 $user->save();
+    //             }
+
+    //         // Optional: Record transaction
+    //         // Transaction::create([
+    //         //     'user_id' => $userId,
+    //         //     'reference' => $reference,
+    //         //     'amount' => $amount,
+    //         //     'status' => 'success',
+    //         //     'channel' => $responseData['data']['channel'],
+    //         //     'paid_at' => $responseData['data']['paid_at'],
+    //         // ]);
+
+    //         DB::commit();
+
+    //         return $responseData;
+
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+    //         Log::error('Payment verification failed: ' . $e->getMessage());
+    //         throw new Exception("Failed to verify payment: " . $e->getMessage());
+    //     }
+    // }
 
 
     public function getBalance(int $userId)

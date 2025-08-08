@@ -17,34 +17,60 @@ class TrendingProductRepository implements ITrendingProductRepository
             ->get();
     }
 
-    public function incrementSalesCount($product, $quantity)
+    public function incrementSalesCount($productId, $quantity)
     {
-        $trendingProduct = TrendingProduct::where('product_id', $product->id)->first();
+        $trendingProduct = TrendingProduct::firstOrNew(['product_id' => $productId]);
 
-        if(!$trendingProduct) {
-            TrendingProduct::create([
-                'product_id' => $product->id,                    
-                'views' => 0,
-                'sales' => $quantity,
-            ]);
+        if (!$trendingProduct->exists) {
+            $trendingProduct->views = 0;
+            $trendingProduct->sales = $quantity;
         } else {
-            $trendingProduct->increment('sales');
+            $trendingProduct->sales += $quantity;
         }
+
+        $trendingProduct->save();
     }
+
+
+    // public function incrementSalesCount($product, $quantity)
+    // {
+    //     $trendingProduct = TrendingProduct::where('product_id', $product->id)->first();
+
+    //     if(!$trendingProduct) {
+    //         TrendingProduct::create([
+    //             'product_id' => $product->id,                    
+    //             'views' => 0,
+    //             'sales' => $quantity,
+    //         ]);
+    //     } else {
+    //         $trendingProduct->increment('sales');
+    //     }
+    // }
 
     public function incrementViewCount($productId)
     {
-        $trendingProduct = TrendingProduct::where('product_id', $productId)->first();
+        $trendingProduct = TrendingProduct::firstOrCreate(
+            ['product_id' => $productId],
+            ['views' => 0, 'sales' => 0]
+        );
 
-        if (!$trendingProduct) {
-            TrendingProduct::create([
-                'product_id' => $productId,
-                'views' => 1,
-                'sales' => 0,
-            ]);
-        } else {
-            $trendingProduct->increment('views');
-        }
+        $trendingProduct->increment('views');
     }
+
+
+    // public function incrementViewCount($productId)
+    // {
+    //     $trendingProduct = TrendingProduct::where('product_id', $productId)->first();
+
+    //     if (!$trendingProduct) {
+    //         TrendingProduct::create([
+    //             'product_id' => $productId,
+    //             'views' => 1,
+    //             'sales' => 0,
+    //         ]);
+    //     } else {
+    //         $trendingProduct->increment('views');
+    //     }
+    // }
 
 }

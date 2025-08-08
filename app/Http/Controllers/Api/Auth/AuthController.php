@@ -41,6 +41,8 @@ class AuthController extends Controller
             'role_id' => 'required|string|max:255',
         ]);
 
+        //dd($request->all());
+
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
