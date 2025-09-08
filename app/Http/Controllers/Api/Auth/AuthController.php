@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Models\User;
+use App\Models\PasswordResetCode;
 use App\Mail\WelcomeMail;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
@@ -291,15 +292,25 @@ public function showResetForm($token)
 }
 
 // Handle the password reset
+
+
 public function resetPasswordPost(Request $request)
 {
-    $request->validate([
+    $validator = Validator::make($request->all(), [
         'email' => 'required|email',
         'code' => 'required|string',
-        'password' => 'required|confirmed|min:8',
+        'password' => 'required|string|min:8|confirmed',
     ]);
 
-    $reset = \App\Models\PasswordResetCode::where('email', $request->email)
+    if ($validator->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => $validator->errors()->first(),
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $reset = PasswordResetCode::where('email', $request->email)
         ->where('code', $request->code)
         ->where('expires_at', '>', now())
         ->first();
@@ -322,6 +333,7 @@ public function resetPasswordPost(Request $request)
     $user->forceFill([
         'password' => Hash::make($request->password)
     ])->setRememberToken(Str::random(60));
+
     $user->save();
 
     // Delete the used code
@@ -334,6 +346,7 @@ public function resetPasswordPost(Request $request)
         'message' => 'Password reset successfully',
     ], 200);
 }
+
 
 public function changePassword(Request $request)
 {
