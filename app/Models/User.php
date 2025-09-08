@@ -13,6 +13,15 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
+    /**
+     * Send the password reset notification with a custom frontend URL.
+     * Update 'https://your-frontend.com' to your actual frontend URL.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $url = 'https://hovertask.com/reset-password/' . $token . '?email=' . urlencode($this->email);
+        $this->notify(new \App\Notifications\ResetPasswordNotification($url));
+    }
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRolesAndPermissions, HasApiTokens;
 

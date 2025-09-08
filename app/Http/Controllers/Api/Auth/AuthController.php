@@ -46,7 +46,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation error',
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 400);
         }
@@ -101,7 +101,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation error',
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors(),
             ], 400);
         }
@@ -180,7 +180,7 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Validation error',
+                'message' => $validator->errors()->first(),
                 'errors' => $validator->errors()
             ], 400);
         }
@@ -211,7 +211,7 @@ public function updatePassword(Request $request)
     if ($validator->fails()) {
         return response()->json([
             'status' => false,
-            'message' => 'Validation error',
+            'message' => $validator->errors()->first(),
             'errors' => $validator->errors(),
         ], 400);
     }
@@ -239,35 +239,51 @@ public function updatePassword(Request $request)
 
 
     public function resetPassword(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'email' => 'required|email',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json([
-            'status' => false,   
-            'message' => 'Validation error',
-            'errors' => $validator->errors()
-        ], 400);
-    }
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 400);
+        }
 
-    $validatedData = $validator->validated();
+        $validatedData = $validator->validated();
+        $email = $validatedData['email'];
 
-    $status = Password::sendResetLink(['email' => $validatedData['email']]);
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
 
-    if ($status === Password::RESET_LINK_SENT) {
+        // Generate a 6-digit code
+        $code = rand(100000, 999999);
+        $expiresAt = now()->addMinutes(10);
+
+        // Store or update the code
+        \App\Models\PasswordResetCode::updateOrCreate(
+            ['email' => $email],
+            ['code' => $code, 'expires_at' => $expiresAt]
+        );
+
+        // Send code via email (simple example, you may want a notification class)
+        Mail::raw("Your password reset code is: $code", function ($message) use ($email) {
+            $message->to($email)
+                ->subject('Your Password Reset Code');
+        });
+
         return response()->json([
             'status' => true,
-            'message' => 'Password reset link sent to your email',
+            'message' => 'Password reset code sent to your email',
         ]);
     }
-
-    return response()->json([
-        'status' => false,
-        'message' => 'Unable to send password reset link',
-    ], 500);
-}
 
 public function showResetForm($token)
 {
@@ -278,27 +294,45 @@ public function showResetForm($token)
 public function resetPasswordPost(Request $request)
 {
     $request->validate([
-        'token' => 'required',
         'email' => 'required|email',
+        'code' => 'required|string',
         'password' => 'required|confirmed|min:8',
     ]);
 
-    $status = Password::reset(
-        $request->only('email', 'password', 'password_confirmation', 'token'),
-        function ($user, $password) {
-            $user->forceFill([
-                'password' => Hash::make($password)
-            ])->setRememberToken(Str::random(60));
+    $reset = \App\Models\PasswordResetCode::where('email', $request->email)
+        ->where('code', $request->code)
+        ->where('expires_at', '>', now())
+        ->first();
 
-            $user->save();
+    if (!$reset) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Invalid or expired code',
+        ], 400);
+    }
 
-            event(new PasswordReset($user));
-        }
-    );
+    $user = User::where('email', $request->email)->first();
+    if (!$user) {
+        return response()->json([
+            'status' => false,
+            'message' => 'User not found',
+        ], 404);
+    }
 
-    return $status === Password::PASSWORD_RESET
-        ? response()->json(['message' => 'Password reset successfully'], 200)
-        : response()->json(['message' => 'Unable to reset password'], 400);
+    $user->forceFill([
+        'password' => Hash::make($request->password)
+    ])->setRememberToken(Str::random(60));
+    $user->save();
+
+    // Delete the used code
+    $reset->delete();
+
+    event(new \Illuminate\Auth\Events\PasswordReset($user));
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Password reset successfully',
+    ], 200);
 }
 
 public function changePassword(Request $request)
@@ -313,7 +347,7 @@ public function changePassword(Request $request)
     if ($validator->fails()) {
         return response()->json([
             'status' => false,   
-            'message' => 'Validation error',
+            'message' => $validator->errors()->first(),
             'errors' => $validator->errors()
         ], 400);
     }
@@ -348,7 +382,7 @@ public function banks(Request $request)
     if ($validator->fails()) {
         return response()->json([
             'status' => false,   
-            'message' => 'Validation error',
+            'message' => $validator->errors()->first(),
             'errors' => $validator->errors()
         ], 400);
     }
