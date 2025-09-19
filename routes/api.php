@@ -25,12 +25,14 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SocialConnectController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
+
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 //Route::post('/send-reset-link', [AuthController::class, 'resetPasswordRequest'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/roles', [AuthController::class, 'roles']);
+Route::post('/verify-email-code', [AuthController::class, 'verifyEmailCode'])->name('verify.email.code');
 
 Route::get('/test-mail', function () {
     \Mail::raw('This is a test email', function ($message) {

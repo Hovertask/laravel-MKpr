@@ -19,10 +19,63 @@ use App\Notifications\BankInfomationUpdatedNotification;
 
 class AuthController extends Controller
 {
+
+    
     protected $user;
+    
     public function __construct(IUserRepository $user)
     {
         $this->user = $user;
+    }
+
+
+    public function verifyEmailCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'code' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $validated = $validator->validated();
+        $user = User::where('email', $validated['email'])->first();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        $verification = \App\Models\EmailVerificationCode::where('user_id', $user->id)
+            ->where('code', $validated['code'])
+            ->where('expires_at', '>', now())
+            ->first();
+
+        if (!$verification) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid or expired verification code',
+            ], 400);
+        }
+
+        // Mark user as verified
+        $user->email_verified_at = now();
+        $user->save();
+
+        // Delete the used code
+        $verification->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Email verified successfully',
+        ], 200);
     }
 
     public function register(Request $request)
@@ -68,27 +121,38 @@ class AuthController extends Controller
 
 
         $user = $this->user->create($validatedData);
-        $user->sendEmailVerificationNotification();
         $user->addRole($validatedData['role_id']);
         $token = $user->createToken('API Token')->plainTextToken;
         Mail::to($user->email)->send(new WelcomeMail($user));
 
+        // Generate verification code
+        $verificationCode = random_int(100000, 999999);
+        $expiresAt = now()->addMinutes(10);
+        \App\Models\EmailVerificationCode::create([
+            'user_id' => $user->id,
+            'code' => $verificationCode,
+            'expires_at' => $expiresAt,
+        ]);
+        // Send code via notification
+        $user->notify(new \App\Notifications\EmailVerificationCodeNotification($verificationCode));
+
         DB::commit();
-       if($user)
-       {
+        if($user)
+        {
+            // You will send the code via email in the next step
             return response()->json([
                 'status' => true,
-                'message' => 'User registered successfully, Kindly verify your email',
+                'message' => 'User registered successfully, Kindly verify your email. Verification code sent.',
                 'data' => $user,
                 'token' => $token,
             ], 201);
-       }
-       else{
+        }
+        else{
             return response()->json([
                 'status' => false,
                 'message' => 'User registration failed',
             ]);
-       }
+        }
        
     }
 
