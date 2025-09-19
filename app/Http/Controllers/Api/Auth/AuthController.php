@@ -18,6 +18,16 @@ use Illuminate\Support\Facades\Validator;
 use App\Notifications\BankInfomationUpdatedNotification;
 
 class AuthController extends Controller
+{
+
+    protected $user;
+    
+    public function __construct(IUserRepository $user)
+    {
+        $this->user = $user;
+    }
+
+    
     public function resendEmailVerificationCode(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -59,15 +69,6 @@ class AuthController extends Controller
             'status' => true,
             'message' => 'Verification code resent successfully',
         ], 200);
-    }
-{
-
-    
-    protected $user;
-    
-    public function __construct(IUserRepository $user)
-    {
-        $this->user = $user;
     }
 
 
