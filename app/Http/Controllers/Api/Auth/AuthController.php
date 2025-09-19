@@ -18,6 +18,48 @@ use Illuminate\Support\Facades\Validator;
 use App\Notifications\BankInfomationUpdatedNotification;
 
 class AuthController extends Controller
+    public function resendEmailVerificationCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'User not found',
+            ], 404);
+        }
+
+        // Delete any existing codes for this user
+        \App\Models\EmailVerificationCode::where('user_id', $user->id)->delete();
+
+        // Generate new code
+        $verificationCode = random_int(100000, 999999);
+        $expiresAt = now()->addMinutes(10);
+        \App\Models\EmailVerificationCode::create([
+            'user_id' => $user->id,
+            'code' => $verificationCode,
+            'expires_at' => $expiresAt,
+        ]);
+
+        // Send code via notification
+        $user->notify(new \App\Notifications\EmailVerificationCodeNotification($verificationCode));
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Verification code resent successfully',
+        ], 200);
+    }
 {
 
     

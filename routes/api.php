@@ -32,7 +32,9 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 //Route::post('/send-reset-link', [AuthController::class, 'resetPasswordRequest'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/roles', [AuthController::class, 'roles']);
+
 Route::post('/verify-email-code', [AuthController::class, 'verifyEmailCode'])->name('verify.email.code');
+Route::post('/resend-email-code', [AuthController::class, 'resendEmailVerificationCode'])->name('resend.email.code');
 
 Route::get('/test-mail', function () {
     \Mail::raw('This is a test email', function ($message) {
