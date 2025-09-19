@@ -111,7 +111,7 @@ Route::get('/wallet/verify-payment/{reference}', [WalletController::class, 'veri
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
     
-    Route::prefix('dashboard')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('dashboard')->middleware(['auth:sanctum', 'verified', 'check.membership'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/user', [DashboardController::class, 'userData'])->name('user.data');
         Route::post('/change-password', [AuthController::class, 'changePassword'])->name('change.password');
@@ -120,13 +120,13 @@ Route::prefix('v1')->group(function () {
         Route::put('/update-password', [AuthController::class, 'updatePassword'])->name('update.password');
     });
 
-     Route::prefix('wallet')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('wallet')->middleware(['auth:sanctum', 'verified', 'check.membership'])->group(function () {
         Route::post('/initialize-payment', [WalletController::class, 'initializePayment'])->name('wallet.initialize');
         //Route::get('/verify-payment', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
         Route::get('/balance', [WalletController::class, 'getBalance'])->name('wallet.balance');
     });
 
-    Route::prefix('payment')->middleware('auth:sanctum')->group(function () {
+    Route::prefix('payment')->middleware(['auth:sanctum', 'verified'])->group(function () {
         Route::post('/initialize-payment', [OrderController::class, 'pay']);
         //Route::post('/create-order', [OrderController::class, 'createOrder']);
     });

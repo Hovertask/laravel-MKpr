@@ -26,18 +26,13 @@ class CheckMembership
 
         // Check if user has is_member field and if it's false
         if (!$user->is_member) {
-            // You can customize the response based on your needs:
-            
-            // Option 1: Redirect to a specific page with error message
-            // return redirect()->route('membership.required')
-            //     ->with('error', 'You need an active membership to access this page.');
-            
-            // Option 2: Return a 403 Forbidden response
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Access denied. Active membership required.'
+                ], 403);
+            }
             abort(403, 'Access denied. Active membership required.');
-            
-            // Option 3: Redirect to home with flash message
-            // return redirect()->route('home')
-            //     ->with('warning', 'Please upgrade your membership to access this feature.');
         }
 
         return $next($request);
