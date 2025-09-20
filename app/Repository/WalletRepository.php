@@ -125,15 +125,20 @@ class WalletRepository implements IWalletRepository
                 ['balance' => 0]
             );
 
+            // Deduct 100 from the amount
+            $netAmount = $amount - 100;
+            if ($netAmount <= 0) {
+                throw new Exception("Amount after deduction must be greater than zero.");
+            }
+
             // Check if user has a referral
             $referral = Referral::where('referee_id', $user->id)->first();
 
-            // Case 1: User is not a member AND has a referral with pending reward
             if (!$user->is_member && $referral && $referral->reward_status == 'pending') {
                 $referrer = User::find($referral->referrer_id);
 
                 if ($referrer && $referrer->is_member) {
-                    $halfAmount = $amount / 2;
+                    $halfAmount = $netAmount / 2;
 
                     // Update referrer's wallet
                     $referrerWallet = Wallet::firstOrCreate(
@@ -144,22 +149,26 @@ class WalletRepository implements IWalletRepository
                     $referrerWallet->save();
 
                     // Update referral status
-                    $referral->reward_status = 'paid';
+                    $referral->reward_status = 'paid'; // Referrer is paid only once
                     $referral->save();
 
-                    // Update user status
+                    // Update user status and credit half to user
+                    $wallet->balance += $halfAmount;
+                    $wallet->save();
+
+                    $user->balance += $halfAmount;
                     $user->is_member = true;
                     $user->save();
                 }
+            } else {
+                // No referral, credit all netAmount to user
+                $wallet->balance += $netAmount;
+                $wallet->save();
+
+                $user->balance += $netAmount;
+                $user->is_member = true;
+                $user->save();
             }
-
-            // Case 2: User is already a member (or referral doesn't exist)
-            $wallet->balance += $amount;
-            $wallet->save();
-
-            $user->balance += $amount;
-            $user->is_member = true;
-            $user->save();
 
             DB::commit();
 
