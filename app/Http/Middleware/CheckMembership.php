@@ -18,10 +18,12 @@ class CheckMembership
     public function handle(Request $request, Closure $next)
     {
         // Check if user is authenticated
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
+        if ($request->expectsJson() || $request->is('api/*')) {
+    return response()->json([
+        'status' => false,
+        'message' => 'Unauthorized. Please log in.'
+    ], 401);
+     }
         $user = Auth::user();
 
         // Check if user has is_member field and if it's false
