@@ -139,7 +139,7 @@ Route::prefix('v1')->group(function () {
 });
 
 //protected routes TASK
-Route::prefix('v1')->middleware('auth:sanctum', 'verified', 'check.membership')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::prefix('tasks')->group(function () {
         Route::post('/create-task', [TaskController::class, 'createTask'])->name('create.task');
         Route::post('/update-task/{id}', [TaskController::class, 'updateTask'])->name('update.task');
