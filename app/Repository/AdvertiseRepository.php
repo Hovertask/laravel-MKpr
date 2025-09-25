@@ -86,12 +86,15 @@ class AdvertiseRepository implements IAdvertiseRepository
     }
 
     public function authUserAds()
-    {
-        $user = auth()->user();
-        $userAds = Advertise::with('user')->get();
+{
+    $user = auth()->user();
 
-        return $userAds;
-    }
+    $userAds = Advertise::with('user')
+        ->where('user_id', $user->id) // filter ads by current user
+        ->get();
+
+    return $userAds;
+}
 
     public function updateAds(array $data, $request, int $id)
     {
