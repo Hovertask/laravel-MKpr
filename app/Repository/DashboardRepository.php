@@ -27,7 +27,7 @@ class DashboardRepository implements IDashboardRepository
 
     public function getUserData()
 {
-    $user = User::withCount(['advertise', 'tasks'])
+    $user = User::withCount(['advertise', 'task'])
         ->where('id', auth()->id())
         ->first();
 
