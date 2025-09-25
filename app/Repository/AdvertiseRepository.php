@@ -14,11 +14,17 @@ class AdvertiseRepository implements IAdvertiseRepository
     }
 
     public function show($id)
-    {
-        $ads = Advertise::with('advertiseImages')->findOrFail($id);
+{
+    $ads = Advertise::with([
+        'user',
+        'participants',
+        'advertiseImages',
+        'userTasks.user' // include user details on allocations
+    ])->findOrFail($id);
 
-        return $ads;
-    }
+    return $ads;
+}
+
 
     public function create(array $data, Request $request)
     {

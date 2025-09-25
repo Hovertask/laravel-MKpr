@@ -55,24 +55,53 @@ class AdvertiseController extends Controller
         ]);
     }
 
+
+
     public function show($id)
-    {
-        $showAds = $this->AdvertiseRepository->show($id);
+{
+    $showadvert = $this->AdvertiseRepository->show($id);
 
-        if(!$showAds)
-        {
-            return response()->json([
-                'status' => false,
-                'Mesaage' => 'Ads not found'
-            ]);
-        }
-
+    if (!$showadvert) {
         return response()->json([
-            'status' => true,
-            'message' => 'Ads retrieved successfully',
-            'data' => $showAds,
-        ], 200);
+            'status' => false,
+            'message' => 'Ads not found',
+        ], 404);
     }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Ads retrieved successfully',
+        'data' => [
+            'id' => $showadvert->id,
+            'title' => $showadvert->title,
+            'description' => $showadvert->description,
+            'amount_paid' => $showadvert->amount_paid ?? 0,
+            'link' => $showadvert->link ?? null,
+            'admin_approval_status' => $showadvert->admin_approval_status,
+            'created_at' => $showadvert->created_at->toDateTimeString(),
+
+            // computed stats
+            'stats' => [
+                'total_participants' => $showadvert->userTasks->count(),
+                'accepted' => $showadvert->userTasks->where('status', 'accepted')->count(),
+                'rejected' => $showadvert->userTasks->where('status', 'rejected')->count(),
+            ],
+
+            // mapped participants
+            'participants' => $showadvert->userTasks->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'name' => $task->user->name ?? 'Unknown',
+                    'handle' => '@' . ($task->user->username ?? 'unknown'),
+                    'proof_link' => $task->proof_link,
+                    'status' => $task->status,
+                    'submitted_at' => $task->created_at->toDateTimeString(),
+                ];
+            }),
+        ],
+    ], 200);
+}
+
 
     public function authUserAds()
     {

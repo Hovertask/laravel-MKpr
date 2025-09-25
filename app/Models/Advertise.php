@@ -28,4 +28,10 @@ class Advertise extends Model
     {
         return $this->hasMany(AdvertiseImages::class);
     }
+
+    public function userTasks()
+    {
+        return $this->hasMany(UserTask::class);
+    }
+
 }

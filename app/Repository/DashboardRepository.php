@@ -25,8 +25,13 @@ class DashboardRepository implements IDashboardRepository
         return compact('wallet', 'tasks', 'totalCompletedTasks', 'totalOrders', 'resellers', 'products');
     }
 
-    public function getUserData() {
-        $user = User::where('id', auth()->id())->first();
-        return $user;
-    }
+    public function getUserData()
+{
+    $user = User::withCount(['advertise', 'tasks'])
+        ->where('id', auth()->id())
+        ->first();
+
+    return $user;
+}
+
 }

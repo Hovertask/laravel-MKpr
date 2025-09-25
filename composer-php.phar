@@ -1,0 +1,46 @@
+/Applications/XAMPP/xamppfiles/bin/php /usr/local/bin/composer install
+/Applications/XAMPP/xamppfiles/bin/php artisan key;generate
+/Applications/XAMPP/xamppfiles/bin/php artisan migrate
+/Applications/XAMPP/xamppfiles/bin/php artisan db:seed
+/Applications/XAMPP/xamppfiles/bin/php artisan storage:link
+/Applications/XAMPP/xamppfiles/bin/php artisan vendor:publish --tag=charts_config
+/Applications/XAMPP/xamppfiles/bin/php artisan notifications:table
+
+
+/Applications/XAMPP/xamppfiles/bin/php artisan serve 
+/Applications/XAMPP/xamppfiles/bin/php artisan make:controller PartnerController
+/Applications/XAMPP/xamppfiles/bin/php artisan make:model Partner
+/Applications/XAMPP/xamppfiles/bin/php artisan make:migration add_start_time_and_end_time_to_revision_sessions_table
+/Applications/XAMPP/xamppfiles/bin/php artisan cache:clear
+
+/Applications/XAMPP/xamppfiles/bin/php artisan make:middleware RoleMiddleware
+/Applications/XAMPP/xamppfiles/bin/php artisan make:notification BaseNotification
+
+/Applications/XAMPP/xamppfiles/bin/php artisan make:seeder
+/Applications/XAMPP/xamppfiles/bin/php artisan make:factory
+/Applications/XAMPP/xamppfiles/bin/php artisan make:command
+/Applications/XAMPP/xamppfiles/bin/php artisan make:job
+/Applications/XAMPP/xamppfiles/bin/php artisan make:listener
+/Applications/XAMPP/xamppfiles/bin/php artisan make:event
+/Applications/XAMPP/xamppfiles/bin/php artisan make:notification
+/Applications/XAMPP/xamppfiles/bin/php artisan make:mail
+/Applications/XAMPP/xamppfiles/bin/php artisan make:policy RevisionSessionPolicy --model=RevisionSession
+/Applications/XAMPP/xamppfiles/bin/php artisan make:resource
+/Applications/XAMPP/xamppfiles/bin/php artisan make:rule
+/Applications/XAMPP/xamppfiles/bin/php artisan make:cast
+/Applications/XAMPP/xamppfiles/bin/php artisan make:channel
+/Applications/XAMPP/xamppfiles/bin/php artisan make:component
+/Applications/XAMPP/xamppfiles/bin/php artisan make:job
+/Applications/XAMPP/xamppfiles/bin/php artisan make:listener
+/Applications/XAMPP/xamppfiles/bin/php artisan make:mail
+/Applications/XAMPP/xamppfiles/bin/php artisan make:notification
+/Applications/XAMPP/xamppfiles/bin/php artisan make:observer
+/Applications/XAMPP/xamppfiles/bin/php artisan make:policy
+/Applications/XAMPP/xamppfiles/bin/php artisan make:provider
+/Applications/XAMPP/xamppfiles/bin/php artisan make:request
+/Applications/XAMPP/xamppfiles/bin/php artisan make:rule
+/Applications/XAMPP/xamppfiles/bin/php artisan make:seeder
+/Applications/XAMPP/xamppfiles/bin/php artisan make:test
+/Applications/XAMPP/xamppfiles/bin/php artisan make:unit-test
+/Applications/XAMPP/xamppfiles/bin/php artisan make:livewire
+/Applications/XAMPP/xamppfiles/bin/php artisan make:livewire-component
