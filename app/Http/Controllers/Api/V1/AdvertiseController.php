@@ -27,10 +27,12 @@ class AdvertiseController extends Controller
 
 
 
-    public function create(Request $request)
+public function create(Request $request)
 {
-    $validator = Validator::make($request->all(), [
-        'title' => 'required|string|max:255',
+    $type = $request->input('type'); // engagement OR advert
+
+    // Default rules
+    $rules = [
         'religion' => 'nullable|max:255',
         'location' => 'nullable|max:255',
         'gender' => 'nullable|max:20',
@@ -40,11 +42,26 @@ class AdvertiseController extends Controller
         'video_path' => 'nullable',
         'description' => 'required|string|min:20',
         'payment_method' => 'nullable|string|max:20',
-        'number_of_participants' => 'required|integer|min:1',
-        'payment_per_task' => 'required|numeric|min:1',
         'estimated_cost' => 'required|numeric|min:1',
-        'deadline' => 'required|date|after:today',
-    ]);
+    ];
+
+    if ($type === 'engagement') {
+        $rules = array_merge($rules, [
+            'title' => 'nullable|string|max:255',
+            'number_of_participants' => 'required|integer|min:1',
+            'payment_per_task' => 'required|numeric|min:1',
+            'deadline' => 'required|date|after:today',
+        ]);
+    } else { // default to advert
+        $rules = array_merge($rules, [
+            'title' => 'required|string|max:255',
+            'number_of_participants' => 'nullable|integer|min:1',
+            'payment_per_task' => 'nullable|numeric|min:1',
+            'deadline' => 'nullable|date|after:today',
+        ]);
+    }
+
+    $validator = Validator::make($request->all(), $rules);
 
     if ($validator->fails()) {
         return response()->json(['error' => $validator->errors()], 400);
@@ -58,6 +75,7 @@ class AdvertiseController extends Controller
         'data' => $createAds,
     ]);
 }
+
 
 
 
