@@ -29,7 +29,7 @@ class AdvertiseRepository implements IAdvertiseRepository
 {
     $user = auth()->user();
 
-    $$createAds = Advertise::create([
+    $createAds = Advertise::create([
     'user_id' => $user->id,
     'title' => $data['title'] ?? null,
     'platforms' => $data['platforms'] ?? null,
