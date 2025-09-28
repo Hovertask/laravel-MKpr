@@ -12,10 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('advertises', function (Blueprint $table) {
-            $table->unsignedInteger('number_of_participants')->after('no_of_status_post');
-            $table->decimal('payment_per_task', 10, 2)->after('number_of_participants');
-            $table->decimal('estimated_cost', 12, 2)->after('payment_per_task');
-            $table->date('deadline')->after('estimated_cost');
+            $table->unsignedInteger('number_of_participants')->nullable()->after('no_of_status_post');
+            $table->decimal('payment_per_task', 10, 2)->nullable()->after('number_of_participants');
+            $table->decimal('estimated_cost', 12, 2)->nullable()->after('payment_per_task');
+            $table->date('deadline')->nullable()->after('estimated_cost');
+
         });
     }
 
