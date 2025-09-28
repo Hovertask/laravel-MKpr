@@ -26,9 +26,10 @@ class AdvertiseRepository implements IAdvertiseRepository
 
 
     public function create(array $data, Request $request)
-    {
-        $user = auth()->user();
-       $createAds = Advertise::create([
+{
+    $user = auth()->user();
+
+    $createAds = Advertise::create([
         'user_id' => $user->id,
         'title' => $data['title'],
         'platforms' => $data['platforms'],
@@ -38,22 +39,23 @@ class AdvertiseRepository implements IAdvertiseRepository
         'no_of_status_post' => $data['no_of_status_post'],
         'payment_method' => $data['payment_method'],
         'description' => $data['description'],
-       ]);
+        'number_of_participants' => $data['number_of_participants'],
+        'payment_per_task' => $data['payment_per_task'],
+        'estimated_cost' => $data['estimated_cost'],
+        'deadline' => $data['deadline'],
+    ]);
 
-
-       if ($request->hasFile('file_path')) {
-        //dd($request->file('file_path'));
+    // ✅ File uploads (unchanged)
+    if ($request->hasFile('file_path')) {
         $files = $request->file('file_path');
-    
-        // Normalize to array (even if it's one file)
         $files = is_array($files) ? $files : [$files];
-    
+
         foreach ($files as $file) {
             if ($file->isValid()) {
                 $uploadedFile = Cloudinary::upload($file->getRealPath(), [
                     'folder' => 'Adverts'
                 ]);
-    
+
                 $createAds->advertiseImages()->create([
                     'file_path' => $uploadedFile->getSecurePath(),
                     'public_id' => $uploadedFile->getPublicId()
@@ -61,19 +63,18 @@ class AdvertiseRepository implements IAdvertiseRepository
             }
         }
     }
-    
-    
+
     if ($request->hasFile('video_path')) {
         $videos = $request->file('video_path');
         $videos = is_array($videos) ? $videos : [$videos];
-    
+
         foreach ($videos as $video) {
             if ($video->isValid()) {
                 $uploadedFile = Cloudinary::upload($video->getRealPath(), [
                     'folder' => 'adverts',
                     'resource_type' => 'video'
                 ]);
-    
+
                 $createAds->advertiseImages()->create([
                     'video_path' => $uploadedFile->getSecurePath(),
                     'public_id' => $uploadedFile->getPublicId()
@@ -82,8 +83,10 @@ class AdvertiseRepository implements IAdvertiseRepository
         }
     }
 
-       return $createAds;
-    }
+    return $createAds;
+}
+
+
 
     public function authUserAds()
 {

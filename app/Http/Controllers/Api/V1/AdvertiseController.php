@@ -25,35 +25,40 @@ class AdvertiseController extends Controller
         ]);
     }
 
+
+
     public function create(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'religion' => 'nullable|max:255',
-            'location' => 'nullable|max:255',
-            'gender' => 'nullable|max:20',
-            'platforms' => 'required',
-            'no_of_status_post' => 'nullable|integer',
-            // 'file_path' => 'nullable|file|mimes:jpeg,png,jpg,gif|max:2048',
-            // 'video_path' => 'nullable|file|mimes:mp4,mov,avi,gif|max:10240',
-            'file_path' => 'nullable',
-            'video_path' => 'nullable',
-            'description' => 'required|string|min:20',
-            'payment_method' => 'nullable|string|max:20',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'title' => 'required|string|max:255',
+        'religion' => 'nullable|max:255',
+        'location' => 'nullable|max:255',
+        'gender' => 'nullable|max:20',
+        'platforms' => 'required',
+        'no_of_status_post' => 'nullable|integer',
+        'file_path' => 'nullable',
+        'video_path' => 'nullable',
+        'description' => 'required|string|min:20',
+        'payment_method' => 'nullable|string|max:20',
+        'number_of_participants' => 'required|integer|min:1',
+        'payment_per_task' => 'required|numeric|min:1',
+        'estimated_cost' => 'required|numeric|min:1',
+        'deadline' => 'required|date|after:today',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
-        }
-
-        $createAds = $this->AdvertiseRepository->create($request->all(), $request);
-
-        return response()->json([
-            'status' => true,
-            'Message' => 'Ads Created successfully',
-            'data' => $createAds,
-        ]);
+    if ($validator->fails()) {
+        return response()->json(['error' => $validator->errors()], 400);
     }
+
+    $createAds = $this->AdvertiseRepository->create($request->all(), $request);
+
+    return response()->json([
+        'status' => true,
+        'Message' => 'Ads Created successfully',
+        'data' => $createAds,
+    ]);
+}
+
 
 
 
