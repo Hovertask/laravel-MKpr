@@ -29,21 +29,22 @@ class AdvertiseRepository implements IAdvertiseRepository
 {
     $user = auth()->user();
 
-    $createAds = Advertise::create([
-        'user_id' => $user->id,
-        'title' => $data['title'],
-        'platforms' => $data['platforms'],
-        'gender' => $data['gender'],
-        'religion' => $data['religion'],
-        'location' => $data['location'],
-        'no_of_status_post' => $data['no_of_status_post'],
-        'payment_method' => $data['payment_method'],
-        'description' => $data['description'],
-        'number_of_participants' => $data['number_of_participants'],
-        'payment_per_task' => $data['payment_per_task'],
-        'estimated_cost' => $data['estimated_cost'],
-        'deadline' => $data['deadline'],
-    ]);
+    $$createAds = Advertise::create([
+    'user_id' => $user->id,
+    'title' => $data['title'] ?? null,
+    'platforms' => $data['platforms'] ?? null,
+    'gender' => $data['gender'] ?? null,
+    'religion' => $data['religion'] ?? null,
+    'location' => $data['location'] ?? null,
+    'no_of_status_post' => $data['no_of_status_post'] ?? null,
+    'payment_method' => $data['payment_method'] ?? null,
+    'description' => $data['description'] ?? null,
+    'number_of_participants' => $data['number_of_participants'] ?? null,
+    'payment_per_task' => $data['payment_per_task'] ?? null,
+    'estimated_cost' => $data['estimated_cost'] ?? null,
+    'deadline' => $data['deadline'] ?? null,
+]);
+
 
     // ✅ File uploads (unchanged)
     if ($request->hasFile('file_path')) {
