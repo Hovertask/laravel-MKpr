@@ -5,7 +5,10 @@
 /Applications/XAMPP/xamppfiles/bin/php artisan storage:link
 /Applications/XAMPP/xamppfiles/bin/php artisan vendor:publish --tag=charts_config
 /Applications/XAMPP/xamppfiles/bin/php artisan notifications:table
+/Applications/XAMPP/xamppfiles/bin/php artisan make:migration create_user_tasks_table
 
+/Applications/XAMPP/xamppfiles/bin/php artisan make:model UserTask
+/Applications/XAMPP/xamppfiles/bin/php artisan make:migration add_participants_payment_deadline_to_advertises_table --table=advertises
 
 /Applications/XAMPP/xamppfiles/bin/php artisan serve 
 /Applications/XAMPP/xamppfiles/bin/php artisan make:controller PartnerController

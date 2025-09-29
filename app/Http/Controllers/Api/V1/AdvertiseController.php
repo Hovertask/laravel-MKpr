@@ -199,4 +199,52 @@ public function create(Request $request)
             'data' => $delete,
         ]);
     }
+
+
+    public function payAdvertFee(Request $request)
+{
+    $user = $request->user();
+
+    // ✅ Already paid
+    if ($user->has_paid_advert_fee) {
+        return response()->json([
+            'message' => 'You have already paid the advert setup fee.'
+        ], 400);
+    }
+
+    // ✅ Get wallet
+    $wallet = \App\Models\Wallet::where('user_id', $user->id)->firstOrFail();
+
+    // ✅ Insufficient balance
+    if ($wallet->balance < 500) {
+        return response()->json([
+            'message' => 'Insufficient balance. Please fund your wallet.'
+        ], 400);
+    }
+
+    // ✅ Deduct from wallet
+    $wallet->balance -= 500;
+    $wallet->save();
+
+    // ✅ Mirror wallet balance to user table
+    $user->balance = $wallet->balance;
+    $user->has_paid_advert_fee = true;
+    $user->save();
+
+    // ✅ Log transaction
+    \App\Models\Transaction::create([
+        'user_id'       => $user->id,
+        'amount'        => -500,
+        'type'          => 'debit',
+        'status'        => 'succesfull',
+        'description'   => 'One-time advert setup fee',
+    ]);
+
+    return response()->json([
+        'message'           => 'Advert setup fee paid successfully.',
+        'balance'           => $wallet->balance,
+        'has_paid_advert_fee' => true,
+    ], 200);
+}
+
 }
