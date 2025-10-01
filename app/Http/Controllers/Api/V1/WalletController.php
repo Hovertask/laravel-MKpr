@@ -93,7 +93,7 @@ class WalletController extends Controller
         ]);
 
         // Notify user BEFORE returning
-        $user->notify(new \App\Notifications\WalletFundedNotification($paymentData));
+        //$user->notify(new \App\Notifications\WalletFundedNotification($paymentData));
 
         // Return consistent success shape
         return response()->json([
