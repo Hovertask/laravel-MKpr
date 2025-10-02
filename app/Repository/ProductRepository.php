@@ -190,15 +190,18 @@ class ProductRepository implements IProductRepository
         return Product::with('productImages')->latest()->get();	
     }
 
+    
     public function show(?int $productId, ?string $resellerId = null)
-    {
-        $product = Product::where('id', $productId)->firstOrFail();
-        if (!is_null($resellerId)) {
-            $product->reseller = $resellerId;
-        }
+{
+    $product = Product::with('productImages')->where('id', $productId)->firstOrFail();
 
-        return $product;
+    if (!is_null($resellerId)) {
+        $product->reseller = $resellerId;
     }
+
+    return $product;
+}
+
 
     public function authUserProducts(){
         return Product::where('user_id', auth()->user()->id)->latest()->get();
