@@ -224,9 +224,11 @@ class ProductRepository implements IProductRepository
         
     }  
 
+
+
 public function resellerLink($id): array
 {
-    $product = Product::findOrFail($id);
+    $product = Product::with('product_images')->findOrFail($id);
     $userId = auth()->id();
 
     // Check if link already exists for this user + product
@@ -238,7 +240,6 @@ public function resellerLink($id): array
         $resellerIdentifier = $existingLink->unique_link;
         $commission = $existingLink->commission_rate;
     } else {
-        // Generate only if it doesn’t exist
         $resellerIdentifier = $this->generateUniqueLink(); 
         $commission = 10.0;
 
@@ -250,11 +251,8 @@ public function resellerLink($id): array
         ]);
     }
 
-    // Generate URL with reseller parameter
-    $resellerUrl = URL::route('product.show', [
-        'id' => $product->id,
-        'reseller' => $resellerIdentifier,
-    ]);
+    // Build **frontend marketplace link**
+    $resellerUrl = "https://pp.hovertask.com/marketplace/p/{$product->id}?reseller={$resellerIdentifier}";
 
     return [
         'product' => $product,
