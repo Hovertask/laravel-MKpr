@@ -11,7 +11,7 @@ class PaystackRepository
 
     public function __construct()
     {
-        $this->secret = config('services.paystack.secret');
+        $this->secret = config('services.paystack.secret_key');
         $this->baseUrl = config('services.paystack.base_url', 'https://api.paystack.co');
     }
 
