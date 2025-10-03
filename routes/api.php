@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SocialConnectController;
 use App\Http\Controllers\Api\V1\ReferralController;
+use App\Http\Controllers\Api\V1\WithdrawalController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
@@ -136,6 +137,11 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('/referrals', [ReferralController::class, 'index'])->name('api.referrals.index');
 });
+
+
+   Route::middleware('auth:sanctum')->post('/withdraw', [WithdrawalController::class, 'withdraw']);
+
+
     //create order is automated when pay is called
 
     // Route::prefix('order')->middleware('auth:sanctum')->group(function (){
