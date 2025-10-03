@@ -8,7 +8,10 @@ use App\Repository\ReferralRepository;
 
 class ReferralController extends Controller
 {
-    protected ReferralRepository $repo;
+    /**
+     * @var ReferralRepository
+     */
+    protected $repo;
 
     public function __construct(ReferralRepository $repo)
     {
