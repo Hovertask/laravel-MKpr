@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\AdvertiseController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SocialConnectController;
+use App\Http\Controllers\Api\V1\ReferralController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
@@ -131,6 +132,10 @@ Route::prefix('v1')->group(function () {
         //Route::post('/create-order', [OrderController::class, 'createOrder']);
     });
 
+
+    Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/referrals', [ReferralController::class, 'index'])->name('api.referrals.index');
+});
     //create order is automated when pay is called
 
     // Route::prefix('order')->middleware('auth:sanctum')->group(function (){
