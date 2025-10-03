@@ -190,7 +190,7 @@ class ProductRepository implements IProductRepository
         return Product::with('productImages')->latest()->get();	
     }
 
-    
+
     public function show(?int $productId, ?string $resellerId = null)
 {
     $product = Product::with('productImages')->where('id', $productId)->firstOrFail();
@@ -224,29 +224,53 @@ class ProductRepository implements IProductRepository
         
     }  
 
-    public function resellerLink($id): array
-    {
-        $product = Product::findOrFail($id);
-        $resellerIdentifier = generateUniqueLink();
+public function resellerLink($id): array
+{
+    $product = Product::findOrFail($id);
+    $userId = auth()->id();
+
+    // Check if link already exists for this user + product
+    $existingLink = ResellerLink::where('user_id', $userId)
+        ->where('product_id', $product->id)
+        ->first();
+
+    if ($existingLink) {
+        $resellerIdentifier = $existingLink->unique_link;
+        $commission = $existingLink->commission_rate;
+    } else {
+        // Generate only if it doesn’t exist
+        $resellerIdentifier = $this->generateUniqueLink(); 
         $commission = 10.0;
 
-        ResellerLink::create([
-            'user_id' => auth()->user()->id,
+        $existingLink = ResellerLink::create([
+            'user_id' => $userId,
             'product_id' => $product->id,
             'unique_link' => $resellerIdentifier,
             'commission_rate' => $commission,
         ]);
-
-        $resellerUrl = URL::route('product.show', [
-            'id' => $product->id,
-            'reseller' => $resellerIdentifier,
-        ]);
-
-        return [
-            'product' => $product,
-            'reseller_url' => $resellerUrl,
-        ];
     }
+
+    // Generate URL with reseller parameter
+    $resellerUrl = URL::route('product.show', [
+        'id' => $product->id,
+        'reseller' => $resellerIdentifier,
+    ]);
+
+    return [
+        'product' => $product,
+        'reseller_url' => $resellerUrl,
+    ];
+}
+
+
+/**
+ * Generate unique reseller code
+ */
+private function generateUniqueLink(): string
+{
+    return substr(str_shuffle('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 10);
+}
+
 
     public function findResellerLink($productId, $resellerIdentifier): ?ResellerLink
     {
