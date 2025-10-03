@@ -228,7 +228,7 @@ class ProductRepository implements IProductRepository
 
 public function resellerLink($id): array
 {
-    $product = Product::with('product_images')->findOrFail($id);
+    $product = Product::with('productImages')->findOrFail($id);
     $userId = auth()->id();
 
     // Check if link already exists for this user + product
