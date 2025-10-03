@@ -13,40 +13,35 @@ use App\Notifications\ChangePasswordNotification;
 class UserRepository implements IUserRepository
 {
     public function create(array $data): User
-    {
-        //this is for string, keeping for future use
-        // do {
-        //     $referralCode = Str::upper(Str::random(8));
-        // } while (User::where('referral_code', $referralCode)->exists());
+{
+    // Generate unique referral code
+    do {
+        $referralCode = str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
+    } while (User::where('referral_code', $referralCode)->exists());
 
-        do {
-            $referralCode = str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
-        } while (User::where('referral_code', $referralCode)->exists());
+    $user = User::create([
+        'fname'           => $data['fname'],
+        'lname'           => $data['lname'],
+        'email'           => $data['email'],
+        'username'        => $data['username'],
+        'password'        => Hash::make($data['password']),
+        'country'         => $data['country'],
+        'currency'        => $data['currency'],
+        'phone'           => $data['phone'],
+        'avatar'          => $data['avatar'] ?? null,
+        'referal_username'=> $data['referal_username'] ?? null,
+        'referred_by'     => $data['referred_by'] ?? null,
+        'referral_code'   => $referralCode,
+    ]);
 
-
-        $user = User::create([
-            'fname' => $data['fname'],
-            'lname' => $data['lname'],
-            'email' => $data['email'],
-            'username' => $data['username'],
-            'password' => Hash::make($data['password']),
-            'country' => $data['country'],
-            'currency' => $data['currency'],
-            'phone' => $data['phone'],
-            'avatar' => $data['avatar'] ?? null,
-            'referal_username' => $data['referal_username'] ?? null,
-            //'referred_by' => $data['referred_by'] ?? null,
-            'referral_code' => $referralCode ?? null,
-        ]);
-        
-        if (isset($data['referal_username'])) {
-            $runame = User::where('username', $data['referal_username'])->first();
-            $this->trackReferral($runame->id, $user->id);
-           // $this->trackReferral($data['referred_by'], $user->id);
-        }
-
-        return $user;
+    // If referrer exists → track referral
+    if (!empty($data['referred_by'])) {
+        $this->trackReferral($data['referred_by'], $user->id);
     }
+
+    return $user;
+}
+
 
     public function updateProfile(array $data)
     {

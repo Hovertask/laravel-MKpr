@@ -122,82 +122,81 @@ class AuthController extends Controller
     }
 
     public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'fname' => 'required|string|max:255',
-            'lname' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'username' => 'required|string|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-            'country' => 'required|string|max:255',
-            'currency' => 'required|string|max:255',
-            'phone' => 'required|string|max:255',
-            'avatar' => 'nullable|string|max:255',
-            'referal_username' => 'nullable|string|max:255',
-            //'referral_code' => 'nullable|string|max:255',
-            'role_id' => 'required|string|max:255',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'fname'     => 'required|string|max:255',
+        'lname'     => 'required|string|max:255',
+        'email'     => 'required|string|email|max:255|unique:users',
+        'username'  => 'required|string|max:255|unique:users',
+        'password'  => 'required|string|min:6|confirmed',
+        'country'   => 'required|string|max:255',
+        'currency'  => 'required|string|max:255',
+        'phone'     => 'required|string|max:255',
+        'avatar'    => 'nullable|string|max:255',
+        'referal_username' => 'nullable|string|max:255',
+        'referral_code'    => 'nullable|string|max:255',
+        'role_id'   => 'required|string|max:255',
+    ]);
 
-        //dd($request->all());
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-                'errors' => $validator->errors()
-            ], 400);
-        }
-
-        
-        DB::beginTransaction();
-
-        $validatedData = $validator->validated();
-
-        // if (isset($validatedData['referral_code'])) {
-        //     $referrer = User::where('referral_code', $validatedData['referral_code'])->first();
-        //     if ($referrer) {
-        //         //dd($referrer);
-        //         $validatedData['referred_by'] = $referrer->id;
-        //         $validatedData['referral_username'] = $referrer->username;
-        //     }
-        // }
-
-
-        $user = $this->user->create($validatedData);
-        $user->addRole($validatedData['role_id']);
-        $token = $user->createToken('API Token')->plainTextToken;
-        Mail::to($user->email)->send(new WelcomeMail($user));
-
-        // Generate verification code
-        $verificationCode = random_int(100000, 999999);
-        $expiresAt = now()->addMinutes(10);
-        \App\Models\EmailVerificationCode::create([
-            'user_id' => $user->id,
-            'code' => $verificationCode,
-            'expires_at' => $expiresAt,
-        ]);
-        // Send code via notification
-        $user->notify(new \App\Notifications\EmailVerificationCodeNotification($verificationCode));
-
-        DB::commit();
-        if($user)
-        {
-            // You will send the code via email in the next step
-            return response()->json([
-                'status' => true,
-                'message' => 'User registered successfully, Kindly verify your email. Verification code sent.',
-                'data' => $user,
-                'token' => $token,
-            ], 201);
-        }
-        else{
-            return response()->json([
-                'status' => false,
-                'message' => 'User registration failed',
-            ]);
-        }
-       
+    if ($validator->fails()) {
+        return response()->json([
+            'status'  => false,
+            'message' => $validator->errors()->first(),
+            'errors'  => $validator->errors()
+        ], 400);
     }
+
+    DB::beginTransaction();
+
+    $validatedData = $validator->validated();
+
+    // 🔹 Check referral by CODE first
+    if (!empty($validatedData['referral_code'])) {
+        $referrer = User::where('referral_code', $validatedData['referral_code'])->first();
+        if ($referrer) {
+            $validatedData['referred_by'] = $referrer->id;
+            $validatedData['referal_username'] = $referrer->username;
+        }
+    }
+    // 🔹 If no code, fallback to USERNAME
+    elseif (!empty($validatedData['referal_username'])) {
+        $referrer = User::where('username', $validatedData['referal_username'])->first();
+        if ($referrer) {
+            $validatedData['referred_by'] = $referrer->id;
+        }
+    }
+
+    // Create user
+    $user = $this->user->create($validatedData);
+
+    // Assign role
+    $user->addRole($validatedData['role_id']);
+
+    // Generate auth token
+    $token = $user->createToken('API Token')->plainTextToken;
+
+    // Send Welcome Email
+    Mail::to($user->email)->send(new WelcomeMail($user));
+
+    // Generate & send verification code
+    $verificationCode = random_int(100000, 999999);
+    \App\Models\EmailVerificationCode::create([
+        'user_id'    => $user->id,
+        'code'       => $verificationCode,
+        'expires_at' => now()->addMinutes(10),
+    ]);
+    $user->notify(new \App\Notifications\EmailVerificationCodeNotification($verificationCode));
+
+    DB::commit();
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'User registered successfully. Kindly verify your email.',
+        'data'    => $user,
+        'token'   => $token,
+    ], 201);
+}
+
 
     public function login(Request $request)
     {

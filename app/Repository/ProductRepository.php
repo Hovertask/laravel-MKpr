@@ -252,7 +252,7 @@ public function resellerLink($id): array
     }
 
     // Build **frontend marketplace link**
-    $resellerUrl = "https://pp.hovertask.com/marketplace/p/{$product->id}?reseller={$resellerIdentifier}";
+    $resellerUrl = "https://app.hovertask.com/marketplace/p/{$product->id}?reseller={$resellerIdentifier}";
 
     return [
         'product' => $product,
