@@ -16,7 +16,7 @@ class ReferralController extends Controller
     public function __construct(ReferralRepository $repo)
     {
         $this->repo = $repo;
-        $this->middleware('auth:sanctum'); // ensure auth
+       
     }
 
     /**
