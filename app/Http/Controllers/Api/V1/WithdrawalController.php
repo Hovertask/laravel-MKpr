@@ -65,7 +65,7 @@ class WithdrawalController extends Controller
             $wallet->decrement('balance', $request->amount);
 
             // Also update user balance if you store it
-            $user->decrement('wallet_balance', $request->amount);
+            $user->decrement('balance', $request->amount);
 
             // Step 4: Log transaction
             Transaction::create([
