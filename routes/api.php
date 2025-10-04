@@ -110,8 +110,7 @@ Route::get('/email/check', function (Request $request) {
 
 Route::get('/wallet/verify-payment/{reference}', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
     Route::get('/payment/verify-payment/{reference}', [OrderController::class, 'verify']);
-    Route::post('/withdraw', [WithdrawalController::class, 'withdraw']);
-
+    
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
     
@@ -139,9 +138,11 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
     Route::get('/referrals', [ReferralController::class, 'index'])->name('api.referrals.index');
 });
-
-
+ 
    
+   Route::middleware('auth:sanctum')->group(function () {
+   Route::post('/withdraw', [WithdrawalController::class, 'withdraw']);
+});
 
     //create order is automated when pay is called
 
