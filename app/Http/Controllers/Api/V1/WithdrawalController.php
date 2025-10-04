@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Withdrawal;
 use App\Models\Transaction;
-use App\Repositories\PaystackRepository;
+use App\Repository\PaystackRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
