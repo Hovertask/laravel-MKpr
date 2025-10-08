@@ -20,7 +20,7 @@ class Task extends Model
 
     public function advert()
 {
-    return $this->belongsTo(Advertises::class, 'advert_id');
+    return $this->belongsTo(Advertise::class, 'advert_id');
 }
 
 }
