@@ -14,7 +14,7 @@ return new class extends Migration
     Schema::table('tasks', function (Blueprint $table) {
         $table->foreignId('advert_id')
             ->nullable()
-            ->constrained('adverts')
+            ->constrained('advertises')
             ->onDelete('cascade');
     });
 }
