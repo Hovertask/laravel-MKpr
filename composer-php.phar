@@ -11,6 +11,8 @@
 /Applications/XAMPP/xamppfiles/bin/php artisan make:migration add_participants_payment_deadline_to_advertises_table --table=advertises
 /Applications/XAMPP/xamppfiles/bin/php artisan make:migration add_has_paid_advert_fee_to_users_table --table=users
 /Applications/XAMPP/xamppfiles/bin/php artisan make:migration add_amount_to_referrals_table --table=referrals
+C:\xampp\php\php artisan make:migration add_advert_id_to_tasks_table --table=tasks
+\xampp\php artisan make:migration add_advert_id_to_tasks_table --table=tasks
 
 /Applications/XAMPP/xamppfiles/bin/php artisan serve 
 /Applications/XAMPP/xamppfiles/bin/php artisan make:controller PartnerController

@@ -34,4 +34,10 @@ class Advertise extends Model
         return $this->hasMany(UserTask::class);
     }
 
+    public function task()
+{
+    return $this->hasOne(Task::class, 'advert_id');
+}
+
+
 }

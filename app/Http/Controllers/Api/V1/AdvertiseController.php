@@ -27,53 +27,100 @@ class AdvertiseController extends Controller
 
 
 
-public function create(Request $request)
+use App\Repositories\AdvertiseRepository;
+use App\Repositories\TaskRepository;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
+class AdvertiseController extends Controller
 {
-    $type = $request->input('type'); // engagement OR advert
+    protected $AdvertiseRepository;
+    protected $TaskRepository;
 
-    // Default rules
-    $rules = [
-        'religion' => 'nullable|max:255',
-        'location' => 'nullable|max:255',
-        'gender' => 'nullable|max:20',
-        'platforms' => 'required',
-        'no_of_status_post' => 'nullable|integer',
-        'file_path' => 'nullable',
-        'video_path' => 'nullable',
-        'description' => 'required|string|min:20',
-        'payment_method' => 'nullable|string|max:20',
-        'estimated_cost' => 'required|numeric|min:1',
-    ];
-
-    if ($type === 'engagement') {
-        $rules = array_merge($rules, [
-            'title' => 'nullable|string|max:255',
-            'number_of_participants' => 'required|integer|min:1',
-            'payment_per_task' => 'required|numeric|min:1',
-            'deadline' => 'required|date|after:today',
-        ]);
-    } else { // default to advert
-        $rules = array_merge($rules, [
-            'title' => 'required|string|max:255',
-            'number_of_participants' => 'nullable|integer|min:1',
-            'payment_per_task' => 'nullable|numeric|min:1',
-            'deadline' => 'nullable|date|after:today',
-        ]);
+    public function __construct(AdvertiseRepository $AdvertiseRepository, TaskRepository $TaskRepository)
+    {
+        $this->AdvertiseRepository = $AdvertiseRepository;
+        $this->TaskRepository = $TaskRepository;
     }
 
-    $validator = Validator::make($request->all(), $rules);
+    public function create(Request $request)
+    {
+        $type = $request->input('type'); // engagement OR advert
 
-    if ($validator->fails()) {
-        return response()->json(['error' => $validator->errors()], 400);
+        // Validation rules
+        $rules = [
+            'religion' => 'nullable|max:255',
+            'location' => 'nullable|max:255',
+            'gender' => 'nullable|max:20',
+            'platforms' => 'required',
+            'no_of_status_post' => 'nullable|integer',
+            'file_path' => 'nullable',
+            'video_path' => 'nullable',
+            'description' => 'required|string|min:20',
+            'payment_method' => 'nullable|string|max:20',
+            'estimated_cost' => 'required|numeric|min:1',
+        ];
+
+        if ($type === 'engagement') {
+            $rules = array_merge($rules, [
+                'title' => 'nullable|string|max:255',
+                'number_of_participants' => 'required|integer|min:1',
+                'payment_per_task' => 'required|numeric|min:1',
+                'deadline' => 'required|date|after:today',
+            ]);
+        } else {
+            $rules = array_merge($rules, [
+                'title' => 'required|string|max:255',
+                'number_of_participants' => 'nullable|integer|min:1',
+                'payment_per_task' => 'nullable|numeric|min:1',
+                'deadline' => 'nullable|date|after:today',
+            ]);
+        }
+
+        $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        // ✅ Create advert first
+        $createAds = $this->AdvertiseRepository->create($request->all(), $request);
+
+        // ✅ If engagement, create linked task
+        $createTask = null;
+        if ($type === 'engagement') {
+            $taskData = [
+                'advert_id' => $createAds->id, // 🔗 link to advert
+                'title' => $request->input('title') ?? 'Engagement Task',
+                'description' => $request->input('description'),
+                'location' => $request->input('location'),
+                'gender' => $request->input('gender'),
+                'religion' => $request->input('religion'),
+                'no_of_participants' => $request->input('number_of_participants'),
+                'social_media_url' => $request->input('file_path'),
+                'type_of_comment' => 'General',
+                'payment_per_task' => $request->input('payment_per_task'),
+                'task_duration' => $request->input('deadline'),
+                'task_count_total' => $request->input('number_of_participants'),
+                'task_amount' => $request->input('estimated_cost'),
+                'task_type' => 'engagement',
+                'status' => 'pending',
+                'priority' => 'normal',
+                'category' => $request->input('category'),
+                'platforms' => $request->input('platforms'),
+            ];
+
+            $createTask = $this->TaskRepository->create($taskData);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Ad created successfully',
+            'data' => [
+                'advert' => $createAds,
+                'task' => $createTask,
+            ],
+        ]);
     }
-
-    $createAds = $this->AdvertiseRepository->create($request->all(), $request);
-
-    return response()->json([
-        'status' => true,
-        'Message' => 'Ads Created successfully',
-        'data' => $createAds,
-    ]);
 }
 
 

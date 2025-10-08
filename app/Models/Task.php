@@ -17,4 +17,10 @@ class Task extends Model
     protected $casts = [
         'platforms' => 'array',
     ];
+
+    public function advert()
+{
+    return $this->belongsTo(Advert::class, 'advert_id');
+}
+
 }
