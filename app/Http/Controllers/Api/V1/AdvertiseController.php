@@ -91,7 +91,7 @@ class AdvertiseController extends Controller
                 'task_duration' => $request->input('deadline'),
                 'task_count_total' => $request->input('number_of_participants'),
                 'task_amount' => $request->input('estimated_cost'),
-                'task_type' => 'engagement',
+                'task_type' => 1,
                 'status' => 'pending',
                 'priority' => 'normal',
                 'category' => $request->input('category'),
