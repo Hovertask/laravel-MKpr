@@ -45,7 +45,7 @@ class AdvertiseController extends Controller
             'no_of_status_post' => 'nullable|integer',
             'file_path' => 'nullable',
             'video_path' => 'nullable',
-            'description' => 'required|string|min:20',
+            'description' => 'nullable|string|min:20',
             'payment_method' => 'nullable|string|max:20',
             'estimated_cost' => 'required|numeric|min:1',
         ];
