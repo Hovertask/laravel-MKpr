@@ -42,6 +42,8 @@ class TaskRepository implements ITaskRepository
             'priority' => $data['priority'],
             'category' => $data['category'],
             'platforms' => $data['platforms'],
+            'start_date' => $data['start_date'] ?? null,
+            'due_date' => $data['due_date'] ?? null,
         ]);
 
         //dd($task);

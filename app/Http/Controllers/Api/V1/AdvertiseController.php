@@ -97,6 +97,8 @@ class AdvertiseController extends Controller
                 'priority' => 'normal',
                 'category' => $request->input('category'),
                 'platforms' => $request->input('platforms'),
+                'start_date' => now(),
+                'due_date' => $request->input('deadline'),
             ];
 
             $createTask = $this->TaskRepository->create($taskData);
