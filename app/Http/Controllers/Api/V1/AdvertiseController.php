@@ -14,11 +14,12 @@ class AdvertiseController extends Controller
     public $AdvertiseRepository;
     protected $TaskRepository;
 
-    public function __construct(IAdvertiseRepository $AdvertiseRepository)
-    {
-        $this->AdvertiseRepository = $AdvertiseRepository;
-        $this->TaskRepository = $TaskRepository;
-    }
+    public function __construct(IAdvertiseRepository $AdvertiseRepository, TaskRepository $TaskRepository)
+{
+    $this->AdvertiseRepository = $AdvertiseRepository;
+    $this->TaskRepository = $TaskRepository;
+}
+
     public function index()
     {
         $ads = $this->AdvertiseRepository->index();
