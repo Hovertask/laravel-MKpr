@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Interfaces\IAdvertiseRepository;
-use App\Repositories\TaskRepository;
+use App\Repository\IAdvertiseRepository;
+use App\Repository\TaskRepository;
 
 class AdvertiseController extends Controller
 {
