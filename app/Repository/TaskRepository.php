@@ -25,7 +25,7 @@ class TaskRepository implements ITaskRepository
     {
         $task = Task::create([
             'title' => $data['title'],
-            'description' => $data['description'],
+            'description' => $data['description'] ?? null,
             'location' => $data['location']  ?? null,
             'gender' => $data['gender']  ?? null,
             'religion' => $data['religion']  ?? null,
