@@ -288,7 +288,7 @@ class AdvertiseController extends Controller
 
 public function showAll()
 {
-    $adverts = $this->$AdvertiseRepository->showAll(); // fetch all adverts
+    $adverts = $this->AdvertiseRepository->showAll(); // fetch all adverts
     
     if ($adverts->isEmpty()) {
         return response()->json([
