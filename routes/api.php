@@ -4,7 +4,11 @@ use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+<<<<<<< Updated upstream
 use Illuminate\Support\Facades\Redirect;
+=======
+use Illuminate\Support\Facades\Mail;
+>>>>>>> Stashed changes
 use App\Http\Controllers\Api\V1\KYCController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\ChatController;
@@ -29,6 +33,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
 Route::post('/register', [AuthController::class, 'register'])->name('register');
+Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('resend.otp');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 //Route::post('/send-reset-link', [AuthController::class, 'resetPasswordRequest'])->name('password.reset');

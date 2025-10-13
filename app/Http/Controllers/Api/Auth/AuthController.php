@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\DB;
 use App\Repository\IUserRepository;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
@@ -31,7 +33,24 @@ class AuthController extends Controller
     public function resendEmailVerificationCode(Request $request)
     {
         $validator = Validator::make($request->all(), [
+<<<<<<< Updated upstream
             'email' => 'required|email|exists:users,email',
+=======
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:users',
+            'password' => 'required|string|min:6|confirmed',
+            'how_you_want_to_use' => 'required|string|max:255',
+            'country' => 'required|string|max:255',
+            'currency' => 'required|string|max:255',
+            'phone' => 'required|string|max:255',
+            'avatar' => 'nullable|string|max:255',
+            'referrer' => 'nullable|string|max:255',
+            'referral_code' => 'nullable|string|max:255',
+            'role_id' => 'required|string|max:255',
+            'code' => 'nullable|string|size:6', // OTP code
+>>>>>>> Stashed changes
         ]);
 
         if ($validator->fails()) {
@@ -42,6 +61,7 @@ class AuthController extends Controller
             ], 400);
         }
 
+<<<<<<< Updated upstream
         $user = User::where('email', $request->email)->first();
         if (!$user) {
             return response()->json([
@@ -69,6 +89,156 @@ class AuthController extends Controller
             'status' => true,
             'message' => 'Verification code resent successfully',
         ], 200);
+=======
+        $validatedData = $validator->validated();
+
+        // If OTP code is provided, this is step 2 - verification
+        if (isset($validatedData['code'])) {
+            return $this->verifyOtpAndCompleteRegistration($validatedData);
+        }
+
+        // Step 1 - Generate OTP and send email
+        return $this->generateOtpAndSendEmail($validatedData);
+    }
+
+    private function generateOtpAndSendEmail($validatedData)
+    {
+        // Generate 6-digit OTP
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+        // Store OTP in cache for 10 minutes
+        $otpKey = 'otp_' . $validatedData['email'];
+        $userDataKey = 'user_data_' . $validatedData['email'];
+        
+        Cache::put($otpKey, $otp, 600); // 10 minutes
+        Cache::put($userDataKey, $validatedData, 600); // 10 minutes
+
+        try {
+            // Send OTP email
+            Mail::to($validatedData['email'])->send(new \App\Mail\OtpMail($otp, $validatedData['fname']));
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'OTP sent to your email address. Please check your inbox.',
+                'email' => $validatedData['email'],
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP email: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to send verification email. Please try again.',
+            ], 500);
+        }
+    }
+
+    private function verifyOtpAndCompleteRegistration($validatedData)
+    {
+        $otpKey = 'otp_' . $validatedData['email'];
+        $userDataKey = 'user_data_' . $validatedData['email'];
+        
+        $cachedOtp = Cache::get($otpKey);
+        $cachedUserData = Cache::get($userDataKey);
+        
+        if (!$cachedOtp || !$cachedUserData) {
+            return response()->json([
+                'status' => false,
+                'message' => 'OTP expired or invalid. Please request a new one.',
+            ], 400);
+        }
+        
+        if ($cachedOtp !== $validatedData['code']) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid OTP code. Please try again.',
+            ], 400);
+        }
+
+        // Handle referral code
+        if (isset($cachedUserData['referral_code']) && !empty($cachedUserData['referral_code'])) {
+            $referrer = User::where('referral_code', $cachedUserData['referral_code'])->first();
+            if ($referrer) {
+                $cachedUserData['referred_by'] = $referrer->id;
+            }
+        }
+
+        // Create user
+        $user = $this->user->create($cachedUserData);
+        
+        // Mark email as verified since OTP was verified
+        $user->markEmailAsVerified();
+        
+        // Add role
+        $user->addRole($cachedUserData['role_id']);
+        
+        // Create token
+        $token = $user->createToken('API Token')->plainTextToken;
+        
+        // Send welcome email
+        try {
+            Mail::to($user->email)->send(new \App\Mail\WelcomeMail($user));
+        } catch (\Exception $e) {
+            Log::error('Failed to send welcome email: ' . $e->getMessage());
+        }
+        
+        // Clear cached data
+        Cache::forget($otpKey);
+        Cache::forget($userDataKey);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User registered successfully! Welcome to Hovertask.',
+            'data' => $user,
+            'token' => $token,
+        ], 201);
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        $email = $request->input('email');
+        $userDataKey = 'user_data_' . $email;
+        $cachedUserData = Cache::get($userDataKey);
+
+        if (!$cachedUserData) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Registration session expired. Please start registration again.',
+            ], 400);
+        }
+
+        // Generate new OTP
+        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $otpKey = 'otp_' . $email;
+        
+        Cache::put($otpKey, $otp, 600); // 10 minutes
+
+        try {
+            // Send OTP email
+            Mail::to($email)->send(new \App\Mail\OtpMail($otp, $cachedUserData['fname']));
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'New OTP sent to your email address.',
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP email: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Failed to send verification email. Please try again.',
+            ], 500);
+        }
+>>>>>>> Stashed changes
     }
 
 
