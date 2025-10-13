@@ -308,6 +308,7 @@ class AuthController extends Controller
     }
 
 
+
 public function updatePassword(Request $request)
 {
     $validator = Validator::make($request->all(), [
@@ -319,10 +320,22 @@ public function updatePassword(Request $request)
         return response()->json([
             'status' => false,
             'message' => $validator->errors()->first(),
-          rors 400); er();
+            'errors' => $validator->errors(),
+        ], 400);
+    }
 
-    // ect
-    if .password) 'status' =,       ], 4quest->password),
+    $user = auth()->user();
+
+    //  Check if old password is correct
+    if (!Hash::check($request->old_password, $user->password)) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Old password is incorrect',
+        ], 403);
+    }
+
+    $user->update([
+        'password' => Hash::make($request->password),
     ]);
 
     return response()->json([
@@ -330,6 +343,7 @@ public function updatePassword(Request $request)
         'message' => 'Password updated successfully',
     ], 200);
 }
+
 
 
 
@@ -361,7 +375,6 @@ public function updatePassword(Request $request)
         // Generate a 6-digit code
         $code = rand(100000, 999999);
         $expiresAt = now()->addMinutes(10);
-
         // Store or update the code
         \App\Models\PasswordResetCode::updateOrCreate(
             ['email' => $email],
