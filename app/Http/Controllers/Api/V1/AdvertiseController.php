@@ -313,7 +313,7 @@ public function showAll()
         $advert->completion_percentage = $completionPercentage;
 
         // Mark as completed/available if relevant
-        $advert->status_text = ($advert->status === 'completed') ? 'Completed' : 'Available';
+        $advert->completed = ($advert->completed == 1) ? 'Completed' : 'Available';
 
         // Check if advert is new (posted within last 12 hours)
         $hoursDifference = $advert->created_at->diffInHours(now());
