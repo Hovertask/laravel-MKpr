@@ -10,6 +10,7 @@ interface IAdvertiseRepository
     public function create(array $data, Request $request);
     public function show($id);
     public function showAll();
+    public function showAds($id);
     public function authUserAds();
     public function approveAds($data, $id);
     public function updateAds(array $data, Request $request, int $id);
