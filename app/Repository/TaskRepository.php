@@ -35,6 +35,7 @@ class TaskRepository implements ITaskRepository
             'payment_per_task' => $data['payment_per_task']  ?? null,
             'task_duration' => $data['task_duration']  ?? null,
             'task_count_total' => $data['task_count_total'],
+            'task_count_remaining' =>$data['task_count_remaining'],
             'task_amount' => $data['task_amount'],
             'task_type' => $data['task_type'],
             'user_id' => auth()->id(),
@@ -62,6 +63,8 @@ class TaskRepository implements ITaskRepository
         return $task;
     }
 
+
+    //track all available tasks for users to pick from
     public function showAll() 
     {
         $user = auth()->user();
@@ -79,6 +82,8 @@ class TaskRepository implements ITaskRepository
         return $task;
     }
 
+
+    //track task by id for users to see details
     public function show($id) {
         $task = Task::find($id);
 

@@ -94,7 +94,7 @@ class AdvertiseController extends Controller
                 'task_count_remaining' => $request->input('number_of_participants'),
                 'task_type' => 1,
                 'status' => 'pending',
-                'priority' => 'normal',
+                'priority' => 'medium',
                 'category' => $request->input('category'),
                 'platforms' => $request->input('platforms'),
                 'start_date' => now(),
@@ -115,7 +115,7 @@ class AdvertiseController extends Controller
     }
 
 
-
+//track advert by id for advert creator to track perfomance
     public function show($id)
 {
     $showadvert = $this->AdvertiseRepository->show($id);
@@ -282,5 +282,91 @@ class AdvertiseController extends Controller
         'has_paid_advert_fee' => true,
     ], 200);
 }
+
+
+//track all available adverts for users to pick from
+
+public function showAll()
+{
+    $adverts = $this->$AdvertiseRepository->showAll(); // fetch all adverts
+    
+    if ($adverts->isEmpty()) {
+        return response()->json([
+            'status' => false,
+            'message' => 'No available Adverts found at the moment',
+        ], 404);
+    }
+
+    foreach ($adverts as $advert) {
+        // Format created_at
+        $advert->created_at_human = $advert->created_at->diffForHumans();
+
+        // Calculate completion percentage if campaign tracking exists
+        $total = $advert->task_count_total ?? 0;
+        $remaining = $advert->task_count_remaining ?? 0;
+        $completed = $total - $remaining;
+
+        $completionPercentage = ($total > 0)
+            ? round(($completed / $total) * 100, 2)
+            : 0;
+
+        $advert->completion_percentage = $completionPercentage;
+
+        // Mark as completed/available if relevant
+        $advert->status_text = ($advert->status === 'completed') ? 'Completed' : 'Available';
+
+        // Check if advert is new (posted within last 12 hours)
+        $hoursDifference = $advert->created_at->diffInHours(now());
+        $advert->posted_status = ($hoursDifference < 12) ? 'New Advert' : '';
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Adverts retrieved successfully',
+        'data' => $adverts,
+    ], 200);
+}
+
+//track advert by ID for users to see details
+
+public function showAds($id)
+{
+    $advert = $this->advertiseRepository->show($id);
+
+    if (!$advert) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Advert not found',
+        ], 404);
+    }
+
+    // Calculate how many hours since advert was created
+    $createdAt = $advert->created_at;
+    $now = now();
+    $hoursDifference = $createdAt->diffInHours($now);
+    $newStatus = ($hoursDifference < 12) ? 'new' : '';
+
+    // Compute advert completion percentage if tracking metrics exist
+    $totalCount = $advert->task_count_total ?? 0;
+    $remainingCount = $advert->task_count_remaining ?? 0;
+    $completedCount = $totalCount - $remainingCount;
+
+    $completionPercentage = ($totalCount > 0)
+        ? round(($completedCount / $totalCount) * 100, 2)
+        : 0;
+
+    // Attach computed properties
+    $advert->completion_percentage = $completionPercentage;
+    $advert->completed = ($advert->completed == 1) ? 'Completed' : 'Available';
+    $advert->posted_status = $newStatus;
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Advert retrieved successfully',
+        'data' => $advert,
+    ], 200);
+}
+
+
 
 }

@@ -101,6 +101,8 @@ class TaskController extends Controller
 
     }
 
+
+    // track all available tasks for users to pick from
     public function showAll()
     {
         $tasks = $this->task->showAll();
@@ -146,6 +148,7 @@ class TaskController extends Controller
         ], 200);
     }
 
+    // track task by id for users to see details
     public function show($id)
     {
         $task = $this->task->show($id);

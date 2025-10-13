@@ -13,6 +13,26 @@ class AdvertiseRepository implements IAdvertiseRepository
         return Advertise::with('advertiseImages')->latest()->get();
     }
 
+
+    //track all available adverts for users to pick from
+    public function showAll() 
+    {
+        $user = auth()->user();
+        $Adverts = Advertise::all();
+        return $Adverts;
+    }
+
+
+
+    // track advert by ID for users to see details
+     public function showads($id)
+    {
+        
+        return Advertise::find($id);
+    }
+
+    //track single advert by id of authenticated user
+
     public function show($id)
 {
     $ads = Advertise::with([
@@ -22,6 +42,8 @@ class AdvertiseRepository implements IAdvertiseRepository
     ])->findOrFail($id);
 
     return $ads;
+
+
 }
 
 
@@ -39,10 +61,12 @@ class AdvertiseRepository implements IAdvertiseRepository
     'no_of_status_post' => $data['no_of_status_post'] ?? null,
     'payment_method' => $data['payment_method'] ?? null,
     'description' => $data['description'] ?? null,
-    'number_of_participants' => $data['number_of_participants'] ?? null,
+    'number_of_participants' => $data['no_of_status_post'] ?? null,
     'payment_per_task' => $data['payment_per_task'] ?? null,
     'estimated_cost' => $data['estimated_cost'] ?? null,
     'deadline' => $data['deadline'] ?? null,
+    'task_count_total' => $data['no_of_status_post'],
+    'task_count_remaining' => $data['no_of_status_post'],
 ]);
 
 
@@ -87,7 +111,7 @@ class AdvertiseRepository implements IAdvertiseRepository
     return $createAds;
 }
 
-
+  //track all advert created by auth user for management
 
     public function authUserAds()
 {

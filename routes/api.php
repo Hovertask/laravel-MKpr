@@ -254,7 +254,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('/authuserads', [AdvertiseController::class, 'authUserAds'])->name('advertise.authUserAds');
         Route::put('/approveads/{id}', [AdvertiseController::class, 'approveAds'])->name('advertise.approveAds');
         Route::delete('/deleteAds/{id}', [AdvertiseController::class, 'destroy'])->name('advertise.deleteAds');
-        Route::post('pay-setup-fee', [AdvertiseController::class, 'payAdvertFee'])->name('setup.fee');
+        Route::post('/ pay-setup-fee', [AdvertiseController::class, 'payAdvertFee'])->name('setup.fee');
+        Route::post('/show-all-advert', [AdvertiseController::class, 'showAll'])->name('advertise.showall');
+        Route::post('/showAds', [AdvertiseController::class, 'showAds'])->name('advertise.showads');
+
+
     });
 
     
