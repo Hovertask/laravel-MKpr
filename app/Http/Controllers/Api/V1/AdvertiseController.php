@@ -331,7 +331,7 @@ public function showAll()
 
 public function showAds($id)
 {
-    $advert = $this->advertiseRepository->show($id);
+    $advert = $this->AdvertiseRepository->show($id);
 
     if (!$advert) {
         return response()->json([
