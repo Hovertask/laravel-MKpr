@@ -66,7 +66,7 @@ class UserRepository implements IUserRepository
             'referrer_id' => $referrerId,
             'referee_id' => $referreeId,
             'reward_status' => 'pending',
-            'amoun' => 500.00,
+            'amount' => 500.00,
         ]);
     }
 
