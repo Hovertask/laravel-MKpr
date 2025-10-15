@@ -167,6 +167,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('/completed-task', [TaskController::class, 'completedTask'])->name('completed.task');
         Route::get('/rejected-task', [TaskController::class, 'rejectTask'])->name('reject.task');
         Route::get('/task-history', [TaskController::class, 'taskHistory'])->name('task.history');
+        Route::get('/completed-task-history', [TaskController::class, 'getTasks'])->name('task.history');
         Route::delete('/delete-task/{id}', [TaskController::class, 'deleteTask'])->name('delete.task');
     });
 
