@@ -195,4 +195,164 @@ class AdvertiseRepository implements IAdvertiseRepository
         return $deletedAds;
     }
 
+
+public function submitAdvert(Request $request, $id)
+{
+    DB::beginTransaction();
+
+    try {
+        $advert = Advertise::findOrFail($id);
+        $userId = auth()->id();
+
+        // 🧩 Check if the user already submitted this advert
+        $existingSubmission = CompletedTask::where('user_id', $userId)
+            ->where('task_id', $advert->id)
+            ->exists();
+
+        if ($existingSubmission) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You have already submitted this advert.',
+            ], 400);
+        }
+
+        // 🧩 Check if advert is still available
+        if ($advert->task_count_remaining > 0) {
+            $advert->decrement('task_count_remaining');
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Advert is no longer available.',
+            ], 404);
+        }
+
+        // 🧩 Handle upload (image or video)
+        $screenshotPath = null;
+
+        if ($request->hasFile('screenshot') && $request->file('screenshot')->isValid()) {
+            $file = $request->file('screenshot');
+            $mimeType = $file->getMimeType();
+
+            // 🔍 Determine if it’s a video or image
+            $resourceType = str_starts_with($mimeType, 'video') ? 'video' : 'image';
+
+            $upload = Cloudinary::uploadFile(
+                $file->getRealPath(),
+                [
+                    'folder' => 'adverts',
+                    'resource_type' => $resourceType, // ✅ Automatically set resource type
+                ]
+            );
+
+            $screenshotPath = $upload->getSecurePath();
+        }
+
+        // 🧩 Save completed advert record
+        CompletedTask::create([
+            'user_id' => $userId,
+            'task_id' => $advert->id,
+            'social_media_url' => $request->input('social_media_url'),
+            'screenshot' => $screenshotPath,
+            'payment_per_task' => $advert->payment_per_task,
+            'title' => $advert->title,
+        ]);
+
+        // 🧩 Record pending funds
+        FundsRecord::create([
+            'user_id' => $userId,
+            'pending' => $advert->payment_per_task,
+            'type' => 'advert',
+        ]);
+
+        DB::commit();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Advert submitted successfully and pending review.',
+        ], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Something went wrong: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
+
+/**
+ * Approve an advert submission by its ID.
+ *
+ * This method updates the advert submission status to 'approved',
+ * credits the user's wallet and user account balance with the advert payment,
+ * and updates the corresponding funds record.
+ *
+ * @param  int  $id
+ * @return \App\Models\CompletedTask|\Illuminate\Http\JsonResponse|null
+ */
+public function approveCompletedAdvert($id)
+{
+    try {
+        DB::beginTransaction();
+
+        // 🔹 Find pending advert submission
+        $advert = CompletedTask::where('id', $id)
+            ->where('status', 'pending')
+            ->first();
+
+        if (!$advert) {
+            DB::rollBack();
+            return null;
+        }
+
+        $advertOwnerId = $advert->user_id;
+
+        // 🔹 Update advert status to approved
+        $advert->update(['status' => 'approved']);
+
+        // 🔹 Get advert payment amount
+        $amount = $advert->advert->payment_per_task;
+
+        // 🔹 Fund the user's wallet
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $advertOwnerId],
+            ['balance' => 0]
+        );
+
+        $wallet->increment('balance', $amount);
+
+        // 🔹 Also update user’s main account balance
+        $user = User::find($advertOwnerId);
+        if ($user) {
+            $user->increment('balance', $amount);
+        }
+
+        // 🔹 Update or create a funds record
+        FundsRecord::updateOrCreate(
+            [
+                'user_id' => $advertOwnerId,
+                'type' => 'advert',
+                'pending' => $amount,
+            ],
+            [
+                'pending' => 0,
+                'earned' => $amount,
+            ]
+        );
+
+        DB::commit();
+
+        return $advert;
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => false,
+            'message' => 'Something went wrong: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
+
 }

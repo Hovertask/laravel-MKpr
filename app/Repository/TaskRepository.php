@@ -135,8 +135,10 @@ public function submitTask(Request $request, $id)
         CompletedTask::create([
             'user_id' => $userId,
             'task_id' => $task->id,
-            'instagram_url' => $data['instagram_url'] ?? null,
+            'social_media_url' => $data['social_media_url'] ?? null,
             'screenshot' => $screenshotPath,
+            'payment_per_task' => $task->payment_per_task,
+            'title' => $task->title,
         ]);
 
         FundsRecord::create([
@@ -194,6 +196,12 @@ public function submitTask(Request $request, $id)
     
             $wallet->increment('balance', $task->task->task_amount);
 
+            // Update user's main balance
+            $user = User::find($taskOwnerId);
+            if ($user) {
+                $user->increment('balance', $task->task->task_amount);
+            }
+
             FundsRecord::updateOrCreate(
                 ['user_id' => $taskOwnerId,
                 'pending' => $task->task->task_amount, 'type' => 'task'],
@@ -229,25 +237,57 @@ public function submitTask(Request $request, $id)
         return $task;
     }
 
-    public function pendingTask() {
-        $task = CompletedTask::with('user')->where('status', 'pending')->count();
-        return $task;
-    }
 
-    public function CompletedTask() {
-        $task = CompletedTask::with('user')->where('status', 'approved')->count();
-        return $task;
-    }
+public function getTasksByType($type = null)
+{
+    $query = CompletedTask::with('user');
 
-    public function rejectedTask() {
-        $task = CompletedTask::with('user')->where('status', 'rejected')->count();
-        return $task;
+    switch ($type) {
+        case 'pending':
+            return $query->where('status', 'pending')->get();
+
+        case 'completed':
+        case 'approved':
+            return $query->where('status', 'approved')->get();
+
+        case 'rejected':
+            return $query->where('status', 'rejected')->get();
+
+        case 'history':
+            return $query->get();
+
+        default:
+            return collect(); // empty collection for invalid types
     }
-    
-    public function TaskHistory() {
-        $task = CompletedTask::with('user')->get();
-        return $task;
-    }
+}
+
+public function CompletedTaskStats()
+{
+    $tasks = CompletedTask::select('status', 'payment_per_task')
+        ->get()
+        ->groupBy('status');
+
+    // Get counts
+    $pendingCount  = $tasks->get('pending')?->count() ?? 0;
+    $approvedCount = $tasks->get('approved')?->count() ?? 0;
+    $rejectedCount = $tasks->get('rejected')?->count() ?? 0;
+
+    // Calculate total earnings only for approved tasks
+    $totalEarnings = $tasks->get('approved') 
+        ? $tasks->get('approved')->sum('payment_per_task')
+        : 0;
+
+    // Calculate total number of all tasks
+    $totalTasks = $tasks->flatten()->count();
+
+    return [
+        'pending'        => $pendingCount,
+        'approved'       => $approvedCount,
+        'rejected'       => $rejectedCount,
+        'total_tasks'    => $totalTasks,
+        'total_earnings' => $totalEarnings,
+    ];
+}
 
     public function delete($id) {
         $task = Task::find($id);

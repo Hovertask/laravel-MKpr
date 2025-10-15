@@ -259,6 +259,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('/ pay-setup-fee', [AdvertiseController::class, 'payAdvertFee'])->name('setup.fee');
         Route::get('/show-all-advert', [AdvertiseController::class, 'showAll'])->name('advertise.showall');
         Route::post('/showAds', [AdvertiseController::class, 'showAds'])->name('advertise.showads');
+        Route::post('/submit-advert/{id}', [AdvertiseController::class, 'submitAdvert'])->name('advertise.submitAdvert');
+        Route::post('/approve-completed-advert/{id}', [TaskController::class, 'approveCompletedAdvert'])->name('approve.completed.advert');
+
 
 
     });

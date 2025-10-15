@@ -72,13 +72,14 @@ class AdvertiseController extends Controller
         }
 
         // ✅ Create advert first
+         if ($type === 'advert') {
         $createAds = $this->AdvertiseRepository->create($request->all(), $request);
+         }
 
         // ✅ If engagement, create linked task
         $createTask = null;
         if ($type === 'engagement') {
             $taskData = [
-                'advert_id' => $createAds->id, // 🔗 link to advert
                 'title' => $request->input('title') ?? 'Engagement Task',
                 'description' => $request->input('description'),
                 'location' => $request->input('location'),
@@ -366,6 +367,59 @@ public function showAds($id)
         'data' => $advert,
     ], 200);
 }
+
+
+//submit advert for review after completion
+
+public function submitAdvert(Request $request, $id)
+{
+    $validate = Validator::make($request->all(), [
+        'screenshot' => 'required|mimes:jpg,png,jpeg,mp4,mov,avi|max:10240', // ✅ support video up to 10MB
+    ]);
+
+    if ($validate->fails()) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Validation failed',
+            'errors' => $validate->errors(),
+        ], 422);
+    }
+
+    $validated = $validate->validated();
+
+    // 🧩 Call repository logic
+    $advert = $this->AdvertiseRepository->submitAdvert($request, $id);
+
+    if ($advert instanceof \Illuminate\Http\JsonResponse) {
+        return $advert;
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Advert submitted successfully, kindly wait for approval.',
+        'data' => $advert,
+    ]);
+}
+
+
+public function approveCompletedAdvert(Request $request, $id)
+{
+    $advert = $this->AdvertiseRepository->approveCompletedAdvert($id);
+
+    if (!$advert) {
+        return response()->json([
+            'status' => false,
+            'message' => 'AdvertTask not found or already approved',
+        ], 404);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'AdvertTask approved successfully',
+        'data' => $advert,
+    ], 200);
+}
+
 
 
 

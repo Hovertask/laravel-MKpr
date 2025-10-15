@@ -264,74 +264,32 @@ class TaskController extends Controller
         ], 200);
     }
 
-    public function pendingTask() {
-        $task = $this->task->pendingTask();
-        if($task > 0) {
-            return response()->json([
-                'status' => true,
-                'message' => 'Task retrieved successfully',
-                'data' => $task,
-            ]);
-        }
-        else{
-            return response()->json([
-                'status' => false,
-                'message' => 'No Pending Tasks found at the moment',
-            ]);
-        }
-        
+     // Fetch tasks based on type with summary stats
+
+public function getTasks(Request $request)
+{
+    $type = $request->query('type'); // pending, completed, rejected, history
+    $tasks = $this->task->getTasksByType($type);
+
+    if ($tasks->isEmpty()) {
+        return response()->json([
+            'status' => false,
+            'message' => match ($type) {
+                'pending' => 'No pending tasks found at the moment',
+                'completed', 'approved' => 'No completed tasks found at the moment',
+                'rejected' => 'No rejected tasks found at the moment',
+                'history' => 'No task history found at the moment',
+                default => 'Invalid task type provided. Use pending, completed, rejected, or history.',
+            },
+        ], $type ? 200 : 400);
     }
 
-    public function completedTask() {
-        $task = $this->task->completedTask();
-        if($task > 0) {
-            return response()->json([
-                'status' => true,
-                'message' => 'Task retrieved successfully',
-                'data' => $task,
-            ]);
-        }
-        else{
-            return response()->json([
-                'status' => false,
-                'message' => 'No Completed Tasks found at the moment',
-            ]);
-        }
-        
-    }
+    return response()->json([
+        'status' => true,
+        'message' => ucfirst($type) . ' tasks retrieved successfully',
+        'data' => $tasks,
+        'stats' => $this->task->CompletedTaskStats(), // 🔹 Include summary stats
+    ]);
+}
 
-    public function rejectTask() {
-        $task = $this->task->rejectedTask();
-       if($task > 0) {
-            return response()->json([
-                'status' => true,
-                'message' => 'Task retrieved successfully',
-                'data' => $task,
-            ]);
-        }
-        else{
-            return response()->json([
-                'status' => false,
-                'message' => 'No Rejected Tasks found at the moment',
-            ]);
-        }
-    }
-
-    public function taskHistory() {
-        $tasks = $this->task->taskHistory();
-        $task = count($tasks);
-        if($task > 0) {
-            return response()->json([
-                'status' => true,
-                'message' => 'Task retrieved successfully',
-                'data' => $tasks,
-            ]);
-        }
-        else{
-            return response()->json([
-                'status' => false,
-                'message' => 'No Task History found at the moment',
-            ]);
-        }
-    }
 }
