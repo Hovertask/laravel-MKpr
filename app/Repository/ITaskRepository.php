@@ -15,8 +15,7 @@ interface ITaskRepository
     public function submitTask(Request $request, $id);
     public function approveTask($id);
     public function approveCompletedTask($id);
-    public function pendingTask();
-    public function completedTask();
-    public function rejectedTask();
-    public function TaskHistory();
+    public function getTasksByType($type);
+    public function CompletedTaskStats();
+    //public function TaskHistory();
 }

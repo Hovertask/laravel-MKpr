@@ -4,6 +4,8 @@ namespace App\Repository;
 use App\Models\Advertise;
 use Illuminate\Http\Request;
 use App\Repository\IAdvertiseRepository;
+use App\Models\CompletedTask;
+use App\Services\FileUploadService;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class AdvertiseRepository implements IAdvertiseRepository
