@@ -118,7 +118,7 @@ public function submitTask(Request $request, $id)
         } else {
             return response()->json([
                 'status' => false,
-                'message' => 'Task is not available',
+                'message' => 'Task is not available and already completed',
             ], 404);
         }
 
@@ -240,7 +240,9 @@ public function submitTask(Request $request, $id)
 
 public function getTasksByType($type = null)
 {
-    $query = CompletedTask::with('user');
+    $query = CompletedTask::with('user')
+    ->where('user_id', auth()->id());
+
 
     switch ($type) {
         case 'pending':

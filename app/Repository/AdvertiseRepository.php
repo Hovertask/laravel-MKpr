@@ -1,6 +1,7 @@
 <?php
 namespace App\Repository;
 
+use DB;
 use App\Models\Advertise;
 use Illuminate\Http\Request;
 use App\Repository\IAdvertiseRepository;
