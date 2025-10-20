@@ -209,7 +209,7 @@ public function submitAdvert(Request $request, $id)
 
         // 🧩 Check if the user already submitted this advert
         $existingSubmission = CompletedTask::where('user_id', $userId)
-            ->where('task_id', $advert->id)
+            ->where('advert__id', $advert->id)
             ->exists();
 
         if ($existingSubmission) {
@@ -253,7 +253,7 @@ public function submitAdvert(Request $request, $id)
         // 🧩 Save completed advert record
         CompletedTask::create([
             'user_id' => $userId,
-            'task_id' => $advert->id,
+            'advert_id' => $advert->id,
             'social_media_url' => $request->input('social_media_url'),
             'screenshot' => $screenshotPath,
             'payment_per_task' => $advert->payment_per_task,
