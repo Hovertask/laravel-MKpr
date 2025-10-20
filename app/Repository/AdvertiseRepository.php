@@ -209,7 +209,7 @@ public function submitAdvert(Request $request, $id)
 
         // 🧩 Check if the user already submitted this advert
         $existingSubmission = CompletedTask::where('user_id', $userId)
-            ->where('advert__id', $advert->id)
+            ->where('advert_id', $advert->id)
             ->exists();
 
         if ($existingSubmission) {
