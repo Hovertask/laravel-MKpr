@@ -186,26 +186,24 @@ class TaskController extends Controller
         ], 200);
     }
 
-    public function submitTask(Request $request, $id) {
-        $validate = Validator::make($request->all(), [
-            'screenshot' => 'required|mimes:jpg,png,jpeg|max:2048',
-        ]);
+    
 
-        if ($validate->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation failed',
-                'errors' => $validate->errors(),
-            ], 422);
-        }
-        $validated = $validate->validated();
-        $task = $this->task->submitTask($request, $id);        
+    public function submitTask(Request $request, $id)
+{
+    $validate = Validator::make($request->all(), [
+        'screenshot' => 'required|mimes:jpg,png,jpeg,mp4,mov,avi|max:10240',
+    ]);
+
+    if ($validate->fails()) {
         return response()->json([
-            'status' => true,
-            'message' => 'Task submitted successfully, kindly wait for approval',
-            'data' => $task,
-        ]);
+            'status' => false,
+            'message' => 'Validation failed',
+            'errors' => $validate->errors(),
+        ], 422);
     }
+
+    return $this->task->submitTask($request, $id);
+}
 
     public function approveTask(Request $request, $id) {
         $validate = Validator::make($request->all(), [

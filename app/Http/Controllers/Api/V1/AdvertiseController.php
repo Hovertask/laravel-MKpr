@@ -382,7 +382,7 @@ public function showAds($id)
 public function submitAdvert(Request $request, $id)
 {
     $validate = Validator::make($request->all(), [
-        'screenshot' => 'required|mimes:jpg,png,jpeg,mp4,mov,avi|max:10240', // ✅ support video up to 10MB
+        'screenshot' => 'required|mimes:jpg,png,jpeg,mp4,mov,avi|max:10240',
     ]);
 
     if ($validate->fails()) {
@@ -393,21 +393,9 @@ public function submitAdvert(Request $request, $id)
         ], 422);
     }
 
-    $validated = $validate->validated();
-
-    // 🧩 Call repository logic
-    $advert = $this->AdvertiseRepository->submitAdvert($request, $id);
-
-    if ($advert instanceof \Illuminate\Http\JsonResponse) {
-        return $advert;
-    }
-
-    return response()->json([
-        'status' => true,
-        'message' => 'Advert submitted successfully, kindly wait for approval.',
-        'data' => $advert,
-    ]);
+    return $this->AdvertiseRepository->submitAdvert($request, $id);
 }
+
 
 
 public function approveCompletedAdvert(Request $request, $id)

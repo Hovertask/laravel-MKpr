@@ -91,6 +91,8 @@ class TaskRepository implements ITaskRepository
     }
 
 
+    //submit task done by user
+
 public function submitTask(Request $request, $id)
 {
     DB::beginTransaction();
@@ -99,65 +101,82 @@ public function submitTask(Request $request, $id)
         $task = Task::findOrFail($id);
         $userId = auth()->id();
 
-        //dd($task);
-
+        // 🧩 Check if the user already submitted this advert
         $existingSubmission = CompletedTask::where('user_id', $userId)
             ->where('task_id', $task->id)
             ->exists();
 
-            //dd($existingSubmission);
         if ($existingSubmission) {
+            // ❌ Stop here, do not create new record
             return response()->json([
                 'status' => false,
-                'message' => 'You have already submitted this task',
+                'type' => 'duplicate', // 👈 helpful for frontend modal
+                'message' => 'You have already submitted proof for this task.',
             ], 400);
         }
 
-        if ($task->task_count_remaining > 0) {
-            $task->decrement('task_count_remaining');
-        } else {
+        // 🧩 Check if task is still available
+        if ($task->task_count_remaining <= 0) {
             return response()->json([
                 'status' => false,
-                'message' => 'Task is not available and already completed',
+                'type' => 'unavailable',
+                'message' => 'This task is no longer available.',
             ], 404);
         }
 
+        // 🧩 Handle upload (image or video)
         $screenshotPath = null;
-
-        // 🔹 Handle file upload
         if ($request->hasFile('screenshot') && $request->file('screenshot')->isValid()) {
-            $upload = Cloudinary::upload($request->file('screenshot')->getRealPath(), [
-                'folder' => 'tasks',
-            ]);
+            $file = $request->file('screenshot');
+            $mimeType = $file->getMimeType();
+
+            // Detect type automatically
+            $resourceType = str_starts_with($mimeType, 'video') ? 'video' : 'image';
+
+            $upload = Cloudinary::uploadFile(
+                $file->getRealPath(),
+                [
+                    'folder' => 'task',
+                    'resource_type' => $resourceType,
+                ]
+            );
+
             $screenshotPath = $upload->getSecurePath();
         }
-    
+
+        // 🧩 Decrement available slots
+        $task->decrement('task_count_remaining');
+
+        // 🧩 Save completed task record
         CompletedTask::create([
             'user_id' => $userId,
             'task_id' => $task->id,
-            'social_media_url' => $data['social_media_url'] ?? null,
+            'social_media_url' => $request->input('social_media_url'),
             'screenshot' => $screenshotPath,
             'payment_per_task' => $task->payment_per_task,
             'title' => $task->title,
         ]);
 
+        // 🧩 Record pending funds
         FundsRecord::create([
             'user_id' => $userId,
-            'pending' => $task->task_amount,
+            'pending' => $task->payment_per_task,
             'type' => 'task',
         ]);
 
-       
-
         DB::commit();
 
-        return $task;
-
+        return response()->json([
+            'status' => true,
+            'type' => 'success',
+            'message' => 'Task submitted successfully and is pending review.',
+        ], 200);
     } catch (\Exception $e) {
-        DB::rollBack(); // Rollback the shit, nigga probaly cheated
+        DB::rollBack();
 
         return response()->json([
             'status' => false,
+            'type' => 'error',
             'message' => 'Something went wrong: ' . $e->getMessage(),
         ], 500);
     }

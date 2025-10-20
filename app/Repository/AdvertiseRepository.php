@@ -214,42 +214,45 @@ public function submitAdvert(Request $request, $id)
             ->exists();
 
         if ($existingSubmission) {
+            // ❌ Stop here, do not create new record
             return response()->json([
                 'status' => false,
-                'message' => 'You have already submitted this advert.',
+                'type' => 'duplicate', // 👈 helpful for frontend modal
+                'message' => 'You have already submitted proof for this advert.',
             ], 400);
         }
 
         // 🧩 Check if advert is still available
-        if ($advert->task_count_remaining > 0) {
-            $advert->decrement('task_count_remaining');
-        } else {
+        if ($advert->task_count_remaining <= 0) {
             return response()->json([
                 'status' => false,
-                'message' => 'Advert is no longer available.',
+                'type' => 'unavailable',
+                'message' => 'This advert is no longer available.',
             ], 404);
         }
 
         // 🧩 Handle upload (image or video)
         $screenshotPath = null;
-
         if ($request->hasFile('screenshot') && $request->file('screenshot')->isValid()) {
             $file = $request->file('screenshot');
             $mimeType = $file->getMimeType();
 
-            // 🔍 Determine if it’s a video or image
+            // Detect type automatically
             $resourceType = str_starts_with($mimeType, 'video') ? 'video' : 'image';
 
             $upload = Cloudinary::uploadFile(
                 $file->getRealPath(),
                 [
                     'folder' => 'adverts',
-                    'resource_type' => $resourceType, // ✅ Automatically set resource type
+                    'resource_type' => $resourceType,
                 ]
             );
 
             $screenshotPath = $upload->getSecurePath();
         }
+
+        // 🧩 Decrement available slots
+        $advert->decrement('task_count_remaining');
 
         // 🧩 Save completed advert record
         CompletedTask::create([
@@ -272,17 +275,20 @@ public function submitAdvert(Request $request, $id)
 
         return response()->json([
             'status' => true,
-            'message' => 'Advert submitted successfully and pending review.',
+            'type' => 'success',
+            'message' => 'Advert submitted successfully and is pending review.',
         ], 200);
     } catch (\Exception $e) {
         DB::rollBack();
 
         return response()->json([
             'status' => false,
+            'type' => 'error',
             'message' => 'Something went wrong: ' . $e->getMessage(),
         ], 500);
     }
 }
+
 
 
 /**
