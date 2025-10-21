@@ -213,19 +213,19 @@ public function submitTask(Request $request, $id)
                 ['balance' => 0]
             );
     
-            $wallet->increment('balance', $task->task->task_amount);
+            $wallet->increment('balance', $task->task->payment_per_task);
 
             // Update user's main balance
             $user = User::find($taskOwnerId);
             if ($user) {
-                $user->increment('balance', $task->task->task_amount);
+                $user->increment('balance', $task->task->payment_per_task);
             }
 
             FundsRecord::updateOrCreate(
                 ['user_id' => $taskOwnerId,
-                'pending' => $task->task->task_amount, 'type' => 'task'],
+                'pending' => $task->task->payment_per_task, 'type' => 'task'],
                 ['pending' => 0,
-                    'earned' => $task->task->task_amount,
+                    'earned' => $task->task->payment_per_task,
     
                 ],
             );
