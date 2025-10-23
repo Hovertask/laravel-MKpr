@@ -148,8 +148,11 @@ Route::prefix('v1')->group(function () {
    Route::post('/withdraw', [WithdrawalController::class, 'withdraw']);
 });
 
+Route::get('/banks', [PaystackController::class, 'banks'])->name('banks.list');
+
+
 // Resolve account endpoint (auth required)
-Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::post('/resolve-account', [\App\Http\Controllers\Api\PaystackController::class, 'resolve']);
 });
 
