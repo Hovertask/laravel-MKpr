@@ -25,22 +25,56 @@ class PaystackRepository
 
     public function createRecipient($name, $accountNumber, $bankCode)
     {
-        return Http::withHeaders($this->headers())->post("{$this->baseUrl}/transferrecipient", [
-            'type'           => 'nuban',
-            'name'           => $name,
-            'account_number' => $accountNumber,
-            'bank_code'      => $bankCode,
-            'currency'       => 'NGN',
-        ])->json();
+        try {
+            $response = Http::withHeaders($this->headers())->post("{$this->baseUrl}/transferrecipient", [
+                'type'           => 'nuban',
+                'name'           => $name,
+                'account_number' => $accountNumber,
+                'bank_code'      => $bankCode,
+                'currency'       => 'NGN',
+            ]);
+
+            $data = $response->json();
+
+            if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
+                \Illuminate\Support\Facades\Log::error('Paystack createRecipient failed', [
+                    'http_status' => $response->status(),
+                    'response' => $data,
+                    'payload' => compact('name', 'accountNumber', 'bankCode'),
+                ]);
+            }
+
+            return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Paystack createRecipient exception', ['message' => $e->getMessage()]);
+            return ['status' => false, 'message' => $e->getMessage()];
+        }
     }
 
     public function initiateTransfer($recipientCode, $amount, $reason = 'Wallet Withdrawal')
     {
-        return Http::withHeaders($this->headers())->post("{$this->baseUrl}/transfer", [
-            'source'    => 'balance',
-            'amount'    => $amount * 100, // kobo
-            'recipient' => $recipientCode,
-            'reason'    => $reason,
-        ])->json();
+        try {
+            $response = Http::withHeaders($this->headers())->post("{$this->baseUrl}/transfer", [
+                'source'    => 'balance',
+                'amount'    => $amount * 100, // kobo
+                'recipient' => $recipientCode,
+                'reason'    => $reason,
+            ]);
+
+            $data = $response->json();
+
+            if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
+                \Illuminate\Support\Facades\Log::error('Paystack initiateTransfer failed', [
+                    'http_status' => $response->status(),
+                    'response' => $data,
+                    'payload' => compact('recipientCode', 'amount', 'reason'),
+                ]);
+            }
+
+            return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Paystack initiateTransfer exception', ['message' => $e->getMessage()]);
+            return ['status' => false, 'message' => $e->getMessage()];
+        }
     }
 }

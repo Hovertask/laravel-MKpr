@@ -46,7 +46,8 @@ class WithdrawalController extends Controller
             );
 
             if (!$recipient['status']) {
-                return response()->json(['error' => 'Failed to create recipient'], 400);
+                \Illuminate\Support\Facades\Log::warning('Failed to create paystack recipient', ['user_id' => $user->id, 'recipient' => $recipient]);
+                return response()->json(['error' => 'Failed to create recipient', 'details' => $recipient['message'] ?? $recipient], 400);
             }
 
             $recipientCode = $recipient['data']['recipient_code'];
@@ -95,7 +96,9 @@ class WithdrawalController extends Controller
             } else {
                 // Refund if failed
                 $wallet->increment('balance', $request->amount);
-                $user->increment('wallet_balance', $request->amount);
+                // ensure correct user balance column is updated; fallback to 'balance'
+                $userBalanceColumn = property_exists($user, 'wallet_balance') ? 'wallet_balance' : 'balance';
+                $user->increment($userBalanceColumn, $request->amount);
 
                 $withdrawal->update(['status' => 'failed']);
 
