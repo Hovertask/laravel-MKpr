@@ -58,6 +58,9 @@ Route::get('/ping', function() {
    ], 200);
 });
 
+// Paystack public webhook endpoint
+Route::post('/webhook/paystack', [\App\Http\Controllers\Api\PaystackWebhookController::class, 'handle']);
+
 
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetForm']);
 Route::post('/password/reset', [AuthController::class, 'resetPasswordPost']);

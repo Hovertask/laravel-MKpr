@@ -51,15 +51,21 @@ class PaystackRepository
         }
     }
 
-    public function initiateTransfer($recipientCode, $amount, $reason = 'Wallet Withdrawal')
+    public function initiateTransfer($recipientCode, $amount, $reason = 'Wallet Withdrawal', $reference = null)
     {
         try {
-            $response = Http::withHeaders($this->headers())->post("{$this->baseUrl}/transfer", [
+            $payload = [
                 'source'    => 'balance',
                 'amount'    => $amount * 100, // kobo
                 'recipient' => $recipientCode,
                 'reason'    => $reason,
-            ]);
+            ];
+
+            if ($reference) {
+                $payload['reference'] = $reference;
+            }
+
+            $response = Http::withHeaders($this->headers())->post("{$this->baseUrl}/transfer", $payload);
 
             $data = $response->json();
 

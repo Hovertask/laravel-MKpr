@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\PaystackRecipient;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WithdrawalController extends Controller
 {
@@ -108,13 +109,17 @@ class WithdrawalController extends Controller
             }
 
             // Step 2: Create withdrawal record
+            // Generate a Paystack-compliant transfer reference (we recommend UUID v4)
+            $reference = 'wd_' . (string) Str::uuid();
+
             $withdrawal = Withdrawal::create([
                 'user_id'  => $user->id,
                 'amount'   => $request->amount,
                 'currency' => 'NGN',
                 'method'   => 'paystack',
-                'trx'      => uniqid('wd_'),
+                'trx'      => $reference,
                 'status'   => 'pending',
+                'paystack_reference' => $reference,
             ]);
 
             // Step 3: Deduct from wallet
@@ -130,15 +135,18 @@ class WithdrawalController extends Controller
                 'type'       => 'debit',
                 'status'     => 'pending',
                 'description'=> 'Withdrawal initiated',
+                
             ]);
 
             // Step 5: Initiate Paystack transfer
-            $transfer = $this->paystack->initiateTransfer($recipientCode, $request->amount, 'Wallet Withdrawal');
+            // Initiate transfer and pass our generated reference so Paystack will use it
+            $transfer = $this->paystack->initiateTransfer($recipientCode, $request->amount, 'Wallet Withdrawal', $reference);
 
             if ($transfer['status']) {
                 $withdrawal->update([
-                    'status'    => 'success',
-                    'trx'       => $transfer['data']['reference'] ?? $withdrawal->trx,
+                    'status'            => 'success',
+                    'trx'               => $transfer['data']['reference'] ?? $withdrawal->trx,
+                    'paystack_reference' => $transfer['data']['reference'] ?? $reference,
                 ]);
 
                 Transaction::create([
@@ -155,7 +163,11 @@ class WithdrawalController extends Controller
                 $userBalanceColumn = property_exists($user, 'wallet_balance') ? 'wallet_balance' : 'balance';
                 $user->increment($userBalanceColumn, $request->amount);
 
-                $withdrawal->update(['status' => 'failed']);
+                // store paystack reference (or our reference) for later reconciliation
+                $withdrawal->update([
+                    'status' => 'failed',
+                    'paystack_reference' => $transfer['data']['reference'] ?? $reference,
+                ]);
 
                 Transaction::create([
                     'user_id'    => $user->id,
