@@ -27,12 +27,14 @@ use App\Http\Controllers\Api\V1\SocialConnectController;
 use App\Http\Controllers\Api\V1\ReferralController;
 use App\Http\Controllers\Api\V1\WithdrawalController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\Api\PaystackController;
 
 
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/resend-otp', [AuthController::class, 'resendOtp'])->name('resend.otp');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/banks', [PaystackController::class, 'banks'])->name('banks.list');
 //Route::post('/send-reset-link', [AuthController::class, 'resetPasswordRequest'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
 Route::get('/roles', [AuthController::class, 'roles']);
@@ -144,6 +146,11 @@ Route::prefix('v1')->group(function () {
    
    Route::middleware('auth:sanctum')->group(function () {
    Route::post('/withdraw', [WithdrawalController::class, 'withdraw']);
+});
+
+// Resolve account endpoint (auth required)
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    Route::post('/resolve-account', [\App\Http\Controllers\Api\PaystackController::class, 'resolve']);
 });
 
     //create order is automated when pay is called

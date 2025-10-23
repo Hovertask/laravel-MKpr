@@ -77,4 +77,58 @@ class PaystackRepository
             return ['status' => false, 'message' => $e->getMessage()];
         }
     }
+
+    /**
+     * Get list of banks for the given country (defaults to NG)
+     */
+    public function listBanks($country = 'NG')
+    {
+        try {
+            $response = Http::withHeaders($this->headers())->get("{$this->baseUrl}/bank", [
+                'country' => strtolower($country),
+            ]);
+
+            $data = $response->json();
+
+            if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
+                \Illuminate\Support\Facades\Log::error('Paystack listBanks failed', [
+                    'http_status' => $response->status(),
+                    'response' => $data,
+                ]);
+            }
+
+            return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Paystack listBanks exception', ['message' => $e->getMessage()]);
+            return ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Resolve an account number & bank code to an account name
+     */
+    public function resolveAccount($accountNumber, $bankCode)
+    {
+        try {
+            $response = Http::withHeaders($this->headers())->get("{$this->baseUrl}/bank/resolve", [
+                'account_number' => $accountNumber,
+                'bank_code' => $bankCode,
+            ]);
+
+            $data = $response->json();
+
+            if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
+                \Illuminate\Support\Facades\Log::warning('Paystack resolveAccount failed', [
+                    'http_status' => $response->status(),
+                    'response' => $data,
+                    'payload' => compact('accountNumber', 'bankCode'),
+                ]);
+            }
+
+            return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Paystack resolveAccount exception', ['message' => $e->getMessage()]);
+            return ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
 }
