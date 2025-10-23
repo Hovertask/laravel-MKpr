@@ -81,7 +81,7 @@ class PaystackRepository
     /**
      * Get list of banks for the given country (defaults to NG)
      */
-    public function listBanks($country = 'NG')
+    public function listBanks($country = 'nigeria')
     {
         try {
             $response = Http::withHeaders($this->headers())->get("{$this->baseUrl}/bank", [

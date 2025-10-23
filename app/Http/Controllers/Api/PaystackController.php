@@ -18,11 +18,23 @@ class PaystackController extends Controller
 
     public function banks(Request $request)
     {
-        $country = $request->query('country', 'NG');
-        $cacheKey = "paystack_banks_" . strtoupper($country);
+        $country = $request->query('country', 'nigeria');
 
-        $banks = Cache::remember($cacheKey, now()->addHours(24), function () use ($country) {
-            return $this->paystack->listBanks($country);
+        // Normalize common inputs to Paystack-accepted country values
+        $c = strtolower(trim($country));
+        $map = [
+            'ng' => 'nigeria', 'ngn' => 'nigeria', 'nigeria' => 'nigeria',
+            'ghana' => 'ghana', 'gh' => 'ghana',
+            'kenya' => 'kenya', 'ke' => 'kenya',
+            'south africa' => 'south africa', 'south_africa' => 'south africa', 'south-africa' => 'south africa', 'za' => 'south africa', 'southafrica' => 'south africa',
+        ];
+
+        $normalized = $map[$c] ?? $c;
+
+        $cacheKey = 'paystack_banks_' . str_replace(' ', '_', $normalized);
+
+        $banks = Cache::remember($cacheKey, now()->addHours(24), function () use ($normalized) {
+            return $this->paystack->listBanks($normalized);
         });
 
         if (!($banks['status'] ?? false)) {
