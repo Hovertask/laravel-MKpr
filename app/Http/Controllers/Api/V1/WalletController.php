@@ -20,7 +20,7 @@ class WalletController extends Controller
     }
 
     /**
-     * Fund the user's wallet.
+     * Fund the user's wallet. 
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse

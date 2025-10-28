@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class PaystackRepository
 {
@@ -37,7 +38,7 @@ class PaystackRepository
             $data = $response->json();
 
             if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
-                \Illuminate\Support\Facades\Log::error('Paystack createRecipient failed', [
+                Log::error('Paystack createRecipient failed', [
                     'http_status' => $response->status(),
                     'response' => $data,
                     'payload' => compact('name', 'accountNumber', 'bankCode'),
@@ -46,8 +47,35 @@ class PaystackRepository
 
             return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Paystack createRecipient exception', ['message' => $e->getMessage()]);
+            Log::error('Paystack createRecipient exception', ['message' => $e->getMessage()]);
             return ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * ✅ NEW: Validate recipient code before initiating transfer
+     */
+    public function validateRecipient($recipientCode)
+    {
+        try {
+            $response = Http::withHeaders($this->headers())->get("{$this->baseUrl}/transferrecipient/{$recipientCode}");
+            $data = $response->json();
+
+            if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
+                Log::warning('Paystack validateRecipient failed', [
+                    'recipientCode' => $recipientCode,
+                    'response' => $data,
+                ]);
+                return false;
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Paystack validateRecipient exception', [
+                'recipientCode' => $recipientCode,
+                'message' => $e->getMessage(),
+            ]);
+            return false;
         }
     }
 
@@ -70,7 +98,7 @@ class PaystackRepository
             $data = $response->json();
 
             if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
-                \Illuminate\Support\Facades\Log::error('Paystack initiateTransfer failed', [
+                Log::error('Paystack initiateTransfer failed', [
                     'http_status' => $response->status(),
                     'response' => $data,
                     'payload' => compact('recipientCode', 'amount', 'reason'),
@@ -79,14 +107,11 @@ class PaystackRepository
 
             return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Paystack initiateTransfer exception', ['message' => $e->getMessage()]);
+            Log::error('Paystack initiateTransfer exception', ['message' => $e->getMessage()]);
             return ['status' => false, 'message' => $e->getMessage()];
         }
     }
 
-    /**
-     * Get list of banks for the given country (defaults to NG)
-     */
     public function listBanks($country = 'nigeria')
     {
         try {
@@ -97,7 +122,7 @@ class PaystackRepository
             $data = $response->json();
 
             if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
-                \Illuminate\Support\Facades\Log::error('Paystack listBanks failed', [
+                Log::error('Paystack listBanks failed', [
                     'http_status' => $response->status(),
                     'response' => $data,
                 ]);
@@ -105,14 +130,11 @@ class PaystackRepository
 
             return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Paystack listBanks exception', ['message' => $e->getMessage()]);
+            Log::error('Paystack listBanks exception', ['message' => $e->getMessage()]);
             return ['status' => false, 'message' => $e->getMessage()];
         }
     }
 
-    /**
-     * Resolve an account number & bank code to an account name
-     */
     public function resolveAccount($accountNumber, $bankCode)
     {
         try {
@@ -124,7 +146,7 @@ class PaystackRepository
             $data = $response->json();
 
             if (!$response->successful() || empty($data) || !($data['status'] ?? false)) {
-                \Illuminate\Support\Facades\Log::warning('Paystack resolveAccount failed', [
+                Log::warning('Paystack resolveAccount failed', [
                     'http_status' => $response->status(),
                     'response' => $data,
                     'payload' => compact('accountNumber', 'bankCode'),
@@ -133,7 +155,7 @@ class PaystackRepository
 
             return $data ?? ['status' => false, 'message' => 'No response from Paystack'];
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Paystack resolveAccount exception', ['message' => $e->getMessage()]);
+            Log::error('Paystack resolveAccount exception', ['message' => $e->getMessage()]);
             return ['status' => false, 'message' => $e->getMessage()];
         }
     }

@@ -41,17 +41,14 @@ class WithdrawalController extends Controller
         }
 
         return DB::transaction(function () use ($user, $wallet, $request) {
-            // Step 1: Resolve account to ensure bank_code/account_number are valid
             $resolved = $this->paystack->resolveAccount($request->account_number, $request->bank_code);
             if (!($resolved['status'] ?? false)) {
-                \Illuminate\Support\Facades\Log::warning('Account resolution failed', ['user_id' => $user->id, 'resolved' => $resolved]);
+                Log::warning('Account resolution failed', ['user_id' => $user->id, 'resolved' => $resolved]);
                 return response()->json(['error' => 'Account resolution failed', 'details' => $resolved['message'] ?? $resolved], 400);
             }
 
-            // Step 2: Create or reuse Paystack recipient (use resolved account_name if available)
             $recipientName = $resolved['data']['account_name'] ?? $request->account_name;
 
-            // Try to find a stored recipient for this user + account + bank
             $storedRecipient = PaystackRecipient::where('user_id', $user->id)
                 ->where('account_number', $request->account_number)
                 ->where('bank_code', $request->bank_code)
@@ -59,6 +56,30 @@ class WithdrawalController extends Controller
 
             if ($storedRecipient && $storedRecipient->recipient_code) {
                 $recipientCode = $storedRecipient->recipient_code;
+
+                // ✅ Validate recipient before transfer
+                if (!$this->paystack->validateRecipient($recipientCode)) {
+                    Log::warning('Recipient invalid — recreating', [
+                        'user_id' => $user->id,
+                        'recipientCode' => $recipientCode,
+                    ]);
+
+                    $recipient = $this->paystack->createRecipient(
+                        $recipientName,
+                        $request->account_number,
+                        $request->bank_code
+                    );
+
+                    if (!($recipient['status'] ?? false)) {
+                        return response()->json([
+                            'error' => 'Unable to validate or recreate recipient',
+                            'details' => $recipient['message'] ?? 'Recipient recreation failed'
+                        ], 400);
+                    }
+
+                    $recipientCode = $recipient['data']['recipient_code'];
+                    $storedRecipient->update(['recipient_code' => $recipientCode]);
+                }
             } else {
                 $recipient = $this->paystack->createRecipient(
                     $recipientName,
@@ -68,48 +89,21 @@ class WithdrawalController extends Controller
 
                 if (!($recipient['status'] ?? false)) {
                     Log::warning('Failed to create paystack recipient', ['user_id' => $user->id, 'recipient' => $recipient]);
-
-                    // If Paystack indicates recipient already exists, try to recover the recipient_code
                     $message = $recipient['message'] ?? null;
-                    $maybeRecipientCode = null;
-
-                    // Some Paystack error responses include the existing recipient in data or message
-                    if (!empty($recipient['data']['recipient_code'] ?? null)) {
-                        $maybeRecipientCode = $recipient['data']['recipient_code'];
-                    }
-
-                    // Attempt to find by account_number and bank_code in our DB as a fallback
-                    if (!$maybeRecipientCode) {
-                        $existing = PaystackRecipient::where('account_number', $request->account_number)
-                            ->where('bank_code', $request->bank_code)
-                            ->first();
-                        if ($existing && $existing->recipient_code) {
-                            $maybeRecipientCode = $existing->recipient_code;
-                        }
-                    }
-
-                    if ($maybeRecipientCode) {
-                        $recipientCode = $maybeRecipientCode;
-                    } else {
-                        return response()->json(['error' => 'Failed to create recipient', 'details' => $message ?? $recipient], 400);
-                    }
-                } else {
-                    $recipientCode = $recipient['data']['recipient_code'];
-
-                    // store recipient for future reuse
-                    PaystackRecipient::create([
-                        'user_id' => $user->id,
-                        'recipient_code' => $recipientCode,
-                        'name' => $recipientName,
-                        'account_number' => $request->account_number,
-                        'bank_code' => $request->bank_code,
-                        'meta' => $recipient['data'] ?? null,
-                    ]);
+                    return response()->json(['error' => 'Failed to create recipient', 'details' => $message ?? $recipient], 400);
                 }
+
+                $recipientCode = $recipient['data']['recipient_code'];
+                PaystackRecipient::create([
+                    'user_id' => $user->id,
+                    'recipient_code' => $recipientCode,
+                    'name' => $recipientName,
+                    'account_number' => $request->account_number,
+                    'bank_code' => $request->bank_code,
+                    'meta' => $recipient['data'] ?? null,
+                ]);
             }
 
-            // Step 2: Create withdrawal record
-            // Generate a Paystack-compliant transfer reference (we recommend UUID v4)
             $reference = 'wd_' . (string) Str::uuid();
 
             $withdrawal = Withdrawal::create([
@@ -122,24 +116,18 @@ class WithdrawalController extends Controller
                 'paystack_reference' => $reference,
             ]);
 
-            // Step 3: Deduct from wallet
             $wallet->decrement('balance', $request->amount);
-
-            // Also update user balance if you store it
             $user->decrement('balance', $request->amount);
 
-            // Step 4: Log transaction
             Transaction::create([
                 'user_id'    => $user->id,
                 'amount'     => $request->amount,
                 'type'       => 'debit',
                 'status'     => 'pending',
                 'description'=> 'Withdrawal initiated',
-                
             ]);
 
-            // Step 5: Initiate Paystack transfer
-            // Initiate transfer and pass our generated reference so Paystack will use it
+            // ✅ Proceed with validated recipient
             $transfer = $this->paystack->initiateTransfer($recipientCode, $request->amount, 'Wallet Withdrawal', $reference);
 
             if ($transfer['status']) {
@@ -157,13 +145,10 @@ class WithdrawalController extends Controller
                     'description'=> 'Withdrawal successful to bank',
                 ]);
             } else {
-                // Refund if failed
                 $wallet->increment('balance', $request->amount);
-                // ensure correct user balance column is updated; fallback to 'balance'
                 $userBalanceColumn = property_exists($user, 'wallet_balance') ? 'wallet_balance' : 'balance';
                 $user->increment($userBalanceColumn, $request->amount);
 
-                // store paystack reference (or our reference) for later reconciliation
                 $withdrawal->update([
                     'status' => 'failed',
                     'paystack_reference' => $transfer['data']['reference'] ?? $reference,
