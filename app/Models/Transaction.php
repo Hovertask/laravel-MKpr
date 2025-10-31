@@ -25,4 +25,13 @@ class Transaction extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    // Helper to resolve transaction type
+
+    public static function resolveTransactionType($type)
+    {
+    return $type === 'deposit' ? 'credit' : 'debit';
+    }
+
+
 }

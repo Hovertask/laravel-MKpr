@@ -60,7 +60,7 @@ class WalletController extends Controller
 
         // ✅ Initialize payment in repository
         $paymentData = $this->walletRepository->initializePayment($userId, $amount, $type, $recordId);
-
+        if
         // ✅ Record the transaction
         $transaction = InitializeDeposit::create([
             'user_id' => $userId,
@@ -71,12 +71,13 @@ class WalletController extends Controller
             'type' => $type,
             'source_id' => $recordId,
         ]);
-
+ 
         Transaction::create([
                 'user_id'    => $userId,
                 'amount'     => $amount,
-                'type'       => 'credit',
-                'status'     => 'success',
+                'type' => Transaction::resolveTransactionType($type),
+
+                'status'     => 'pending',
                 'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
                 'reference' => $paymentData['data']['reference'],
                 'payment_source' => 'paystack',//gets from config or payment gateway used in future
