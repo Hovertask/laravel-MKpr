@@ -33,4 +33,11 @@ class InitializeDeposit extends Model
         return $str;
     
     }
+
+     // Helper to resolve transaction type
+
+    public static function resolveTransactionType($type)
+    {
+    return $type === 'deposit' ? 'credit' : 'debit';
+    }
 }

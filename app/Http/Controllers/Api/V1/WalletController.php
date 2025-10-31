@@ -68,7 +68,7 @@ class WalletController extends Controller
             'amount' => $amount,
             'status' => 'pending',
             'trx' => InitializeDeposit::generateTrx(10),
-            'type' => $type,
+            'type' => InitializeDeposit::resolveTransactionType($type),
             'source_id' => $recordId,
         ]);
  
@@ -76,7 +76,6 @@ class WalletController extends Controller
                 'user_id'    => $userId,
                 'amount'     => $amount,
                 'type' => Transaction::resolveTransactionType($type),
-
                 'status'     => 'pending',
                 'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
                 'reference' => $paymentData['data']['reference'],
