@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Referral;
 use App\Models\InitializeDeposit;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -20,33 +21,42 @@ class WalletRepository implements IWalletRepository
         $this->paystackSecretKey = env('PAYSTACK_SECRET_KEY');
     }
 
-    public function initializePayment(int $userId, float $amount)
-    {
-        try {
-            $user = User::findOrFail($userId);
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-                'Content-Type' => 'application/json',
-            ])->post('https://api.paystack.co/transaction/initialize', [
-                'email' => $user->email,
-                'amount' => $amount * 100,
-                'metadata' => [
-                    'user_id' => $userId,
-                ],
-            ]);
+    public function initializePayment(int $userId, float $amount, ?string $type = null, ?int $recordId = null)
+{
+    try {
+        $user = User::findOrFail($userId);
 
-            $responseData = $response->json();
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+            'Content-Type' => 'application/json',
+        ])->post('https://api.paystack.co/transaction/initialize', [
+            'email' => $user->email,
+            'amount' => $amount * 100,
+            'metadata' => [
+                'user_id' => $userId,
+                'payment_category' => $type ?? 'deposit',
+                'source_id' => $recordId,
+                'description' => match ($type) {
+                    'task' => 'paid for Task creation',
+                    'advert' => 'paid for Advert creation',
+                    'membership' => 'paid for Membership',
+                    default => 'Wallet Deposit',
+                },
+            ],
+        ]);
 
-            if (!$response->successful() || !$responseData['status']) {
-                throw new Exception("Failed to initialize payment: " . ($responseData['message'] ?? 'Unknown error'));
-            }
+        $responseData = $response->json();
 
-            return $responseData;
-        } catch (Exception $e) {
-            throw new Exception("Failed to initialize payment: " . $e->getMessage());
+        if (!$response->successful() || !$responseData['status']) {
+            throw new Exception("Failed to initialize payment: " . ($responseData['message'] ?? 'Unknown error'));
         }
+
+        return $responseData;
+    } catch (Exception $e) {
+        throw new Exception("Failed to initialize payment: " . $e->getMessage());
     }
+}
 
     // public function verifyPayment(string $reference)
     // {
@@ -95,91 +105,190 @@ class WalletRepository implements IWalletRepository
     //     }
     // }
 
-    public function verifyPayment(string $reference)
-    {
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-                'Content-Type' => 'application/json',
-            ])->get("https://api.paystack.co/transaction/verify/{$reference}");
+ public function verifyPayment(string $reference)
+{
+    try {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->paystackSecretKey,
+            'Content-Type' => 'application/json',
+        ])->get("https://api.paystack.co/transaction/verify/{$reference}");
 
-            $responseData = $response->json();
+        $responseData = $response->json();
 
-            if (!$response->successful() || !$responseData['status']) {
-                throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+        if (!$response->successful() || !$responseData['status']) {
+            throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+        }
+
+        if ($responseData['data']['status'] !== 'success') {
+            throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+        }
+
+        // ✅ Extract metadata info
+        $metadata = $responseData['data']['metadata'] ?? [];
+        $userId = $metadata['user_id'] ?? null;
+        $paymentCategory = $metadata['payment_category'] ?? 'deposit';
+        $sourceId = $metadata['source_id'] ?? null;
+
+        $amount = $responseData['data']['amount'] / 100;
+        $reference = $responseData['data']['reference'];
+
+        // ✅ Get Super Administrator ID dynamically
+        $superAdminId = \DB::table('users')
+            ->join('role_user', 'users.id', '=', 'role_user.user_id')
+            ->join('roles', 'roles.id', '=', 'role_user.role_id')
+            ->where('roles.name', 'superadministrator')
+            ->orWhere('roles.slug', 'superadministrator')
+            ->value('users.id');
+
+            // ✅ Log for debugging
+\Log::info('Super Administrator ID fetched for platform earnings:', ['super_admin_id' => $superAdminId]);
+
+ 
+        DB::beginTransaction();   
+
+        // ✅ If payment is for a task or advert, mark as paid
+        if ($paymentCategory === 'task' && $sourceId) {
+            $task = \App\Models\Task::find($sourceId);
+            if ($task) {
+                $task->status = 'success';
+                $task->save();
             }
-
-            if ($responseData['data']['status'] !== 'success') {
-                throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+        } elseif ($paymentCategory === 'advert' && $sourceId) {
+            $advert = \App\Models\Advertise::find($sourceId);
+            if ($advert) {
+                $advert->status = 'success';
+                $advert->save();
             }
-
-            $userId = $responseData['data']['metadata']['user_id'];
-            $amount = $responseData['data']['amount'] / 100;
-            $reference = $responseData['data']['reference'];
-
-            DB::beginTransaction();
-
+        } elseif ($paymentCategory === 'deposit') {
+            // ✅ Simple wallet deposit
             $user = User::findOrFail($userId);
             $wallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['user_id' => $userId],
                 ['balance' => 0]
             );
 
-            // Deduct 100 from the amount
-            $netAmount = $amount - 100;
-            if ($netAmount <= 0) {
-                throw new Exception("Amount after deduction must be greater than zero.");
+            $wallet->balance += $amount;
+            $wallet->save();
+
+            $user->balance += $amount;
+            $user->save();
+
+        } else {
+            // ✅ Membership / Referral Flow
+            $user = User::findOrFail($userId);
+            $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                ['user_id' => $userId],
+                ['balance' => 0]
+            );
+
+            $platformFee = 600;
+            $membershipBonus = $amount - $platformFee;
+
+            if ($membershipBonus <= 0) {
+                throw new Exception("Amount after platform fee must be greater than zero.");
             }
 
-            // Check if user has a referral
+            // ✅ Log platform earnings for super admin
+            Transaction::create([
+                'user_id'     => $superAdminId,
+                'amount'      => $platformFee,
+                'type'        => 'credit',
+                'status'      => 'success',
+                'description' => 'Platform Earnings',
+                'reference'   => $responseData['data']['reference'],
+                'payment_source' => 'system',
+                'category'    => 'platform_fee',
+            ]);
+
+            // ✅ Handle referral logic
             $referral = Referral::where('referee_id', $user->id)->first();
 
             if (!$user->is_member && $referral && $referral->reward_status == 'pending') {
                 $referrer = User::find($referral->referrer_id);
 
                 if ($referrer && $referrer->is_member) {
-                    $halfAmount = $netAmount / 2;
+                    $referralAmount = 500;
 
                     // Update referrer's wallet
                     $referrerWallet = Wallet::firstOrCreate(
                         ['user_id' => $referrer->id],
                         ['balance' => 0]
                     );
-                    $referrerWallet->balance += $halfAmount;
+                    $referrerWallet->balance += $referralAmount;
                     $referrerWallet->save();
 
-                    // Update referral status
-                    $referral->reward_status = 'paid'; // Referrer is paid only once
+                    // Update referrer's user balance
+                    $referrer->balance += $referralAmount;
+                    $referrer->save();
+
+                    // Update referral record
+                    $referral->reward_status = 'paid';
+                    $referral->amount = $referralAmount;
                     $referral->save();
 
-                    // Update user status and credit half to user
-                    $wallet->balance += $halfAmount;
+                    // Record transaction for referral reward
+                    Transaction::create([
+                        'user_id'     => $referrer->id,
+                        'amount'      => $referralAmount,
+                        'type'        => 'credit',
+                        'status'      => 'success',
+                        'description' => 'Referrer reward',
+                        'reference'   => $responseData['data']['reference'],
+                        'payment_source' => 'system',
+                        'category'    => 'referral_commission',
+                    ]);
+
+                    // Credit membership bonus to user
+                    $wallet->balance += $membershipBonus;
                     $wallet->save();
 
-                    $user->balance += $halfAmount;
+                    $user->balance += $membershipBonus;
                     $user->is_member = true;
                     $user->save();
+
+                    Transaction::create([
+                        'user_id'     => $userId,
+                        'amount'      => $membershipBonus,
+                        'type'        => 'credit',
+                        'status'      => 'success',
+                        'description' => 'Membership bonus credited to user wallet',
+                        'reference'   => $responseData['data']['reference'],
+                        'payment_source' => 'system',
+                        'category'    => 'membership_bonus',
+                    ]);
                 }
             } else {
-                // No referral, credit all netAmount to user
-                $wallet->balance += $netAmount;
+                // No referral — full membership bonus to user
+                $wallet->balance += $membershipBonus;
                 $wallet->save();
 
-                $user->balance += $netAmount;
+                $user->balance += $membershipBonus;
                 $user->is_member = true;
                 $user->save();
+
+                Transaction::create([
+                    'user_id'     => $userId,
+                    'amount'      => $membershipBonus,
+                    'type'        => 'credit',
+                    'status'      => 'success',
+                    'description' => 'Membership bonus credited to user wallet',
+                    'reference'   => $responseData['data']['reference'],
+                    'payment_source' => 'system',
+                    'category'    => 'membership_bonus',
+                ]);
             }
-
-            DB::commit();
-
-            return $responseData;
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Payment verification failed: ' . $e->getMessage());
-            throw new Exception("Failed to verify payment: " . $e->getMessage());
         }
+
+        DB::commit();
+        return $responseData;
+
+    } catch (Exception $e) {
+        DB::rollBack();
+        Log::error('Payment verification failed: ' . $e->getMessage());
+        throw new Exception("Failed to verify payment: " . $e->getMessage());
     }
+}
+
 
 
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use Exception;
 use Illuminate\Http\Request;
 use App\Models\InitializeDeposit;
+use App\Models\Transaction;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Repository\IWalletRepository;
@@ -26,35 +27,71 @@ class WalletController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     
-     public function initializePayment(Request $request)
-    {
-        \Log::info('Method:', [request()->method()]);
+    public function initializePayment(Request $request)
+{
+    \Log::info('Method:', [request()->method()]);
 
-        //dd($request->all());
-        $request->validate([
-            'amount' => 'required|numeric|min:100', 
+    $request->validate([
+        'type' => 'nullable|string|in:task,advert,deposit,membership',
+        'id' => 'nullable|integer', // task_id or advert_id
+        'amount' => 'nullable|numeric|min:100',
+    ]);
+
+    $userId = Auth::id();
+    $type = $request->input('type');
+    $recordId = $request->input('id');
+    $amount = $request->input('amount');
+
+    try {
+        // ✅ Determine amount dynamically
+        if ($type === 'task' && $recordId) {
+            $task = \App\Models\Task::findOrFail($recordId);
+            $amount = $task->task_amount;
+        } elseif ($type === 'advert' && $recordId) {
+            $advert = \App\Models\Advertise::findOrFail($recordId);
+            $amount = $advert->estimated_cost;
+        }
+
+        if (!$amount) {
+            return response()->json([
+                'error' => 'Amount is required if not a task or advert payment.'
+            ], 422);
+        }
+
+        // ✅ Initialize payment in repository
+        $paymentData = $this->walletRepository->initializePayment($userId, $amount, $type, $recordId);
+
+        // ✅ Record the transaction
+        $transaction = InitializeDeposit::create([
+            'user_id' => $userId,
+            'reference' => $paymentData['data']['reference'],
+            'amount' => $amount,
+            'status' => 'pending',
+            'trx' => InitializeDeposit::generateTrx(10),
+            'type' => $type,
+            'source_id' => $recordId,
         ]);
 
-        $userId = Auth::id();
-        $amount = $request->input('amount');
-        
-        try {
-            $paymentData = $this->walletRepository->initializePayment($userId, $amount);
-            //yo man, lets go to space 🚀 with KolozJNR
-            //d($paymentData);
-            $transaction = InitializeDeposit::create([
-                'user_id' => $userId,
+        Transaction::create([
+                'user_id'    => $userId,
+                'amount'     => $amount,
+                'type'       => 'credit',
+                'status'     => 'success',
+                'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
                 'reference' => $paymentData['data']['reference'],
-                'amount' => $amount,
-                'status' => 'pending',
-                'trx' => InitializeDeposit::generateTrx(10),
+                'payment_source' => 'paystack',//gets from config or payment gateway used in future
+                'category' => $paymentData['data']['metadata']['$payment_category'] ?? 'Wallet funding',
             ]);
 
-            return response()->json(['message' => 'Payment initialized successfully!', 'data' => $paymentData], 200);
-        } catch (Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
-        }
+
+        return response()->json([
+            'message' => 'Payment initialized successfully!',
+            'data' => $paymentData
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 400);
     }
+}
 
     /**
      * Verify a Paystack payment and fund the wallet.
@@ -92,18 +129,29 @@ class WalletController extends Controller
             'amount'   => $paymentData['data']['amount'] ?? 0,
         ]);
 
+
+        Transaction::where('reference', $reference)->update([
+                'currency' => $paymentData['data']['currency'] ?? null,
+                'amount'   => $paymentData['data']['amount'] ?? 0,
+                'status'     => 'successful',
+                'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
+                'reference' => $paymentData['data']['reference'],
+                'category' => $paymentData['data']['metadata']['$payment_category'] ?? 'Wallet funding',
+            ]);
+
         // Notify user BEFORE returning
         //$user->notify(new \App\Notifications\WalletFundedNotification($paymentData));
 
         // Return consistent success shape
         return response()->json([
             'success' => true,
-            'message' => 'Payment verified and wallet funded successfully!',
+            'message' => 'Payment verified and  successfully!',
             'data'    => $paymentData
         ], 200);
     } catch (\Exception $e) {
         // If something fails, mark tx failed (best effort)
         InitializeDeposit::where('reference', $reference)->update(['status' => 'failed']);
+        Transaction::where('reference', $reference)->update(['status' => 'failed']);
 
         return response()->json([
             'success' => false,

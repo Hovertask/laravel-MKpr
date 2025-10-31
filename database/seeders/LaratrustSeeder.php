@@ -61,15 +61,34 @@ class LaratrustSeeder extends Seeder
             $role->permissions()->sync($permissions);
 
             if (Config::get('laratrust_seeder.create_users')) {
-                $this->command->info("Creating '{$key}' user");
-                // Create default user for each role
-                $user = \App\Models\User::create([
-                    'name' => ucwords(str_replace('_', ' ', $key)),
-                    'email' => $key.'@app.com',
-                    'password' => bcrypt('password')
-                ]);
-                $user->addRole($role);
-            }
+    $this->command->info("Creating '{$key}' user");
+
+    // Special credentials for superadministrator
+    if ($key === 'superadministrator') {
+        $email = 'superadmin@hovertask.com';
+        $plainPassword = 'hovertask';
+        $name = 'Superadministrator';
+    } else {
+        $email = $key . '@app.com';
+        $plainPassword = 'password';
+        $name = ucwords(str_replace('_', ' ', $key));
+    }
+
+    // Use firstOrCreate to avoid duplicates and make it idempotent
+    $user = \App\Models\User::firstOrCreate(
+        ['email' => $email],
+        [
+            'name' => $name,
+            'email' => $email,
+            'password' => bcrypt($plainPassword),
+            // add other required fields defaults here if needed
+        ]
+    );
+
+    // Attach the role to the user (Laratrust supports passing role model or id)
+    $user->addRole($role);
+}
+
 
         }
     }
