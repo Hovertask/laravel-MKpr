@@ -15,6 +15,7 @@ class InitializeDeposit extends Model
         'method',
         'trx',
         'status',
+        'type',
     ];
 
     public static function generateTrx($len = 10)
