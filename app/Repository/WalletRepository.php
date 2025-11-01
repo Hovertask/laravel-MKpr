@@ -180,7 +180,7 @@ class WalletRepository implements IWalletRepository
                 ['balance' => 0]
             );
 
-            $platformFee = 600;
+            $platformFee = 100;
             $membershipBonus = $amount - $platformFee;
 
             if ($membershipBonus <= 0) {
@@ -196,7 +196,7 @@ class WalletRepository implements IWalletRepository
                 'description' => 'Platform Earnings',
                 'reference'   => $responseData['data']['reference'],
                 'payment_source' => 'system',
-                'category'    => 'platform_fee',
+                'category'    => 'platform_charges',
             ]);
 
             // ✅ Handle referral logic
@@ -208,34 +208,21 @@ class WalletRepository implements IWalletRepository
                 if ($referrer && $referrer->is_member) {
                     $referralAmount = 500;
 
-                    // Update referrer's wallet
-                    $referrerWallet = Wallet::firstOrCreate(
-                        ['user_id' => $referrer->id],
-                        ['balance' => 0]
-                    );
-                    $referrerWallet->balance += $referralAmount;
-                    $referrerWallet->save();
-
-                    // Update referrer's user balance
-                    $referrer->balance += $referralAmount;
-                    $referrer->save();
-
+                   
                     // Update referral record
-                    $referral->reward_status = 'paid';
+                    $referral->reward_status = 'pending';
                     $referral->amount = $referralAmount;
                     $referral->save();
+                    
+                     // 🧩 Record pending funds
+                   FundsRecord::create([
+                     'user_id' => $referrer->id,
+                     'referral_id' => $referral->id,
+                     'pending' => $referralAmount,
+                     'type' => 'referral_commission',
+                 ]);
 
-                    // Record transaction for referral reward
-                    Transaction::create([
-                        'user_id'     => $referrer->id,
-                        'amount'      => $referralAmount,
-                        'type'        => 'credit',
-                        'status'      => 'success',
-                        'description' => 'Referrer reward',
-                        'reference'   => $responseData['data']['reference'],
-                        'payment_source' => 'system',
-                        'category'    => 'referral_commission',
-                    ]);
+                    
 
                     // Credit membership bonus to user
                     $wallet->balance += $membershipBonus;

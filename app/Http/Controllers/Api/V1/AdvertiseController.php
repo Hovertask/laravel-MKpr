@@ -96,6 +96,8 @@ class AdvertiseController extends Controller
             'task_count_total' => $request->input('number_of_participants'),
             'task_amount' => $request->input('estimated_cost'),
             'task_count_remaining' => $request->input('number_of_participants'),
+            'payment_method' => $request->input('payment_method'),
+            'payment_gateway' => 'paystack',
             'task_type' => 1,
             'status' => 'pending',
             'priority' => 'medium',
@@ -279,11 +281,73 @@ class AdvertiseController extends Controller
     // ✅ Log transaction
     \App\Models\Transaction::create([
         'user_id'       => $user->id,
-        'amount'        => -500,
+        'amount'        => 500,
         'type'          => 'debit',
         'status'        => 'succesfull',
-        'description'   => 'One-time advert setup fee',
+        'description'   => 'One-time advert/task/product setup fee',
+        'payment_source' => 'wallet',
+        'category'    => 'platform_charges',
+
     ]);
+
+
+     // ✅ Handle referral logic
+            $referral = Referral::where('referee_id', $user->id)->first();
+
+            if ($user->is_member && $referral && $referral->reward_status == 'pending') {
+                $referrer = User::find($referral->referrer_id);
+
+                if ($referrer && $referrer->is_member) {
+                    $referralAmount = 500;
+
+                    // Update referrer's wallet
+                    $referrerWallet = Wallet::firstOrCreate(
+                        ['user_id' => $referrer->id],
+                        ['balance' => 0]
+                    );
+                    $referrerWallet->balance += $referralAmount;
+                    $referrerWallet->save();
+
+                    // Update referrer's user balance
+                    $referrer->balance += $referralAmount;
+                    $referrer->save();
+
+                    // Update referral record
+                    $referral->reward_status = 'paid';
+                    $referral->amount = $referralAmount;
+                    $referral->save();
+                    
+                    
+                   //  Update or create a funds record
+            FundsRecord::updateOrCreate(
+            [
+                'user_id' => $referrer->id,
+                'referral_id' => $referral->id,
+                'type' => 'referral_commission',
+                'pending' => $referralAmount,
+            
+            ],
+            [
+                'pending' => 0,
+                'earned' => $referralAmount,
+            ]
+        );
+
+                    // Record transaction for referral reward
+                    Transaction::create([
+                        'user_id'     => $referrer->id,
+                        'amount'      => $referralAmount,
+                        'type'        => 'credit',
+                        'status'      => 'success',
+                        'description' => 'Referrer reward',
+                        'payment_source' => 'system',
+                        'category'    => 'referral_commission',
+                    ]);
+
+
+                }
+            }
+
 
     return response()->json([
         'message'           => 'Advert setup fee paid successfully.',

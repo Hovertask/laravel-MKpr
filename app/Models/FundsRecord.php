@@ -8,7 +8,7 @@ class FundsRecord extends Model
 {
     protected $table = 'funds_records';
 
-    protected $fillable = ['user_id', 'task_id', 'product_id', 'earned', 'spent', 'pending', 'type', 'status'];
+    protected $fillable = ['user_id', 'task_id', 'completed_task_id', 'referral_id', 'product_id', 'earned', 'spent', 'pending', 'type', 'status'];
 
     public function user()
     {

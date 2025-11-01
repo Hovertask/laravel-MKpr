@@ -37,6 +37,8 @@ class TaskRepository implements ITaskRepository
             'task_count_total' => $data['task_count_total'],
             'task_count_remaining' =>$data['task_count_remaining'],
             'task_amount' => $data['task_amount'],
+            'payment_method' => $data['payment_method'],
+            'payment_gateway' => $data['payment_gateway'],
             'task_type' => $data['task_type'],
             'user_id' => auth()->id(),
             'status' => $data['status'],
@@ -160,6 +162,7 @@ public function submitTask(Request $request, $id)
         // 🧩 Record pending funds
         FundsRecord::create([
             'user_id' => $userId,
+            'completed_task_id' => $task->id,
             'pending' => $task->payment_per_task,
             'type' => 'task',
         ]);
@@ -194,7 +197,7 @@ public function submitTask(Request $request, $id)
      * @return \App\Models\Task
      */
     public function approveCompletedTask($id) {
-        //$userId = auth()->id();
+        
     
         try {
             DB::beginTransaction();
@@ -223,7 +226,7 @@ public function submitTask(Request $request, $id)
 
             FundsRecord::updateOrCreate(
                 ['user_id' => $taskOwnerId,
-                'pending' => $task->task->payment_per_task, 'type' => 'task'],
+                'pending' => $task->task->payment_per_task, 'completed_task_id' => $task->id, 'type' => 'task'],
                 ['pending' => 0,
                     'earned' => $task->task->payment_per_task,
     

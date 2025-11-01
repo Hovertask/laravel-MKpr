@@ -68,6 +68,8 @@ class AdvertiseRepository implements IAdvertiseRepository
     'number_of_participants' => $data['no_of_status_post'] ?? null,
     'payment_per_task' => $data['payment_per_task'] ?? null,
     'estimated_cost' => $data['estimated_cost'] ?? null,
+    'status' => 'pending',
+    'payment_gateway' => 'paystack',
     'deadline' => $data['deadline'] ?? null,
     'task_count_total' => $data['no_of_status_post'],
     'task_count_remaining' => $data['no_of_status_post'],
@@ -267,6 +269,7 @@ public function submitAdvert(Request $request, $id)
         // 🧩 Record pending funds
         FundsRecord::create([
             'user_id' => $userId,
+            'completed_task_id' => $advert->id,
             'pending' => $advert->payment_per_task,
             'type' => 'advert',
         ]);
@@ -342,6 +345,7 @@ public function approveCompletedAdvert($id)
         FundsRecord::updateOrCreate(
             [
                 'user_id' => $advertOwnerId,
+                'completed_task_id' => $advert->id
                 'type' => 'advert',
                 'pending' => $amount,
             ],
