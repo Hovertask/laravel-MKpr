@@ -80,7 +80,7 @@ class LaratrustSeeder extends Seeder
     $user = \App\Models\User::firstOrCreate(
         ['email' => $email],
         [
-            'name' => $fname,
+            'fname' => $fname,
             'lname' => $lname,
             'email' => $email,
             'password' => bcrypt($plainPassword),
