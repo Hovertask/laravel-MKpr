@@ -33,13 +33,13 @@ class WalletController extends Controller
 
     $request->validate([
         'type' => 'nullable|string|in:task,advert,deposit,membership',
-        'id' => 'nullable|integer', // task_id or advert_id
+        'advert_id' => 'nullable|integer', // task_id or advert_id
         'amount' => 'nullable|numeric|min:100',
     ]);
 
     $userId = Auth::id();
     $type = $request->input('type');
-    $recordId = $request->input('id');
+    $recordId = $request->input('advert_id');
     $amount = $request->input('amount');
 
     try {
