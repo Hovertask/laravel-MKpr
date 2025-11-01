@@ -68,7 +68,7 @@ class LaratrustSeeder extends Seeder
         $email = 'superadmin@hovertask.com';
         $plainPassword = 'hovertask';
         $fname = 'Superadministrator';
-        $lname 'superadmin';
+        $lname = 'superadmin';
     } else {
         $email = $key . '@app.com';
         $plainPassword = 'password';
