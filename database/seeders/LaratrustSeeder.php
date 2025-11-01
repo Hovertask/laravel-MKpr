@@ -69,11 +69,13 @@ class LaratrustSeeder extends Seeder
         $plainPassword = 'hovertask';
         $fname = 'Superadministrator';
         $lname = 'superadmin';
+        $username = 'superadmin';
     } else {
         $email = $key . '@app.com';
         $plainPassword = 'password';
         $fname = ucwords(str_replace('_', ' ', $key));
         $lname = ucwords(str_replace('_', ' ', $key));
+        $username = ucwords(str_replace('_', ' ', $key));
     }
 
     // Use firstOrCreate to avoid duplicates and make it idempotent
@@ -82,6 +84,7 @@ class LaratrustSeeder extends Seeder
         [
             'fname' => $fname,
             'lname' => $lname,
+            'username' => $username,
             'email' => $email,
             'password' => bcrypt($plainPassword),
             // add other required fields defaults here if needed
