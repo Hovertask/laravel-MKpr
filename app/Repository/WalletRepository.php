@@ -6,6 +6,7 @@ use Exception;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Referral;
+use App\\Models\FundRecord;
 use App\Models\InitializeDeposit;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;

@@ -7,6 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Repository\IAdvertiseRepository;
 use App\Repository\AdvertiseRepository;
 use App\Repository\TaskRepository;
+use App\Models\Referral;
+use App\Models\FundRecord;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Validator;
 
 class AdvertiseController extends Controller
