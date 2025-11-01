@@ -131,12 +131,11 @@ class WalletController extends Controller
 
 
         Transaction::where('reference', $reference)->update([
-                'currency' => $paymentData['data']['currency'] ?? null,
                 'amount'   => $paymentData['data']['amount'] ?? 0,
                 'status'     => 'successful',
                 'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
                 'reference' => $paymentData['data']['reference'],
-                'category' => $paymentData['data']['metadata']['$payment_category'] ?? 'Wallet funding',
+                'category' => $paymentData['data']['metadata']['payment_category'] ?? 'Wallet funding',
             ]);
 
         // Notify user BEFORE returning
