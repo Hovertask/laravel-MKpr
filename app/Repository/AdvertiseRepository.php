@@ -345,7 +345,7 @@ public function approveCompletedAdvert($id)
         FundsRecord::updateOrCreate(
             [
                 'user_id' => $advertOwnerId,
-                'completed_task_id' => $advert->id
+                'completed_task_id' => $advert->id,
                 'type' => 'advert',
                 'pending' => $amount,
             ],
