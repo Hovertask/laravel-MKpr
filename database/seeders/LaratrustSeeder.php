@@ -67,18 +67,21 @@ class LaratrustSeeder extends Seeder
     if ($key === 'superadministrator') {
         $email = 'superadmin@hovertask.com';
         $plainPassword = 'hovertask';
-        $name = 'Superadministrator';
+        $fname = 'Superadministrator';
+         =$lname 'superadmin';
     } else {
         $email = $key . '@app.com';
         $plainPassword = 'password';
-        $name = ucwords(str_replace('_', ' ', $key));
+        $fname = ucwords(str_replace('_', ' ', $key));
+        $lname = ucwords(str_replace('_', ' ', $key));
     }
 
     // Use firstOrCreate to avoid duplicates and make it idempotent
     $user = \App\Models\User::firstOrCreate(
         ['email' => $email],
         [
-            'name' => $name,
+            'name' => $fname,
+            'lname' => $lname,
             'email' => $email,
             'password' => bcrypt($plainPassword),
             // add other required fields defaults here if needed
