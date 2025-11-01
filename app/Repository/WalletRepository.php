@@ -136,8 +136,8 @@ class WalletRepository implements IWalletRepository
         $superAdminId = \DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
-            ->where('roles.name', 'superadministrator')
-            ->orWhere('roles.slug', 'superadministrator')
+            ->where('roles.fname', 'superadministrator')
+            ->orWhere('roles.lname', 'superadmin')
             ->value('users.id');
 
             // ✅ Log for debugging
