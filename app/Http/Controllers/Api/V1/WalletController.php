@@ -60,7 +60,7 @@ class WalletController extends Controller
 
         // ✅ Initialize payment in repository
         $paymentData = $this->walletRepository->initializePayment($userId, $amount, $type, $recordId);
-        if
+        
         // ✅ Record the transaction
         $transaction = InitializeDeposit::create([
             'user_id' => $userId,
