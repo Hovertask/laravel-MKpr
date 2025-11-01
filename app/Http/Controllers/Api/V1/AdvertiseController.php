@@ -282,7 +282,7 @@ class AdvertiseController extends Controller
     $user->save();
 
     // ✅ Log transaction
-    \App\Models\Transaction::create([
+    Transaction::create([
         'user_id'       => $user->id,
         'amount'        => 500,
         'type'          => 'debit',
