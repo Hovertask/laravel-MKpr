@@ -297,76 +297,109 @@ public function submitAdvert(Request $request, $id)
 /**
  * Approve an advert submission by its ID.
  *
- * This method updates the advert submission status to 'approved',
+ * This method updates the advert submission status to 'approved' or 'rejected',
  * credits the user's wallet and user account balance with the advert payment,
- * and updates the corresponding funds record.
+ * and updates the corresponding funds record if accepted.
  *
- * @param  int  $id
+ * @param  int  $id The ID of the advert submission to update.
+ * @param  string  $status The new status for the submission ('accepted' or '
  * @return \App\Models\CompletedTask|\Illuminate\Http\JsonResponse|null
  */
-public function approveCompletedAdvert($id)
+public function updateParticipantStatus($id, $status)
 {
     try {
         DB::beginTransaction();
 
-        // 🔹 Find pending advert submission
-        $advert = CompletedTask::where('id', $id)
-            ->where('status', 'pending')
-            ->first();
+        $task = CompletedTask::where('id', $id)->first();
 
-        if (!$advert) {
-            DB::rollBack();
-            return null;
+        if (!$task) {
+            return [
+                'success' => false,
+                'message' => 'Task not found',
+                'code' => 404
+            ];
         }
 
-        $advertOwnerId = $advert->user_id;
-
-        // 🔹 Update advert status to approved
-        $advert->update(['status' => 'accepted']);
-
-        // 🔹 Get advert payment amount
-        $amount = $advert->advert->payment_per_task;
-
-        // 🔹 Fund the user's wallet
-        $wallet = Wallet::firstOrCreate(
-            ['user_id' => $advertOwnerId],
-            ['balance' => 0]
-        );
-
-        $wallet->increment('balance', $amount);
-
-        // 🔹 Also update user’s main account balance
-        $user = User::find($advertOwnerId);
-        if ($user) {
-            $user->increment('balance', $amount);
+        if ($task->status !== 'pending') {
+            return [
+                'success' => false,
+                'message' => 'Task already processed',
+                'code' => 400
+            ];
         }
 
-        // 🔹 Update or create a funds record
-        FundsRecord::updateOrCreate(
-            [
-                'user_id' => $advertOwnerId,
-                'completed_task_id' => $advert->id,
-                'type' => 'advert',
-                'pending' => $amount,
-            ],
-            [
-                'pending' => 0,
-                'earned' => $amount,
-            ]
-        );
+        $task->update(['status' => $status]);
 
-        DB::commit();
+        // Handle approval logic
+        if ($status === 'accepted') {
+            $amount = $task->advert->payment_per_task;
+            $advertOwnerId = $task->user_id;
 
-        return $advert;
+            // ✅ Update wallet
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $advertOwnerId],
+                ['balance' => 0]
+            );
+            $wallet->increment('balance', $amount);
+
+            // ✅ Update user balance
+            $user = User::find($advertOwnerId);
+            if ($user) {
+                $user->increment('balance', $amount);
+            }
+
+            // ✅ Record earning
+            FundsRecord::updateOrCreate(
+                [
+                    'user_id' => $advertOwnerId,
+                    'completed_task_id' => $task->id,
+                    'type' => 'advert',
+                ],
+                [
+                    'pending' => 0,
+                    'earned' => $amount,
+                ]
+            );
+
+            // ✅ Update advert stats
+            $advert = $task->advert;
+            if ($advert) {
+                $advert->increment('amount_paid', $amount);
+                $advert->decrement('budget', $amount);
+            }
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Task approved successfully',
+                'data' => $task,
+                'code' => 200
+            ];
+        }
+
+        // Handle rejection
+        if ($status === 'rejected') {
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Task rejected successfully',
+                'data' => $task,
+                'code' => 200
+            ];
+        }
 
     } catch (\Exception $e) {
         DB::rollBack();
-        return response()->json([
-            'status' => false,
-            'message' => 'Something went wrong: ' . $e->getMessage(),
-        ], 500);
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'code' => 500
+        ];
     }
 }
+
 
 
 }

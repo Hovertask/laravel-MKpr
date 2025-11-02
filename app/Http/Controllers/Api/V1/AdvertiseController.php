@@ -469,23 +469,43 @@ public function submitAdvert(Request $request, $id)
 
 
 
-public function approveCompletedAdvert(Request $request, $id)
-{
-    $advert = $this->AdvertiseRepository->approveCompletedAdvert($id);
+/**
+ * Approve an advert submission by its ID.
+ *
+ * This method updates the advert submission status to 'approved' or 'rejected',
+ * credits the user's wallet and user account balance with the advert payment,
+ * and updates the corresponding funds record if accepted.
+ *
+ * @param  int  $id The ID of the advert submission to update.
+ * @param  string  $status The new status for the submission ('accepted' or '
+ * @return \App\Models\CompletedTask|\Illuminate\Http\JsonResponse|null
+ */
 
-    if (!$advert) {
+
+public function updateParticipantStatus(Request $request, $id)
+{
+    $validated = $request->validate([
+        'status' => 'required|in:accepted,rejected',
+    ]);
+
+    $status = $validated['status'];
+
+    $result = $this->AdvertiseRepository->updateParticipantStatus($id, $status);
+
+    if (!$result['success']) {
         return response()->json([
             'status' => false,
-            'message' => 'AdvertTask not found or already approved',
-        ], 404);
+            'message' => $result['message'],
+        ], $result['code']);
     }
 
     return response()->json([
         'status' => true,
-        'message' => 'AdvertTask approved successfully',
-        'data' => $advert,
-    ], 200);
+        'message' => $result['message'],
+        'data' => $result['data'],
+    ]);
 }
+
 
 
 
