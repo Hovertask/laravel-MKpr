@@ -28,4 +28,6 @@ class CompletedTask extends Model
     {
         return $this->belongsTo(Advertise::class, 'advert_id');
     }
+
+    
 }

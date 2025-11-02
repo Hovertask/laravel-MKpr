@@ -29,9 +29,9 @@ class Advertise extends Model
         return $this->hasMany(AdvertiseImages::class);
     }
 
-    public function userTasks()
+    public function completedTasks()
     {
-        return $this->hasMany(UserTask::class);
+        return $this->hasMany(CompletedTask::class);
     }
 
     public function task()

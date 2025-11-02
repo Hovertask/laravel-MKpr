@@ -150,25 +150,26 @@ class AdvertiseController extends Controller
             'id' => $showadvert->id,
             'title' => $showadvert->title,
             'description' => $showadvert->description,
-            'amount_paid' => $showadvert->amount_paid ?? 0,
+            'amount_paid' => $showadvert->estimated_cost ?? 0,
             'link' => $showadvert->link ?? null,
-            'admin_approval_status' => $showadvert->admin_approval_status,
+            'status' => $showadvert->status,
             'created_at' => $showadvert->created_at->toDateTimeString(),
 
             // computed stats
             'stats' => [
-                'total_participants' => $showadvert->userTasks->count(),
-                'accepted' => $showadvert->userTasks->where('status', 'accepted')->count(),
-                'rejected' => $showadvert->userTasks->where('status', 'rejected')->count(),
+                'total_participants' => $showadvert->completedTasks->count(),
+                'accepted' => $showadvert->CompletedTasks->where('status', 'accepted')->count(),
+                'rejected' => $showadvert->CompletedTasks->where('status', 'rejected')->count(),
             ],
 
             // mapped participants
-            'participants' => $showadvert->userTasks->map(function ($task) {
+            'participants' => $showadvert->completedTasks->map(function ($task) {
                 return [
                     'id' => $task->id,
-                    'name' => $task->user->name ?? 'Unknown',
+                    'title' => $task->title,
+                    'name' => $task->user->fname ?? 'Unknown',
                     'handle' => '@' . ($task->user->username ?? 'unknown'),
-                    'proof_link' => $task->proof_link,
+                    'proof_link' => $task->social_media_url,
                     'status' => $task->status,
                     'submitted_at' => $task->created_at->toDateTimeString(),
                 ];

@@ -42,7 +42,7 @@ class AdvertiseRepository implements IAdvertiseRepository
     $ads = Advertise::with([
         'user',
         'advertiseImages',
-        'userTasks.user' // include user details on allocations
+        'completedTasks.user' // include user details on allocations
     ])->findOrFail($id);
 
     return $ads;
