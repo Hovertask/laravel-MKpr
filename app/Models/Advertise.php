@@ -31,7 +31,7 @@ class Advertise extends Model
 
     public function completedTasks()
     {
-        return $this->hasMany(CompletedTask::class);
+        return $this->hasMany(CompletedTask::class, 'advert_id');
     }
 
     public function task()
