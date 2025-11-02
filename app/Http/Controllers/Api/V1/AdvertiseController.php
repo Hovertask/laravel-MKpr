@@ -8,6 +8,8 @@ use App\Repository\IAdvertiseRepository;
 use App\Repository\AdvertiseRepository;
 use App\Repository\TaskRepository;
 use App\Models\Referral;
+use App\Models\Wallet;
+use App\Models\User;
 use App\Models\FundsRecord;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Validator;
@@ -263,7 +265,7 @@ class AdvertiseController extends Controller
     }
 
     // ✅ Get wallet
-    $wallet = \App\Models\Wallet::where('user_id', $user->id)->firstOrFail();
+    $wallet = Wallet::where('user_id', $user->id)->firstOrFail();
 
     // ✅ Insufficient balance
     if ($wallet->balance < 500) {
