@@ -322,7 +322,7 @@ public function approveCompletedAdvert($id)
         $advertOwnerId = $advert->user_id;
 
         // 🔹 Update advert status to approved
-        $advert->update(['status' => 'approved']);
+        $advert->update(['status' => 'accepted']);
 
         // 🔹 Get advert payment amount
         $amount = $advert->advert->payment_per_task;

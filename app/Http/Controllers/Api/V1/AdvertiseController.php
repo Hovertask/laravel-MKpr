@@ -160,6 +160,7 @@ class AdvertiseController extends Controller
                 'total_participants' => $showadvert->completedTasks->count(),
                 'accepted' => $showadvert->CompletedTasks->where('status', 'accepted')->count(),
                 'rejected' => $showadvert->CompletedTasks->where('status', 'rejected')->count(),
+                'pending' => $showadvert->CompletedTasks->where('status', 'pending')->count(),
             ],
 
             // mapped participants
