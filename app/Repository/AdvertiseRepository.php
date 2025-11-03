@@ -363,12 +363,7 @@ public function updateParticipantStatus($id, $status)
                 ]
             );
 
-            // ✅ Update advert stats
-            $advert = $task->advert;
-            if ($advert) {
-                $advert->increment('amount_paid', $amount);
-                $advert->decrement('budget', $amount);
-            }
+            
 
             DB::commit();
 
