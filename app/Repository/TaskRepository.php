@@ -294,7 +294,7 @@ public function getTasksByType($type = null)
 
         case 'completed':
         case 'approved':
-            return $query->where('status', 'approved')->get();
+            return $query->where('status', 'accepted')->get();
 
         case 'rejected':
             return $query->where('status', 'rejected')->get();
@@ -320,7 +320,7 @@ public function CompletedTaskStats()
 
     // Counts by status
     $pendingCount  = $tasks->get('pending')?->count() ?? 0;
-    $approvedCount = $tasks->get('approved')?->count() ?? 0;
+    $approvedCount = $tasks->get('accepted')?->count() ?? 0;
     $rejectedCount = $tasks->get('rejected')?->count() ?? 0;
 
     // Total earnings = only approved tasks
@@ -335,7 +335,7 @@ public function CompletedTaskStats()
         'status'         => true,
         'user_id'        => $userId,
         'pending'        => $pendingCount,
-        'approved'       => $approvedCount,
+        'accepted'       => $approvedCount,
         'rejected'       => $rejectedCount,
         'total_tasks'    => $totalTasks,
         'total_earnings' => $totalEarnings,
