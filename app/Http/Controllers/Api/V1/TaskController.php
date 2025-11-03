@@ -66,6 +66,66 @@ class TaskController extends Controller
 
     }
 
+
+
+    //track advert by id for  creator to track perfomance
+    public function showTaskPerformance($id)
+{
+    $showtask = $this->task->showTaskPerformance($id);
+
+    if (!$showadvert) {
+        return response()->json([
+            'status' => false,
+            'message' => 'Task not found',
+        ], 404);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => 'Task retrieved successfully',
+        'data' => [
+            'id' => $showtask->id,
+            'title' => $showatask->title,
+            'description' => $showtask->description,
+            'amount_paid' => $showtask->task_amount ?? 0,
+            'link' => $showtask->link ?? null,
+            'status' => $showtask->status,
+            'payment_per_task' => $showtask->payment_per_task ?? null,
+            'no_of_status_post' => $showtask->no_of_status_post ?? null,
+            'created_at' => $showtask->created_at->toDateTimeString(),
+
+
+            // computed stats
+            'stats' => [
+                'total_participants' => $showtask->completedTasks->count(),
+                'accepted' => $showtask->CompletedTasks->where('status', 'accepted')->count(),
+                'rejected' => $showtask->CompletedTasks->where('status', 'rejected')->count(),
+                'pending' => $showtask->CompletedTasks->where('status', 'pending')->count(),
+                'total_count' => $showtask->task_count_total ?? 0,
+                'remaining_count' => $showtask->task_count_remaining ?? 0,
+                'completed_count' => ($showtask->task_count_total ?? 0) - ($showadvert->task_count_remaining ?? 0),
+                'completion_percentage' => ($showtask->task_count_total ?? 0) > 0
+                ? round((($showtask->task_count_total - $showtask->task_count_remaining) / $showtask->task_count_total) * 100, 2)
+                : 0,
+                'BudgetSpent' => ($showtask->estimated_cost ?? 0) - ($showtask->payment_per_task ?? 0),
+            ],
+
+            // mapped participants
+            'participants' => $showtask->completedTasks->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'name' => $task->user->fname ?? 'Unknown',
+                    'handle' => '@' . ($task->user->username ?? 'unknown'),
+                    'proof_link' => $task->social_media_url,
+                    'status' => $task->status,
+                    'submitted_at' => $task->created_at->toDateTimeString(),
+                ];
+            }),
+        ],
+    ], 200);
+}
+
     public function updateTask(Request $request, $id) {
         $validateTask = Validator::make($request->all(), [
             'title' => 'required|string',
@@ -148,7 +208,7 @@ class TaskController extends Controller
         ], 200);
     }
 
-    // track task by id for users to see details
+    // track task by id for earners to see details to complete the task
     public function show($id)
     {
         $task = $this->task->show($id);
@@ -262,7 +322,7 @@ class TaskController extends Controller
         ], 200);
     }
 
-     // Fetch tasks based on type with summary stats
+     // Fetch tasks based on type with summary stats for user who completed task
 
 public function getTasks(Request $request)
 {
@@ -289,5 +349,44 @@ public function getTasks(Request $request)
         'stats' => $this->task->CompletedTaskStats(), // 🔹 Include summary stats
     ]);
 }
+
+
+/**
+ * Approve an advert submission by its ID.
+ *
+ * This method updates the advert submission status to 'approved' or 'rejected',
+ * credits the user's wallet and user account balance with the advert payment,
+ * and updates the corresponding funds record if accepted.
+ *
+ * @param  int  $id The ID of the advert submission to update.
+ * @param  string  $status The new status for the submission ('accepted' or '
+ * @return \App\Models\CompletedTask|\Illuminate\Http\JsonResponse|null
+ */
+
+
+public function updateParticipantStatus(Request $request, $id)
+{
+    $validated = $request->validate([
+        'status' => 'required|in:accepted,rejected',
+    ]);
+
+    $status = $validated['status'];
+
+    $result = $this->task->updateParticipantStatus($id, $status);
+
+    if (!$result['success']) {
+        return response()->json([
+            'status' => false,
+            'message' => $result['message'],
+        ], $result['code']);
+    }
+
+    return response()->json([
+        'status' => true,
+        'message' => $result['message'],
+        'data' => $result['data'],
+    ]);
+}
+
 
 }

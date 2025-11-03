@@ -93,6 +93,22 @@ class TaskRepository implements ITaskRepository
     }
 
 
+    //track single  advert by id  created  by  user to track perfomance
+
+    public function showTaskPerformance($id)
+{
+    $task = Task::with([
+        'user',
+        'advertiseImages',
+        'completedTasks.user' // include user details on allocations
+    ])->findOrFail($id);
+
+    return $task;
+
+
+}
+
+
     //submit task done by user
 
 public function submitTask(Request $request, $id)
@@ -187,64 +203,6 @@ public function submitTask(Request $request, $id)
 
     
 
-    /**
-     * Approve a task, given its id.
-     * 
-     * This method first updates the task's status to approved and then increments the user's balance
-     * by the amount of the task.
-     * 
-     * @param  int  $id
-     * @return \App\Models\Task
-     */
-    public function approveCompletedTask($id) {
-        
-    
-        try {
-            DB::beginTransaction();
-            $task = CompletedTask::where('id', $id)->where('status', 'pending')->first();
-            if (!$task) {    
-                DB::rollBack();
-                return null;
-            }
-
-            $taskOwnerId = $task->user_id;
-            $task->update(['status' => 'approved']);
-    
-            // Fund the user's wallet
-            $wallet = Wallet::firstOrCreate(
-                ['user_id' => $taskOwnerId],
-                ['balance' => 0]
-            );
-    
-            $wallet->increment('balance', $task->task->payment_per_task);
-
-            // Update user's main balance
-            $user = User::find($taskOwnerId);
-            if ($user) {
-                $user->increment('balance', $task->task->payment_per_task);
-            }
-
-            FundsRecord::updateOrCreate(
-                ['user_id' => $taskOwnerId,
-                'pending' => $task->task->payment_per_task, 'completed_task_id' => $task->id, 'type' => 'task'],
-                ['pending' => 0,
-                    'earned' => $task->task->payment_per_task,
-    
-                ],
-            );
-    
-            DB::commit();
-            return $task;
-    
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
     public function approveTask($id) {
         $task = Task::where('id', $id)
         ->where('status', 'pending')->first();
@@ -285,6 +243,8 @@ public function getTasksByType($type = null)
     }
 }
 
+//completed task stats for user dashboard
+
 public function CompletedTaskStats()
 {
     $tasks = CompletedTask::select('status', 'payment_per_task')
@@ -318,5 +278,107 @@ public function CompletedTaskStats()
         $task->delete();
         return $task;
     }
+
+
+    /**
+ * Approve an task submission by its ID.
+ *
+ * This method updates the advert submission status to 'approved' or 'rejected',
+ * credits the user's wallet and user account balance with the advert payment,
+ * and updates the corresponding funds record if accepted.
+ *
+ * @param  int  $id The ID of the advert submission to update.
+ * @param  string  $status The new status for the submission ('accepted' or '
+ * @return \App\Models\CompletedTask|\Illuminate\Http\JsonResponse|null
+ */
+public function updateParticipantStatus($id, $status)
+{
+    try {
+        DB::beginTransaction();
+
+        $task = CompletedTask::where('id', $id)->first();
+
+        if (!$task) {
+            return [
+                'success' => false,
+                'message' => 'Task not found',
+                'code' => 404
+            ];
+        }
+
+        if ($task->status !== 'pending') {
+            return [
+                'success' => false,
+                'message' => 'Task already processed',
+                'code' => 400
+            ];
+        }
+
+        $task->update(['status' => $status]);
+
+        // Handle approval logic
+        if ($status === 'accepted') {
+            $amount = $task->task->payment_per_task;
+            $taskOwnerId = $task->user_id;
+
+            // ✅ Update wallet
+            $wallet = Wallet::firstOrCreate(
+                ['user_id' => $taskOwnerId],
+                ['balance' => 0]
+            );
+            $wallet->increment('balance', $amount);
+
+            // ✅ Update user balance
+            $user = User::find($taskOwnerId);
+            if ($user) {
+                $user->increment('balance', $amount);
+            }
+
+            // ✅ Record earning
+            FundsRecord::updateOrCreate(
+                [
+                    'user_id' => $taskOwnerId,
+                    'completed_task_id' => $task->id,
+                    'type' => 'task',
+                ],
+                [
+                    'pending' => 0,
+                    'earned' => $amount,
+                ]
+            );
+
+            
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Task approved successfully',
+                'data' => $task,
+                'code' => 200
+            ];
+        }
+
+        // Handle rejection
+        if ($status === 'rejected') {
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Task rejected successfully',
+                'data' => $task,
+                'code' => 200
+            ];
+        }
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return [
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage(),
+            'code' => 500
+        ];
+    }
+}
 
 }

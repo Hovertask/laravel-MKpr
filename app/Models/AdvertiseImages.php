@@ -15,4 +15,9 @@ class AdvertiseImages extends Model
     {
         return $this->belongsTo(Advertise::class);
     }
+
+    public function task()
+    {
+        return $this->belongsTo(Task::class);
+    }
 }

@@ -23,4 +23,14 @@ class Task extends Model
     return $this->belongsTo(Advertise::class, 'advert_id');
 }
 
+public function advertiseImages()
+    {
+        return $this->hasMany(AdvertiseImages::class);
+    }
+
+    public function completedTasks()
+    {
+        return $this->hasMany(CompletedTask::class, 'task_id');
+    }
+
 }

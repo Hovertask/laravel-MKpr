@@ -173,6 +173,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('/update-task/{id}', [TaskController::class, 'updateTask'])->name('update.task');
         Route::get('/show-all-task', [TaskController::class, 'showAll'])->name('show.all');
         Route::get('/show-task/{id}', [TaskController::class, 'show'])->name('show.task');
+        Route::get('/show-task-perfrmance/{id}', [AdvertiseController::class, 'showTaskPerformance'])->name('advertise.show');
         Route::post('/submit-task/{id}', [TaskController::class, 'submitTask'])->name('submit.task');
         Route::post('/approve-task/{id}', [TaskController::class, 'approveTask'])->name('approve.task');
         Route::post('/approve-completed-task/{id}', [TaskController::class, 'approveCompletedTask'])->name('approve.completed.task');
@@ -283,6 +284,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
    // Update participant status route
     Route::patch('/participants/{id}/status', [AdvertiseController::class, 'updateParticipantStatus']);
+    Route::patch('/participants/{id}/status', [TaskController::class, 'updateParticipantStatus']);
+
 
 
     

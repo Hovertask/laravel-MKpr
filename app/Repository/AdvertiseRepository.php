@@ -37,7 +37,7 @@ class AdvertiseRepository implements IAdvertiseRepository
         return Advertise::find($id);
     }
 
-    //track single advert by id of authenticated user
+    //track single  advert by id  created  by  user to track perfomance
 
     public function show($id)
 {
@@ -119,7 +119,7 @@ class AdvertiseRepository implements IAdvertiseRepository
     return $createAds;
 }
 
-  //track all advert created by auth user for management
+  //track all advert created by auth user for management/perfomance tracking
 
     public function authUserAds()
 {
