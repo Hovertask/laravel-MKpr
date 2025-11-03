@@ -93,7 +93,20 @@ class TaskRepository implements ITaskRepository
     }
 
 
-    //track single  advert by id  created  by  user to track perfomance
+     //track all task created by auth user for management/perfomance tracking
+
+    public function authUserTasks()
+{
+    $user = auth()->user();
+
+    $userAds = Task::with('user')
+        ->where('user_id', $user->id) // filter ads by current user
+        ->get();
+
+    return $userTasks;
+}
+
+    //track single  task  by id  created  by  user to track perfomance
 
     public function showTaskPerformance($id)
 {
@@ -243,35 +256,41 @@ public function getTasksByType($type = null)
     }
 }
 
-//completed task stats for user dashboard
+//completed task stats for authenticated user dashboard
 
 public function CompletedTaskStats()
 {
-    $tasks = CompletedTask::select('status', 'payment_per_task')
+    $userId = auth()->id();
+
+    $tasks = CompletedTask::where('user_id', $userId)
+        ->select('status', 'payment_per_task')
         ->get()
         ->groupBy('status');
 
-    // Get counts
+    // Counts by status
     $pendingCount  = $tasks->get('pending')?->count() ?? 0;
     $approvedCount = $tasks->get('approved')?->count() ?? 0;
     $rejectedCount = $tasks->get('rejected')?->count() ?? 0;
 
-    // Calculate total earnings only for approved tasks
-    $totalEarnings = $tasks->get('approved') 
+    // Total earnings = only approved tasks
+    $totalEarnings = $tasks->get('approved')
         ? $tasks->get('approved')->sum('payment_per_task')
         : 0;
 
-    // Calculate total number of all tasks
+    // Total number of all tasks
     $totalTasks = $tasks->flatten()->count();
 
-    return [
+    return response()->json([
+        'status'         => true,
+        'user_id'        => $userId,
         'pending'        => $pendingCount,
         'approved'       => $approvedCount,
         'rejected'       => $rejectedCount,
         'total_tasks'    => $totalTasks,
         'total_earnings' => $totalEarnings,
-    ];
+    ], 200);
 }
+
 
     public function delete($id) {
         $task = Task::find($id);

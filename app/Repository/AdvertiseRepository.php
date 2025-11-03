@@ -30,14 +30,14 @@ class AdvertiseRepository implements IAdvertiseRepository
 
 
 
-    // track advert by ID for users to see details
+    // track advert by ID picked by  user/earner  to see details and apply for it 
      public function showads($id)
     {
         
         return Advertise::find($id);
     }
 
-    //track single  advert by id  created  by  user to track perfomance
+    //track single  advert by id picked  by the advert creator  to track perfomance
 
     public function show($id)
 {

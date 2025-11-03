@@ -12,6 +12,7 @@ interface ITaskRepository
     public function delete($id);
     public function showAll();
     public function show($id);
+    public function authUserTasks();
     public function showTaskPerformance($id);
     public function submitTask(Request $request, $id);
     public function approveTask($id);

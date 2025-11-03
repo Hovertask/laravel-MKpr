@@ -66,9 +66,24 @@ class TaskController extends Controller
 
     }
 
+   
+
+    //track all task created by auth user
+
+    public function authUserTasks()
+    {
+        $authUserTasks = $this->task->authUserTasks();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Ads retrieved successfully',
+            'data' => $authUserTasks,
+        ], 200);
+    }
 
 
-    //track advert by id for  creator to track perfomance
+
+    //track task by id for  creator to track task perfomance
     public function showTaskPerformance($id)
 {
     $showtask = $this->task->showTaskPerformance($id);
@@ -295,23 +310,7 @@ class TaskController extends Controller
     
     }
 
-    public function approveCompletedTask(Request $request, $id) {
-        $task = $this->task->approveCompletedTask($id);
-            
-        if (!$task) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Task not found or already approved',
-            ], 404);
-        }
     
-        return response()->json([
-            'status' => true,
-            'message' => 'Task approved successfully',
-            'data' => $task,
-        ], 200);
-    
-    }
 
     public function deleteTask($id) {
         $task = $this->task->delete($id);

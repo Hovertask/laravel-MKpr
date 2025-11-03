@@ -173,6 +173,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('/update-task/{id}', [TaskController::class, 'updateTask'])->name('update.task');
         Route::get('/show-all-task', [TaskController::class, 'showAll'])->name('show.all');
         Route::get('/show-task/{id}', [TaskController::class, 'show'])->name('show.task');
+        Route::get('/authusertasks', [TaskController::class, 'authUserTasks'])->name('task.authUserTasks');
+
         Route::get('/show-task-perfrmance/{id}', [AdvertiseController::class, 'showTaskPerformance'])->name('advertise.show');
         Route::post('/submit-task/{id}', [TaskController::class, 'submitTask'])->name('submit.task');
         Route::post('/approve-task/{id}', [TaskController::class, 'approveTask'])->name('approve.task');
@@ -283,8 +285,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
 
    // Update participant status route
-    Route::patch('/participants/{id}/status', [AdvertiseController::class, 'updateParticipantStatus']);
-    Route::patch('/participants/{id}/status', [TaskController::class, 'updateParticipantStatus']);
+    Route::patch('advert/participants/{id}/status', [AdvertiseController::class, 'updateParticipantStatus']);
+    Route::patch('engagement/participants/{id}/status', [TaskController::class, 'updateParticipantStatus']);
 
 
 
