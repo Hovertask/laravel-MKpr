@@ -191,6 +191,8 @@ class AdvertiseController extends Controller
         ], 200);
     }
 
+    
+
     public function approveAds(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
