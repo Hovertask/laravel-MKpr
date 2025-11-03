@@ -21,7 +21,7 @@ class TaskRepository implements ITaskRepository
         $this->fileUploadService = $fileUploadService;
     }
 
-    public function create(array $data): Task
+    public function create(array $data, Request $request): Task
     {
         $task = Task::create([
             'title' => $data['title'],
@@ -50,9 +50,60 @@ class TaskRepository implements ITaskRepository
         ]);
 
         //dd($task);
+        
+
+        
+        // ✅ Handle payment via wallet
+
+    if ($request->payment_method === 'wallet') {
+    // Deduct estimated cost from user's wallet
+    $wallet = Wallet::firstOrCreate(
+        ['user_id' => $user->id],
+        ['balance' => 0]
+    );
+
+
+    if ($wallet->balance < $data['estimated_cost']) {
+        throw new \Exception('Insufficient wallet balance to create advert.');
+    }
+
+    $wallet->decrement('balance', $data['estimated_cost']);
+
+    // Also deduct from user's main balance
+    $user->decrement('balance', $data['estimated_cost']);
+
+    //log transaction
+    Transaction::create([
+        'user_id'    => $user->id,
+        'amount'     => $data['estimated_cost'],
+        'type'       => 'debit',
+        'status'     => 'success',
+        'description'=> 'paid for task creation via Wallet',
+        'payment_source' => 'wallet',
+        'category'    => 'task',
+
+    ]);
+
+    // fund record for advert creation
+    FundsRecord::create([
+        'user_id' => $user->id,
+        'advert_id' => $task->id,
+        'spent' => $data['estimated_cost'],
+        'type' => 'task',
+    ]);
+
+    // update advert status to approved since wallet payment is instant 
+    $task->update(['status' => 'success']);
+
+}
 
         return $task;
-    }
+    
+    
+}
+
+
+
 
     public function update($id, array $data)
     {

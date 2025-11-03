@@ -9,6 +9,7 @@ use App\Models\CompletedTask;
 use App\Models\FundsRecord;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\Transaction;
 use App\Services\FileUploadService;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
@@ -115,6 +116,51 @@ class AdvertiseRepository implements IAdvertiseRepository
             }
         }
     }
+
+
+    // ✅ Handle payment via wallet
+
+    if ($request->payment_method === 'wallet') {
+    // Deduct estimated cost from user's wallet
+    $wallet = Wallet::firstOrCreate(
+        ['user_id' => $user->id],
+        ['balance' => 0]
+    );
+
+
+    if ($wallet->balance < $data['estimated_cost']) {
+        throw new \Exception('Insufficient wallet balance to create advert.');
+    }
+
+    $wallet->decrement('balance', $data['estimated_cost']);
+
+    // Also deduct from user's main balance
+    $user->decrement('balance', $data['estimated_cost']);
+
+    //log transaction
+    \App\Models\Transaction::create([
+        'user_id'    => $user->id,
+        'amount'     => $data['estimated_cost'],
+        'type'       => 'debit',
+        'status'     => 'success',
+        'description'=> 'paid for Advert creation via Wallet',
+        'payment_source' => 'wallet',
+        'category'    => 'Advert',
+
+    ]);
+
+    // fund record for advert creation
+    FundsRecord::create([
+        'user_id' => $user->id,
+        'advert_id' => $createAds->id,
+        'spent' => $data['estimated_cost'],
+        'type' => 'Advert',
+    ]);
+
+    // update advert status to approved since wallet payment is instant 
+    $createAds->update(['status' => 'success']);
+
+}
 
     return $createAds;
 }
