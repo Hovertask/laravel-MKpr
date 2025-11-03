@@ -174,8 +174,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::get('/show-all-task', [TaskController::class, 'showAll'])->name('show.all');
         Route::get('/show-task/{id}', [TaskController::class, 'show'])->name('show.task');
         Route::get('/authusertasks', [TaskController::class, 'authUserTasks'])->name('task.authUserTasks');
-
-        Route::get('/show-task-perfrmance/{id}', [AdvertiseController::class, 'showTaskPerformance'])->name('advertise.show');
+        Route::get('/show-task-perfrmance/{id}', [TaskController::class, 'showTaskPerformance'])->name('advertise.show');
         Route::post('/submit-task/{id}', [TaskController::class, 'submitTask'])->name('submit.task');
         Route::post('/approve-task/{id}', [TaskController::class, 'approveTask'])->name('approve.task');
         Route::post('/approve-completed-task/{id}', [TaskController::class, 'approveCompletedTask'])->name('approve.completed.task');
