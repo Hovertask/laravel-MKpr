@@ -11,7 +11,7 @@ class CompletedTask extends Model
 
     public function task()
     {
-        return $this->belongsTo(Task::class);
+        return $this->belongsTo(Task::class, 'task_id');
     }
 
     /**
@@ -29,9 +29,6 @@ class CompletedTask extends Model
         return $this->belongsTo(Advertise::class, 'advert_id');
     }
 
-    public function task()
-    {
-        return $this->belongsTo(Task::class, 'task_id');
-    }
+    
     
 }
