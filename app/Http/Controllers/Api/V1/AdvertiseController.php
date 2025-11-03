@@ -181,6 +181,7 @@ class AdvertiseController extends Controller
                     'name' => $task->user->fname ?? 'Unknown',
                     'handle' => '@' . ($task->user->username ?? 'unknown'),
                     'proof_link' => $task->social_media_url,
+                    'screenshot_path' => $task->screenshot,
                     'status' => $task->status,
                     'submitted_at' => $task->created_at->toDateTimeString(),
                 ];

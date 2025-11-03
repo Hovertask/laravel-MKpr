@@ -163,7 +163,6 @@ class TaskRepository implements ITaskRepository
 {
     $task = Task::with([
         'user',
-        'advertiseImages',
         'completedTasks.user' // include user details on allocations
     ])->findOrFail($id);
 
