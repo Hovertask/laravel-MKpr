@@ -280,6 +280,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     });
 
+
+
+    Route::patch('/participants/{id}/status', [AdvertiseController::class, 'updateParticipantStatus']);
+
+
     
 
 
