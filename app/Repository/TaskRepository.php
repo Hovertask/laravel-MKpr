@@ -5,6 +5,7 @@ use DB;
 use App\Models\Task;
 use App\Models\Wallet;
 use App\Models\FundsRecord;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use App\Models\CompletedTask;
 use App\Services\FileUploadService;
@@ -55,7 +56,7 @@ class TaskRepository implements ITaskRepository
         
         // ✅ Handle payment via wallet
 
-    if ($data['payment_method'] === 'wallet') {
+    if($data['payment_method'] === 'wallet') {
     // Deduct estimated cost from user's wallet
     $wallet = Wallet::firstOrCreate(
         ['user_id' => $user->id],
@@ -63,19 +64,19 @@ class TaskRepository implements ITaskRepository
     );
 
 
-    if ($wallet->balance < $data['estimated_cost']) {
+    if ($wallet->balance < $data['task_count_total']) {
         throw new \Exception('Insufficient wallet balance to create advert.');
     }
 
-    $wallet->decrement('balance', $data['estimated_cost']);
+    $wallet->decrement('balance', $data['task_count_total']);
 
     // Also deduct from user's main balance
-    $user->decrement('balance', $data['estimated_cost']);
+    $user->decrement('balance', $data['task_count_total']);
 
     //log transaction
     Transaction::create([
         'user_id'    => $user->id,
-        'amount'     => $data['estimated_cost'],
+        'amount'     => $data['task_count_total'],
         'type'       => 'debit',
         'status'     => 'success',
         'description'=> 'paid for task creation via Wallet',
@@ -88,7 +89,7 @@ class TaskRepository implements ITaskRepository
     FundsRecord::create([
         'user_id' => $user->id,
         'advert_id' => $task->id,
-        'spent' => $data['estimated_cost'],
+        'spent' => $data['task_count_total'],
         'type' => 'task',
     ]);
 
