@@ -21,7 +21,7 @@ class TaskRepository implements ITaskRepository
         $this->fileUploadService = $fileUploadService;
     }
 
-    public function create(array $data, Request $request): Task
+    public function create(array $data): Task
     {
         $task = Task::create([
             'title' => $data['title'],
@@ -55,7 +55,7 @@ class TaskRepository implements ITaskRepository
         
         // ✅ Handle payment via wallet
 
-    if ($request->payment_method === 'wallet') {
+    if ($data['payment_method '] === 'wallet') {
     // Deduct estimated cost from user's wallet
     $wallet = Wallet::firstOrCreate(
         ['user_id' => $user->id],
