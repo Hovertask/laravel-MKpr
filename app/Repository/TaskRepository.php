@@ -150,7 +150,7 @@ class TaskRepository implements ITaskRepository
 {
     $user = auth()->user();
 
-    $userAds = Task::with('user')
+    $userTasks = Task::with('user')
         ->where('user_id', $user->id) // filter ads by current user
         ->get();
 
