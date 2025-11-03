@@ -153,7 +153,10 @@ class AdvertiseController extends Controller
             'amount_paid' => $showadvert->estimated_cost ?? 0,
             'link' => $showadvert->link ?? null,
             'status' => $showadvert->status,
+            'payment_per_task' => $showadvert->payment_per_task ?? null,
+            'no_of_status_post' => $showadvert->no_of_status_post ?? null,
             'created_at' => $showadvert->created_at->toDateTimeString(),
+
 
             // computed stats
             'stats' => [
@@ -161,6 +164,13 @@ class AdvertiseController extends Controller
                 'accepted' => $showadvert->CompletedTasks->where('status', 'accepted')->count(),
                 'rejected' => $showadvert->CompletedTasks->where('status', 'rejected')->count(),
                 'pending' => $showadvert->CompletedTasks->where('status', 'pending')->count(),
+                'total_count' => $showadvert->task_count_total ?? 0,
+                'remaining_count' => $showadvert->task_count_remaining ?? 0,
+                'completed_count' => ($showadvert->task_count_total ?? 0) - ($showadvert->task_count_remaining ?? 0),
+                'completion_percentage' => ($showadvert->task_count_total ?? 0) > 0
+                ? round((($showadvert->task_count_total - $showadvert->task_count_remaining) / $showadvert->task_count_total) * 100, 2)
+                : 0,
+                'BudgetSpent' => ($showadvert->estimated_cost ?? 0) - ($showadvert->payment_per_task ?? 0),
             ],
 
             // mapped participants
@@ -191,7 +201,7 @@ class AdvertiseController extends Controller
         ], 200);
     }
 
-    
+
 
     public function approveAds(Request $request, $id)
     {
