@@ -55,7 +55,7 @@ class TaskRepository implements ITaskRepository
         
         // ✅ Handle payment via wallet
 
-    if ($data['payment_method '] === 'wallet') {
+    if ($data['payment_method'] === 'wallet') {
     // Deduct estimated cost from user's wallet
     $wallet = Wallet::firstOrCreate(
         ['user_id' => $user->id],
@@ -331,15 +331,14 @@ public function CompletedTaskStats()
     // Total number of all tasks
     $totalTasks = $tasks->flatten()->count();
 
-    return response()->json([
-        'status'         => true,
-        'user_id'        => $userId,
-        'pending'        => $pendingCount,
-        'accepted'       => $approvedCount,
-        'rejected'       => $rejectedCount,
-        'total_tasks'    => $totalTasks,
-        'total_earnings' => $totalEarnings,
-    ], 200);
+    return [
+    'pending'        => $pendingCount,
+    'accepted'       => $approvedCount,
+    'rejected'       => $rejectedCount,
+    'total_tasks'    => $totalTasks,
+    'total_earnings' => $totalEarnings,
+];
+
 }
 
 
