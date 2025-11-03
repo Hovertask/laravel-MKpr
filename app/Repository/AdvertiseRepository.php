@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Repository\IAdvertiseRepository;
 use App\Models\CompletedTask;
 use App\Models\FundsRecord;
+use App\Models\User;
+use App\Models\Wallet;
 use App\Services\FileUploadService;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
