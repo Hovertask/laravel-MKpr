@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 use DB;
+use App\Models\User;
 use App\Models\Task;
 use App\Models\Wallet;
 use App\Models\FundsRecord;
@@ -58,6 +59,8 @@ class TaskRepository implements ITaskRepository
 
     if($data['payment_method'] === 'wallet') {
     // Deduct estimated cost from user's wallet
+     $user = auth()->user();
+
     $wallet = Wallet::firstOrCreate(
         ['user_id' => $user->id],
         ['balance' => 0]
