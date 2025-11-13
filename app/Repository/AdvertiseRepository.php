@@ -92,7 +92,8 @@ class AdvertiseRepository implements IAdvertiseRepository
 
                 $createAds->advertiseImages()->create([
                     'file_path' => $uploadedFile->getSecurePath(),
-                    'public_id' => $uploadedFile->getPublicId()
+                    'public_id' => $uploadedFile->getPublicId(),
+                    'media_type' => 'image',
                 ]);
             }
         }
@@ -112,6 +113,7 @@ class AdvertiseRepository implements IAdvertiseRepository
                 $createAds->advertiseImages()->create([
                     'video_path' => $uploadedFile->getSecurePath(),
                     'public_id' => $uploadedFile->getPublicId()
+                    'media_type' => 'video',
                 ]);
             }
         }
