@@ -25,8 +25,7 @@ class AdvertiseRepository implements IAdvertiseRepository
     public function showAll() 
     {
         $user = auth()->user();
-        $Adverts = Advertise::all();
-        return $Adverts;
+         return Advertise::with('advertiseImages')->latest()->get();
     }
 
 
@@ -112,7 +111,7 @@ class AdvertiseRepository implements IAdvertiseRepository
 
                 $createAds->advertiseImages()->create([
                     'video_path' => $uploadedFile->getSecurePath(),
-                    'public_id' => $uploadedFile->getPublicId()
+                    'public_id' => $uploadedFile->getPublicId(),
                     'media_type' => 'video',
                 ]);
             }
