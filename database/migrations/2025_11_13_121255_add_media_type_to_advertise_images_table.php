@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('advertise_images', function (Blueprint $table) {
-            //
+            // Add a new column to specify media type (image, video, etc.)
+            $table->string('media_type')->nullable()->after('id');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('advertise_images', function (Blueprint $table) {
-            //
+            $table->dropColumn('media_type');
         });
     }
 };
