@@ -88,7 +88,7 @@ class TaskController extends Controller
 {
     $showtask = $this->task->showTaskPerformance($id);
 
-    if (!$showadvert) {
+    if (!$showtask) {
         return response()->json([
             'status' => false,
             'message' => 'Task not found',
