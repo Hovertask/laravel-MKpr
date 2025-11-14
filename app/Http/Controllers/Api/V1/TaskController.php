@@ -326,7 +326,7 @@ class TaskController extends Controller
 
 public function getTasks(Request $request)
 {
-    $type = $request->query('type'); // pending, completed, rejected, history
+    $type = $request->query('type'); // pending, accepted, rejected, history
     $tasks = $this->task->getTasksByType($type);
 
     if ($tasks->isEmpty()) {
@@ -334,7 +334,7 @@ public function getTasks(Request $request)
             'status' => false,
             'message' => match ($type) {
                 'pending' => 'No pending tasks found at the moment',
-                'completed', 'approved' => 'No completed tasks found at the moment',
+                'accepted' => 'No completed tasks found at the moment',
                 'rejected' => 'No rejected tasks found at the moment',
                 'history' => 'No task history found at the moment',
                 default => 'Invalid task type provided. Use pending, completed, rejected, or history.',

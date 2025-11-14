@@ -233,7 +233,7 @@ public function submitTask(Request $request, $id)
         $task->decrement('task_count_remaining');
 
         // 🧩 Save completed task record
-        CompletedTask::create([
+      $completedTask = CompletedTask::create([
             'user_id' => $userId,
             'task_id' => $task->id,
             'social_media_url' => $request->input('social_media_url'),
@@ -245,7 +245,7 @@ public function submitTask(Request $request, $id)
         // 🧩 Record pending funds
         FundsRecord::create([
             'user_id' => $userId,
-            'completed_task_id' => $task->id,
+            'completed_task_id' => $completedTask->id,
             'pending' => $task->payment_per_task,
             'type' => 'task',
         ]);

@@ -306,22 +306,24 @@ public function submitAdvert(Request $request, $id)
         $advert->decrement('task_count_remaining');
 
         // 🧩 Save completed advert record
-        CompletedTask::create([
-            'user_id' => $userId,
-            'advert_id' => $advert->id,
-            'social_media_url' => $request->input('social_media_url'),
-            'screenshot' => $screenshotPath,
-            'payment_per_task' => $advert->payment_per_task,
-            'title' => $advert->title,
-        ]);
+        
+$completedTask = CompletedTask::create([
+    'user_id' => $userId,
+    'advert_id' => $advert->id,
+    'social_media_url' => $request->input('social_media_url'),
+    'screenshot' => $screenshotPath,
+    'payment_per_task' => $advert->payment_per_task,
+    'title' => $advert->title,
+]);
 
-        // 🧩 Record pending funds
-        FundsRecord::create([
-            'user_id' => $userId,
-            'completed_task_id' => $advert->id,
-            'pending' => $advert->payment_per_task,
-            'type' => 'advert',
-        ]);
+// 🧩 Record pending funds
+FundsRecord::create([
+    'user_id' => $userId,
+    'completed_task_id' => $completedTask->id,
+    'pending' => $advert->payment_per_task,
+    'type' => 'advert',
+]);
+
 
         DB::commit();
 
