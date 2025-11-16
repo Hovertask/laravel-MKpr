@@ -9,6 +9,7 @@
         "cloudinary-labs/cloudinary-laravel": "2.2",
         "facebook/graph-sdk": "^5.1",
         "laravel/framework": "^11.9",
+        "laravel/reverb": "^1.6",
         "laravel/sanctum": "*",
         "laravel/socialite": "^5.18",
         "laravel/tinker": "^2.9",
