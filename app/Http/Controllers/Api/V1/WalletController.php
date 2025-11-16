@@ -140,6 +140,8 @@ class WalletController extends Controller
 
         // Notify user BEFORE returning
         //$user->notify(new \App\Notifications\WalletFundedNotification($paymentData));
+        event(new UserWalletUpdated($user->id, $user->balance));
+
 
         // Return consistent success shape
         return response()->json([
