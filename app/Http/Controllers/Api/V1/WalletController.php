@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Repository\IWalletRepository;
 use App\Notifications\WalletFundedNotification;
+use App\Events\UserWalletUpdated;
 
 class WalletController extends Controller
 {
