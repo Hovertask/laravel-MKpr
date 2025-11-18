@@ -323,6 +323,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     });
 });
 
+//transaction routes
+Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
+    Route::get('/transactions', [TransactionController::class, 'index']);
+    Route::get('/transactions/{id}', [TransactionController::class, 'show']);
+});
 
 //product routes
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
