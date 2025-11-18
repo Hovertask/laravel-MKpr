@@ -2,13 +2,23 @@
 
 namespace App\Services;
 
+use App\Repository\TransactionRepository;
+use Illuminate\Support\Collection;
+
 class TransactionService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
+    public function __construct(
+        protected TransactionRepository $transactionRepository
+    ) {}
+
+    public function getUserTransactions(int $userId): Collection
     {
-        //
+        return $this->transactionRepository->getTransactionsForUser($userId);
+    }
+
+    public function getUserTransaction(int $userId, int $transactionId)
+    {
+        return $this->transactionRepository->getUserTransaction($userId, $transactionId);
     }
 }
+
