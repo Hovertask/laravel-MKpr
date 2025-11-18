@@ -14,7 +14,7 @@ class TransactionRepository
     public function getTransactionsForUser(int $userId): Collection
     {
         return Transaction::where('user_id', $userId)
-            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->get();
     }
 
