@@ -28,7 +28,7 @@ use App\Http\Controllers\Api\V1\ReferralController;
 use App\Http\Controllers\Api\V1\WithdrawalController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\Api\PaystackController;
-use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\V1\TransactionController;
 
 
 Route::post('/register', [AuthController::class, 'register'])->name('register');
