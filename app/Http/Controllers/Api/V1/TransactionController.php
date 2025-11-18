@@ -8,11 +8,9 @@ use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-    public function __construct(
-        protected TransactionService $transactionService
-    ) {
-        $this->middleware('auth:sanctum');
-    }
+    public function __construct(TransactionService $transactionService){
+        $this->transactionService = $transactionService;
+    } 
 
     public function index(Request $request)
     {
