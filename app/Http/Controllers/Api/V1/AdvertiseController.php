@@ -358,7 +358,7 @@ class AdvertiseController extends Controller
                         'user_id'     => $referrer->id,
                         'amount'      => $referralAmount,
                         'type'        => 'credit',
-                        'status'      => 'success',
+                        'status'      => 'successful',
                         'description' => 'Referrer reward',
                         'payment_source' => 'system',
                         'category'    => 'referral_commission',

@@ -115,6 +115,7 @@ class WalletController extends Controller
 
         // Call wallet repository to verify with Paystack (or other gateway)
         $paymentData = $this->walletRepository->verifyPayment($reference);
+        $amount=$paymentData['data']['amount']/ 100;
 
         if (!isset($paymentData['data'])) {
             throw new \Exception('Invalid response from payment gateway');
@@ -132,7 +133,7 @@ class WalletController extends Controller
 
 
         Transaction::where('reference', $reference)->update([
-                'amount'   => $paymentData['data']['amount'] ?? 0,
+                'amount'   => $amount ?? 0,
                 'status'     => 'successful',
                 'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
                 'reference' => $paymentData['data']['reference'],
