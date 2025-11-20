@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ResellerConversion extends Model
 {
-    use HasFactory;
+    protected $fillable = [
+        'product_id',
+        'reseller_code',
+        'visitor_cookie',
+        'ip',
+        'user_agent',
+    ];
 }
