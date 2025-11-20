@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\pi\V1;
+namespace App\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
 use App\Repository\ResellerConversionRepository;

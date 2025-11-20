@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SocialConnectController;
 use App\Http\Controllers\Api\V1\ReferralController;
 use App\Http\Controllers\Api\V1\WithdrawalController;
+use App\Http\Controllers\Api\V1\ResellerConversionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\Api\PaystackController;
 use App\Http\Controllers\Api\V1\TransactionController;
@@ -329,6 +330,10 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index']);
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });
+
+//reseller conversion tracking route
+Route::get('/track-conversion/{productId}', [ResellerConversionController::class, 'track']);
+
 
 //product routes
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
