@@ -82,10 +82,13 @@ class ResellerConversionController extends Controller
 
     // WhatsApp Message
     $msg = urlencode(
-        "Hello, I'm interested in your product: {$product->name}\n\n".
-        "Here is the product link I viewed:\n{$productPreviewUrl}"
-        "Price: NGN " . number_format($product->price, 2) . "\n\n"
-    );
+    "Hello, I'm interested in your product: {$product->name}\n\n" .
+    "Product Details:\n" .
+    "Price: NGN " . number_format($product->price, 2) . "\n" .
+    "Preview Link:\n{$productPreviewUrl}\n\n" .
+    "Please give me more information about this item."
+);
+
 
     return "https://wa.me/{$sellerPhone}?text={$msg}";
 }
