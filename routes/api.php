@@ -203,6 +203,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::post('/contact-seller/{id}', [ProductController::class, 'contactSeller'])->name('product.contactSeller');
     });
 
+    //reseller conversion tracking route
+    Route::get('/track-conversion/{productId}', [ResellerConversionController::class, 'track']);
+
+    
     Route::prefix('wishlists')->group(function () {
         Route::post('/add/{product}', [WishlistController::class, 'add'])->name('wishlist.add');
         Route::delete('/remove/{product}', [WishlistController::class, 'remove'])->name('wishlist.remove');
@@ -331,8 +335,6 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });
 
-//reseller conversion tracking route
-Route::get('/track-conversion/{productId}', [ResellerConversionController::class, 'track']);
 
 
 //product routes
