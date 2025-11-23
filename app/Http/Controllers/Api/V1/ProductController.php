@@ -46,6 +46,7 @@ class ProductController extends Controller
             'phone_number' => 'nullable|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'social_media_link' => 'nullable|string|max:255',
+            'resell_budget' => 'nullable|numeric|min:0',
             
             'file_path' => 'nullable',
             'file_path.*' => 'file|mimes:jpeg,png,jpg|max:2040',
