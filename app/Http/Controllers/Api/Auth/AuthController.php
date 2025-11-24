@@ -137,7 +137,7 @@ public function register(Request $request)
             'avatar'    => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
             'referral_code'    => 'nullable|string|max:255',
-            'role_id'   => 'required|integer|max:255',
+            //'role_id'   => 'required|integer|max:255',
         ],
         [
             //  Custom message for phone format
@@ -177,7 +177,7 @@ public function register(Request $request)
     $user = $this->user->create($validatedData);
 
     // Assign role
-    $user->addRole($validatedData['role_id']);
+    //$user->addRole($validatedData['role_id']);
 
     // Generate auth token
     $token = $user->createToken('API Token')->plainTextToken;
