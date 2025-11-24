@@ -137,10 +137,10 @@ public function register(Request $request)
             'avatar'    => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
             'referral_code'    => 'nullable|string|max:255',
-            'role_id'   => 'required|string|max:255',
+            'role_id'   => 'required|integer|max:255',
         ],
         [
-            // ✅ Custom message for phone format
+            //  Custom message for phone format
             'phone.regex' => 'Phone number must contain only digits and be between 7–15 digits. Example: 08012345678.',
         ]
     );
