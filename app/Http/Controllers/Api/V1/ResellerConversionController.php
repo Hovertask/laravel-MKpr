@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Repository\ResellerConversionRepository;
 use App\Models\Product;
@@ -21,12 +22,23 @@ class ResellerConversionController extends Controller
         // Accept reseller from query or body (GET or POST). Use get() which checks both.
         $resellerCode = $request->get('reseller');
 
-        // Explicitly reject empty or whitespace-only reseller codes.
-        if (is_null($resellerCode) || trim((string) $resellerCode) === '') {
+        // Explicitly reject empty or whitespace-only reseller codes, and common 'null' placeholders
+        $raw = trim((string) $resellerCode);
+        if (is_null($resellerCode) || $raw === '' || in_array(strtolower($raw), ['null', 'undefined', 'false'])) {
+            Log::info('ResellerConversionController: missing or invalid reseller', ['reseller_raw' => $resellerCode, 'product_id' => $productId, 'ip' => $request->ip()]);
             return response()->json([
                 'error' => 'reseller code missing'
             ], 400);
         }
+
+        // Enforce a basic reseller code format (alphanumeric, underscores, dashes, 2-50 chars)
+        if (!preg_match('/^[A-Za-z0-9_-]{2,50}$/', $raw)) {
+            Log::warning('ResellerConversionController: reseller code failed format check', ['reseller' => $raw, 'product_id' => $productId]);
+            return response()->json(['error' => 'invalid reseller code'], 400);
+        }
+
+        // Normalized reseller code to use
+        $resellerCode = $raw;
 
         // Generate or retrieve visitor cookie
         $cookieName = "conversion_" . $resellerCode;
@@ -46,6 +58,10 @@ class ResellerConversionController extends Controller
                 'ip'             => $request->ip(),
                 'user_agent'     => $request->userAgent(),
             ]);
+
+            Log::info('ResellerConversionController: conversion created', ['reseller' => $resellerCode, 'product_id' => $productId, 'visitor' => $visitorCookie]);
+        } else {
+            Log::debug('ResellerConversionController: conversion already exists', ['reseller' => $resellerCode, 'visitor' => $visitorCookie]);
         }
 
         // Set cookie for 5 years
