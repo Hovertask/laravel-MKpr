@@ -133,15 +133,16 @@ public function register(Request $request)
             'password'  => 'required|string|min:6|confirmed',
             'country'   => 'required|string|max:255',
             'currency'  => 'required|string|max:255',
-            'phone'     => 'required|regex:/^[0-9]{7,15}$/',
+            'phone'     => 'required|regex:/^[0-9]{7,15}$/|unique:users,phone',
             'avatar'    => 'nullable|string|max:255',
             'referal_username' => 'nullable|string|max:255',
             'referral_code'    => 'nullable|string|max:255',
             //'role_id'   => 'required|integer|max:255',
         ],
         [
-            //  Custom message for phone format
-            'phone.regex' => 'Phone number must contain only digits and be between 7–15 digits. Example: 08012345678.',
+            //custom messages
+        'phone.regex' => 'Phone number must contain only digits and be between 7–15 digits. Example: 08012345678.',
+        'phone.unique' => 'This phone number is already registered.',
         ]
     );
 
