@@ -30,6 +30,8 @@ use App\Http\Controllers\Api\V1\ResellerConversionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\Api\PaystackController;
 use App\Http\Controllers\Api\V1\TransactionController;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 
 
 Route::post('/register', [AuthController::class, 'register'])->name('register');
@@ -119,6 +121,12 @@ Route::get('/email/check', function (Request $request) {
 
 Route::get('/wallet/verify-payment/{reference}', [WalletController::class, 'verifyPayment'])->name('wallet.verify');
     Route::get('/payment/verify-payment/{reference}', [OrderController::class, 'verify']);
+
+// Broadcasting auth endpoint for token-based SPA (Bearer token)
+Route::post('/broadcasting/auth', function (Request $request) {
+    Log::info('API Broadcasting auth attempt', ['ip' => $request->ip(), 'headers' => $request->headers->all(), 'body' => $request->all()]);
+    return Broadcast::auth($request);
+})->middleware('auth:sanctum');
     
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
