@@ -102,6 +102,9 @@ class WalletController extends Controller
      */
     public function verifyPayment($reference)
 {
+    // Don't rely on the currently authenticated user here — this endpoint may be called
+    // by external payment callbacks or from unauthenticated routes. We'll prefer the
+    // user id supplied in the payment metadata (set when initializing the payment).
     $user = Auth::user();
 
     try {
@@ -115,7 +118,13 @@ class WalletController extends Controller
 
         // Call wallet repository to verify with Paystack (or other gateway)
         $paymentData = $this->walletRepository->verifyPayment($reference);
-        $amount=$paymentData['data']['amount']/ 100;
+        $amount = $paymentData['data']['amount'] / 100;
+
+        // Prefer user id from payment metadata (safer for webhooks/callbacks)
+        $userIdFromMeta = $paymentData['data']['metadata']['user_id'] ?? null;
+        if ($userIdFromMeta) {
+            $user = \App\Models\User::find($userIdFromMeta);
+        }
 
         if (!isset($paymentData['data'])) {
             throw new \Exception('Invalid response from payment gateway');
@@ -140,9 +149,19 @@ class WalletController extends Controller
                 'category' => $paymentData['data']['metadata']['payment_category'] ?? 'Wallet funding',
             ]);
 
-        // Notify user BEFORE returning
-        //$user->notify(new \App\Notifications\WalletFundedNotification($paymentData));
-        event(new UserWalletUpdated($user->id, $user->balance));
+        // Notify user AFTER DB updates. If we don't have a user (e.g. unauthenticated
+        // callback), skip the event but still return success.
+        try {
+            if ($user) {
+                // Reload user to ensure we have fresh balance
+                $user->refresh();
+                event(new UserWalletUpdated($user->id, $user->balance));
+            } else {
+                \Log::warning('verifyPayment: user not found for reference', ['reference' => $reference]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('verifyPayment: failed to dispatch UserWalletUpdated', ['error' => $e->getMessage(), 'reference' => $reference]);
+        }
 
 
         // Return consistent success shape
