@@ -18,9 +18,11 @@ class ResellerConversionController extends Controller
 
     public function track(Request $request, $productId)
     {
-        $resellerCode = $request->query('reseller');
+        // Accept reseller from query or body (GET or POST). Use get() which checks both.
+        $resellerCode = $request->get('reseller');
 
-        if (!$resellerCode) {
+        // Explicitly reject empty or whitespace-only reseller codes.
+        if (is_null($resellerCode) || trim((string) $resellerCode) === '') {
             return response()->json([
                 'error' => 'reseller code missing'
             ], 400);
