@@ -131,7 +131,7 @@ class AuthController extends Controller
         'password'  => 'required|string|min:6|confirmed',
         'country'   => 'required|string|max:255',
         'currency'  => 'required|string|max:255',
-        'phone'     => 'required|string|max:255',
+        'phone'     => 'required|regex:/^[0-9]{7,15}$/',
         'avatar'    => 'nullable|string|max:255',
         'referal_username' => 'nullable|string|max:255',
         'referral_code'    => 'nullable|string|max:255',
