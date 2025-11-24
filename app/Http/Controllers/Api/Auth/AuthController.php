@@ -121,28 +121,35 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function register(Request $request)
+public function register(Request $request)
 {
-    $validator = Validator::make($request->all(), [
-        'fname'     => 'required|string|max:255',
-        'lname'     => 'required|string|max:255',
-        'email'     => 'required|string|email|max:255|unique:users',
-        'username'  => 'required|string|max:255|unique:users',
-        'password'  => 'required|string|min:6|confirmed',
-        'country'   => 'required|string|max:255',
-        'currency'  => 'required|string|max:255',
-        'phone'     => 'required|regex:/^[0-9]{7,15}$/',
-        'avatar'    => 'nullable|string|max:255',
-        'referal_username' => 'nullable|string|max:255',
-        'referral_code'    => 'nullable|string|max:255',
-        'role_id'   => 'required|string|max:255',
-    ]);
+    $validator = Validator::make(
+        $request->all(),
+        [
+            'fname'     => 'required|string|max:255',
+            'lname'     => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users',
+            'username'  => 'required|string|max:255|unique:users',
+            'password'  => 'required|string|min:6|confirmed',
+            'country'   => 'required|string|max:255',
+            'currency'  => 'required|string|max:255',
+            'phone'     => 'required|regex:/^[0-9]{7,15}$/',
+            'avatar'    => 'nullable|string|max:255',
+            'referal_username' => 'nullable|string|max:255',
+            'referral_code'    => 'nullable|string|max:255',
+            'role_id'   => 'required|string|max:255',
+        ],
+        [
+            // ✅ Custom message for phone format
+            'phone.regex' => 'Phone number must contain only digits and be between 7–15 digits. Example: 08012345678.',
+        ]
+    );
 
     if ($validator->fails()) {
         return response()->json([
             'status'  => false,
             'message' => $validator->errors()->first(),
-            'errors'  => $validator->errors()
+            'errors'  => $validator->errors(),
         ], 400);
     }
 
@@ -196,7 +203,6 @@ class AuthController extends Controller
         'token'   => $token,
     ], 201);
 }
-
 
     public function login(Request $request)
     {
