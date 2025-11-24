@@ -7,6 +7,7 @@ use App\Models\InitializeDeposit;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class WalletFundedNotification extends Notification
 {
@@ -27,7 +28,7 @@ class WalletFundedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     /**
@@ -55,5 +56,10 @@ class WalletFundedNotification extends Notification
             'type' => 'wallet_funding',
             'timestamp' => now(),
         ];
+    }
+
+    public function toBroadcast(object $notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

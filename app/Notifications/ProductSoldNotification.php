@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 
 class ProductSoldNotification extends Notification
 {
@@ -21,7 +22,7 @@ class ProductSoldNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        return ['mail', 'database', 'broadcast'];
     }
 
     public function toMail($notifiable)
@@ -41,5 +42,10 @@ class ProductSoldNotification extends Notification
             'quantity_sold' => $this->quantitySold,
             'message' => "Your product '{$this->product->name}' was sold. Quantity: {$this->quantitySold}",
         ];
+    }
+
+    public function toBroadcast($notifiable)
+    {
+        return new BroadcastMessage($this->toArray($notifiable));
     }
 }

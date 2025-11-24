@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\FundsRecord;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Validator;
+use App\Events\UserWalletUpdated;
 
 class AdvertiseController extends Controller
 {
@@ -298,6 +299,9 @@ class AdvertiseController extends Controller
     $user->has_paid_advert_fee = true;
     $user->save();
 
+    // Fire wallet-updated event for the paying user
+    event(new UserWalletUpdated($user->id, $user->balance));
+
     // ✅ Log transaction
     Transaction::create([
         'user_id'       => $user->id,
@@ -363,6 +367,9 @@ class AdvertiseController extends Controller
                         'payment_source' => 'system',
                         'category'    => 'referral_commission',
                     ]);
+
+                    // Fire wallet-updated event for the referrer
+                    event(new UserWalletUpdated($referrer->id, $referrer->balance));
 
 
                 }
