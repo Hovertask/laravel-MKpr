@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\PaystackRecipient;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Notifications\WithdrawalNotification;
+use App\Events\UserWalletUpdated;
 
 class WithdrawalController extends Controller
 {
@@ -144,6 +146,19 @@ class WithdrawalController extends Controller
                     'status'     => 'success',
                     'description'=> 'Withdrawal successful to bank',
                 ]);
+
+                // Notify user and broadcast wallet update
+                try {
+                    $user->notify(new WithdrawalNotification($request->amount, 'success', $withdrawal->paystack_reference));
+                } catch (\Exception $e) {
+                    Log::error('Failed to notify user about successful withdrawal', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+                }
+
+                try {
+                    event(new UserWalletUpdated($user->id, $user->balance));
+                } catch (\Exception $e) {
+                    Log::error('Failed to dispatch UserWalletUpdated after withdrawal success', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+                }
             } else {
                 $wallet->increment('balance', $request->amount);
                 $userBalanceColumn = property_exists($user, 'wallet_balance') ? 'wallet_balance' : 'balance';
@@ -161,6 +176,13 @@ class WithdrawalController extends Controller
                     'status'     => 'failed',
                     'description'=> 'Withdrawal failed, amount refunded',
                 ]);
+
+                // Notify user about failed withdrawal
+                try {
+                    $user->notify(new WithdrawalNotification($request->amount, 'failed', $withdrawal->paystack_reference));
+                } catch (\Exception $e) {
+                    Log::error('Failed to notify user about failed withdrawal', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+                }
 
                 return response()->json(['error' => 'Transfer failed'], 400);
             }

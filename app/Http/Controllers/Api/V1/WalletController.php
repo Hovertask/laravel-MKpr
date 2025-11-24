@@ -156,6 +156,16 @@ class WalletController extends Controller
                 // Reload user to ensure we have fresh balance
                 $user->refresh();
                 event(new UserWalletUpdated($user->id, $user->balance));
+
+                // Load deposit record and notify user (database + broadcast)
+                $deposit = InitializeDeposit::where('reference', $reference)->first();
+                try {
+                    if ($deposit) {
+                        $user->notify(new WalletFundedNotification($deposit));
+                    }
+                } catch (\Exception $notifyEx) {
+                    \Log::error('verifyPayment: failed to notify user about wallet funding', ['error' => $notifyEx->getMessage(), 'user_id' => $user->id, 'reference' => $reference]);
+                }
             } else {
                 \Log::warning('verifyPayment: user not found for reference', ['reference' => $reference]);
             }
