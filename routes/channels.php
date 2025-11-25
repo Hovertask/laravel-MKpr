@@ -1,7 +1,6 @@
 <?php
 
-use Illuminate\Broadcasting\Broadcast;
-use Illuminate\Support\Facades\Broadcast as BroadcastFacade;
+use Illuminate\Support\Facades\Broadcast;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,8 +13,12 @@ use Illuminate\Support\Facades\Broadcast as BroadcastFacade;
 |
 */
 
-use Illuminate\Support\Facades\Broadcast;
-
+//  PRIVATE CHANNEL — for Laravel Notifications
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
+});
+
+//  PUBLIC CHANNEL — for your wallet-updated event (user.{id})
+Broadcast::channel('user.{id}', function ($user, $id) {
+    return true; // public, no authentication needed
 });
