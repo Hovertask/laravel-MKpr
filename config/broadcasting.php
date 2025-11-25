@@ -30,6 +30,7 @@ return [
 
         'reverb' => [
             'driver' => 'reverb',
+            'key' => env('BROADCAST_KEY', 'key_123467890abcdef'),
             // reverb reads details from config/reverb.php (app key/secret/app_id) and env
         ],
 
