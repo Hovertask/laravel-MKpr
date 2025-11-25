@@ -31,6 +31,14 @@ return [
         'reverb' => [
             'driver' => 'reverb',
             'key' => env('BROADCAST_KEY', 'key_123467890abcdef'),
+            'secret' => env('REVERB_APP_SECRET'),
+            'app_id' => env('REVERB_APP_ID'),
+            'options' => [
+                    'host' => env('REVERB_HOST'),
+                    'port' => env('REVERB_PORT', 443),
+                    'scheme' => env('REVERB_SCHEME', 'https'),
+                    'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                ],
             // reverb reads details from config/reverb.php (app key/secret/app_id) and env
         ],
 
