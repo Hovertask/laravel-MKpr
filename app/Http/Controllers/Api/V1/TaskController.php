@@ -100,7 +100,7 @@ class TaskController extends Controller
         'message' => 'Task retrieved successfully',
         'data' => [
             'id' => $showtask->id,
-            'title' => $showatask->title,
+            'title' => $showtask->title,
             'description' => $showtask->description,
             'amount_paid' => $showtask->task_amount ?? 0,
             'link' => $showtask->link ?? null,
