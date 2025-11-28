@@ -72,17 +72,7 @@ class WalletController extends Controller
             'type' => InitializeDeposit::resolveTransactionType($type),
             'source_id' => $recordId,
         ]);
- 
-        Transaction::create([
-                'user_id'    => $userId,
-                'amount'     => $amount,
-                'type' => Transaction::resolveTransactionType($type),
-                'status'     => 'pending',
-                'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
-                'reference' => $paymentData['data']['reference'],
-                'payment_source' => 'paystack',//gets from config or payment gateway used in future
-                'category' => $paymentData['data']['metadata']['$payment_category'] ?? 'Wallet funding',
-            ]);
+
 
 
         return response()->json([
@@ -141,11 +131,11 @@ class WalletController extends Controller
         ]);
 
 
-        Transaction::where('reference', $reference)->update([
+        Transaction::where('gateway_reference', $reference)->update([
                 'amount'   => $amount ?? 0,
+                'gateway_reference' => $paymentData['data']['reference'] ?? null,
                 'status'     => 'successful',
                 'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
-                'reference' => $paymentData['data']['reference'],
                 'category' => $paymentData['data']['metadata']['payment_category'] ?? 'Wallet funding',
             ]);
 
@@ -183,7 +173,7 @@ class WalletController extends Controller
     } catch (\Exception $e) {
         // If something fails, mark tx failed (best effort)
         InitializeDeposit::where('reference', $reference)->update(['status' => 'failed']);
-        Transaction::where('reference', $reference)->update(['status' => 'failed']);
+        Transaction::where('gateway_reference', $reference)->update(['status' => 'failed']);
 
         return response()->json([
             'success' => false,

@@ -307,7 +307,7 @@ class AdvertiseController extends Controller
         'user_id'       => $user->id,
         'amount'        => 500,
         'type'          => 'debit',
-        'status'        => 'succesfull',
+        'status'        => 'successfull',
         'description'   => 'One-time advert/task/product setup fee',
         'payment_source' => 'wallet',
         'category'    => 'platform_charges',

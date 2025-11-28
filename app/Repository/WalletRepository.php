@@ -106,12 +106,13 @@ class WalletRepository implements IWalletRepository
     //     }
     // }
 
- public function verifyPayment(string $reference)
+public function verifyPayment(string $reference)
 {
     try {
+        // Verify Paystack
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
-            'Content-Type' => 'application/json',
+            'Content-Type'  => 'application/json',
         ])->get("https://api.paystack.co/transaction/verify/{$reference}");
 
         $responseData = $response->json();
@@ -124,44 +125,80 @@ class WalletRepository implements IWalletRepository
             throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
         }
 
-        // ✅ Extract metadata info
-        $metadata = $responseData['data']['metadata'] ?? [];
-        $userId = $metadata['user_id'] ?? null;
-        $paymentCategory = $metadata['payment_category'] ?? 'deposit';
-        $sourceId = $metadata['source_id'] ?? null;
+        // Extract metadata
+        $metadata         = $responseData['data']['metadata'] ?? [];
+        $userId           = $metadata['user_id'] ?? null;
+        $paymentCategory  = $metadata['payment_category'] ?? 'deposit';
+        $sourceId         = $metadata['source_id'] ?? null;
+        $type = $paymentCategory;
+        $amount           = $responseData['data']['amount'] / 100;
+        $gatewayReference = $responseData['data']['reference']; // Paystack ref
 
-        $amount = $responseData['data']['amount'] / 100;
-        $reference = $responseData['data']['reference'];
+        // Generate platform reference (used for all internal distributions)
+        $platformReference = 'PLAT-' . strtoupper(Str::random(12));
 
-        // ✅ Get Super Administrator ID dynamically
+        // Get super admin ID
         $superAdminId = \DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
             ->where('roles.name', 'superadministrator')
             ->value('users.id');
 
-            // ✅ Log for debugging
-\Log::info('Super Administrator ID fetched for platform earnings:', ['super_admin_id' => $superAdminId]);
+        \Log::info('Super Admin ID for platform earnings:', [
+            'super_admin_id' => $superAdminId
+        ]);
 
- 
-        DB::beginTransaction();   
+        DB::beginTransaction();
 
-        // ✅ If payment is for a task or advert, mark as paid
+        /*
+        ───────────────────────────────────────────────
+        STEP 1: UPDATE ROOT PAYMENT (DEBIT)
+        This is the parent transaction that everything links to.
+        ───────────────────────────────────────────────
+        */
+        $parentTransaction = Transaction::create([
+            'user_id'            => $userId,
+            'amount'             => $amount,
+            'status'             => 'successful',
+            'platform_reference' => $platformReference,
+            'gateway_reference'  => $gatewayReference,
+            'parent_reference'   => null,       // Root of the tree
+            'payment_source'     => 'paystack',
+            'category'           => $paymentCategory,
+            'type' => Transaction::resolveTransactionType($type),
+            'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
+
+        ]);
+
+        /*
+        ───────────────────────────────────────────────
+        HANDLE PAYMENT ATEGORY
+        ───────────────────────────────────────────────
+        */
         if ($paymentCategory === 'task' && $sourceId) {
+
             $task = \App\Models\Task::find($sourceId);
             if ($task) {
                 $task->status = 'success';
                 $task->save();
             }
+
         } elseif ($paymentCategory === 'advert' && $sourceId) {
+
             $advert = \App\Models\Advertise::find($sourceId);
             if ($advert) {
                 $advert->status = 'success';
                 $advert->save();
             }
+
         } elseif ($paymentCategory === 'deposit') {
-            // ✅ Simple wallet deposit
-            $user = User::findOrFail($userId);
+
+            /*
+            ───────────────────────────────────────────────
+            SIMPLE WALLET DEPOSIT
+            ───────────────────────────────────────────────
+            */
+            $user   = User::findOrFail($userId);
             $wallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['user_id' => $userId],
                 ['balance' => 0]
@@ -172,9 +209,14 @@ class WalletRepository implements IWalletRepository
 
             $user->balance += $amount;
             $user->save();
+            
 
         } else {
-            // ✅ Membership / Referral Flow
+            /*
+            ───────────────────────────────────────────────
+            MEMBERSHIP PAYMENT + DISTRIBUTION LOGIC
+            ───────────────────────────────────────────────
+            */
             $user = User::findOrFail($userId);
             $wallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['user_id' => $userId],
@@ -188,90 +230,90 @@ class WalletRepository implements IWalletRepository
                 throw new Exception("Amount after platform fee must be greater than zero.");
             }
 
-            // ✅ Log platform earnings for super admin
+            /*
+            ───────────────────────────────────────────────
+            CREDIT PLATFORM FEE TO SUPER ADMIN
+            ───────────────────────────────────────────────
+            */
             Transaction::create([
-                'user_id'     => $superAdminId,
-                'amount'      => $platformFee,
-                'type'        => 'credit',
-                'status'      => 'successful',
-                'description' => 'Platform Earnings',
-                'reference'   => $responseData['data']['reference'],
-                'payment_source' => 'system',
-                'category'    => 'platform_charges',
+                'user_id'            => $superAdminId,
+                'amount'             => $platformFee,
+                'type'               => 'credit',
+                'status'             => 'successful',
+                'description'        => 'Platform Earnings',
+                'platform_reference' => $platformReference,
+                'gateway_reference'  => null,
+                'parent_reference'   => $platformReference,
+                'payment_source'     => 'system',
+                'category'           => 'platform_charges',
             ]);
 
-            // ✅ Handle referral logic
+            /*
+            ───────────────────────────────────────────────
+            REFERRAL LOGIC
+            ───────────────────────────────────────────────
+            */
             $referral = Referral::where('referee_id', $user->id)->first();
 
             if (!$user->is_member && $referral && $referral->reward_status == 'pending') {
+
                 $referrer = User::find($referral->referrer_id);
 
                 if ($referrer && $referrer->is_member) {
+
                     $referralAmount = 500;
 
-                   
-                    // Update referral record
+                    // Update referral
                     $referral->reward_status = 'pending';
                     $referral->amount = $referralAmount;
                     $referral->save();
-                    
-                     // 🧩 Record pending funds
-                   FundsRecord::create([
-                     'user_id' => $referrer->id,
-                     'referral_id' => $referral->id,
-                     'pending' => $referralAmount,
-                     'type' => 'referral_commission',
-                 ]);
 
-                    
-
-                    // Credit membership bonus to user
-                    $wallet->balance += $membershipBonus;
-                    $wallet->save();
-
-                    $user->balance += $membershipBonus;
-                    $user->is_member = true;
-                    $user->save();
-
-                    Transaction::create([
-                        'user_id'     => $userId,
-                        'amount'      => $membershipBonus,
-                        'type'        => 'credit',
-                        'status'      => 'successful',
-                        'description' => 'Membership bonus credited to user wallet',
-                        'reference'   => $responseData['data']['reference'],
-                        'payment_source' => 'system',
-                        'category'    => 'membership_bonus',
+                    // Record pending funds
+                    FundsRecord::create([
+                        'user_id'            => $referrer->id,
+                        'referral_id'        => $referral->id,
+                        'pending'            => $referralAmount,
+                        'type'               => 'referral_commission',
+                        'platform_reference' => $platformReference,
+                        'parent_reference'   => $platformReference,
                     ]);
                 }
-            } else {
-                // No referral — full membership bonus to user
-                $wallet->balance += $membershipBonus;
-                $wallet->save();
-
-                $user->balance += $membershipBonus;
-                $user->is_member = true;
-                $user->save();
-
-                Transaction::create([
-                    'user_id'     => $userId,
-                    'amount'      => $membershipBonus,
-                    'type'        => 'credit',
-                    'status'      => 'successful',
-                    'description' => 'Membership bonus credited to user wallet',
-                    'reference'   => $responseData['data']['reference'],
-                    'payment_source' => 'system',
-                    'category'    => 'membership_bonus',
-                ]);
             }
+
+            /*
+            ───────────────────────────────────────────────
+            CREDIT MEMBERSHIP BONUS TO USER
+            ───────────────────────────────────────────────
+            */
+            $wallet->balance += $membershipBonus;
+            $wallet->save();
+
+            $user->balance += $membershipBonus;
+            $user->is_member = true;
+            $user->save();
+
+            Transaction::create([
+                'user_id'            => $userId,
+                'amount'             => $membershipBonus,
+                'type'               => 'credit',
+                'status'             => 'successful',
+                'description'        => 'Membership bonus credited to wallet',
+                'platform_reference' => $platformReference,
+                'gateway_reference'  => null,
+                'parent_reference'   => $platformReference,
+                'payment_source'     => 'system',
+                'category'           => 'membership_bonus',
+            ]);
         }
 
         DB::commit();
         return $responseData;
 
     } catch (Exception $e) {
+
         DB::rollBack();
         Log::error('Payment verification failed: ' . $e->getMessage());
+
         throw new Exception("Failed to verify payment: " . $e->getMessage());
     }
 }
