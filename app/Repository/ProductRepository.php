@@ -205,7 +205,7 @@ class ProductRepository implements IProductRepository
 
 
     public function authUserProducts(){
-        return Product::where('user_id', auth()->user()->id)->latest()->get();
+        return Product::with('productImages')->where('user_id', auth()->user()->id)->latest()->get();
     }
 
     // public function submitProduct(array $product, $id): Product
