@@ -275,8 +275,6 @@ public function verifyPayment(string $reference)
                         'referral_id'        => $referral->id,
                         'pending'            => $referralAmount,
                         'type'               => 'referral_commission',
-                        'platform_reference' => $platformReference,
-                        'parent_reference'   => $platformReference,
                     ]);
                 }
             }
