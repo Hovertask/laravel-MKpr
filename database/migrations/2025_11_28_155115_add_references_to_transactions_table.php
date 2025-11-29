@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            //
+            $table->string('platform_reference')->nullable()->after('reference');
+            $table->string('gateway_reference')->nullable()->after('platform_reference');
+            $table->string('parent_reference')->nullable()->after('gateway_reference');
         });
     }
 
@@ -22,7 +24,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            //
+            $table->dropColumn([
+                'platform_reference',
+                'gateway_reference',
+                'parent_reference',
+            ]);
         });
     }
 };
