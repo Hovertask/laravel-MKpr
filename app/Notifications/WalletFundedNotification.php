@@ -34,13 +34,17 @@ class WalletFundedNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
-    {
-        return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
-    }
+  public function toMail(object $notifiable): MailMessage
+{
+    return (new MailMessage)
+        ->subject('Wallet Funded Successfully')
+        ->greeting('Hello ' . $notifiable->name . ',')
+        ->line('Your wallet has been funded successfully.')
+        ->line('Amount Credited: NGN' . number_format($this->paymentData->amount / 100, 2))
+        ->line('The funds have been added to your account and are now available for use.')
+        ->action('View Wallet', config('dashboard') . '/fund-wallet')
+        ->line('Thank you for choosing our platform!');
+}
 
     /**
      * Get the array representation of the notification.

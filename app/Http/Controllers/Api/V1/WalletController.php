@@ -149,10 +149,14 @@ class WalletController extends Controller
 
                 // Load deposit record and notify user (database + broadcast)
                 $deposit = InitializeDeposit::where('reference', $reference)->first();
+                
+                  
                 try {
+                    if($paymentData['data']['metadata']['payment_category'] === 'deposit'){
                     if ($deposit) {
                         $user->notify(new WalletFundedNotification($deposit));
                     }
+                }
                 } catch (\Exception $notifyEx) {
                     \Log::error('verifyPayment: failed to notify user about wallet funding', ['error' => $notifyEx->getMessage(), 'user_id' => $user->id, 'reference' => $reference]);
                 }
