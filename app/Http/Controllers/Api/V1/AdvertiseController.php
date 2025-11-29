@@ -38,15 +38,15 @@ class AdvertiseController extends Controller
     }
 
 
-    public function create(Request $request)
+ public function create(Request $request)
 {
     $type = $request->input('type'); // engagement OR advert
 
-    // ✅ Initialize variables to avoid "undefined" issues
+    // Initialize variables
     $createAds = null;
     $createTask = null;
 
-    // Validation rules
+    // Base Validation Rules
     $rules = [
         'religion' => 'nullable|max:255',
         'location' => 'nullable|max:255',
@@ -60,6 +60,13 @@ class AdvertiseController extends Controller
         'estimated_cost' => 'required|numeric|min:1',
     ];
 
+    // If NOT engagement → require at least one: file OR video
+    if ($type !== 'engagement') {
+        $rules['file_path'] = 'required_without:video_path';
+        $rules['video_path'] = 'required_without:file_path';
+    }
+
+    // Engagement-specific rules
     if ($type === 'engagement') {
         $rules = array_merge($rules, [
             'title' => 'nullable|string|max:255',
@@ -68,6 +75,7 @@ class AdvertiseController extends Controller
             'deadline' => 'required|date|after:today',
         ]);
     } else {
+        // Advert-specific rules
         $rules = array_merge($rules, [
             'title' => 'required|string|max:255',
             'number_of_participants' => 'nullable|integer|min:1',
@@ -76,17 +84,18 @@ class AdvertiseController extends Controller
         ]);
     }
 
+    // Validate Request
     $validator = Validator::make($request->all(), $rules);
     if ($validator->fails()) {
         return response()->json(['error' => $validator->errors()], 400);
     }
 
-    // ✅ Create advert if type is "advert"
+    // Create advert
     if ($type === 'advert') {
         $createAds = $this->AdvertiseRepository->create($request->all(), $request);
     }
 
-    // ✅ If engagement, create a linked task
+    // Create engagement task
     if ($type === 'engagement') {
         $taskData = [
             'title' => $request->input('title') ?? 'Engagement Task',
@@ -116,7 +125,7 @@ class AdvertiseController extends Controller
         $createTask = $this->TaskRepository->create($taskData);
     }
 
-    // ✅ Build response dynamically
+    // Build response
     $responseData = [
         'advert' => $createAds,
         'task' => $createTask,
@@ -130,7 +139,6 @@ class AdvertiseController extends Controller
         'data' => $responseData,
     ]);
 }
-
 
 //track advert by id for advert creator to track perfomance
     public function show($id)
