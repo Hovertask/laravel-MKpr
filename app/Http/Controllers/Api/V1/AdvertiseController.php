@@ -308,7 +308,7 @@ class AdvertiseController extends Controller
     $user->save();
 
     // Fire wallet-updated event for the paying user
-    event(new UserWalletUpdated($user->id, $user->balance));
+    //event(new UserWalletUpdated($user->id, $user->balance));
 
     // ✅ Log transaction
     Transaction::create([
@@ -377,7 +377,7 @@ class AdvertiseController extends Controller
                     ]);
 
                     // Fire wallet-updated event for the referrer
-                    event(new UserWalletUpdated($referrer->id, $referrer->balance));
+                    //event(new UserWalletUpdated($referrer->id, $referrer->balance));
 
 
                 }
