@@ -44,7 +44,7 @@ class ProductRepository implements IProductRepository
             'phone_number' => $data['phone_number'],
             'email' => $data['email'],
             'social_media_link' => $data['social_media_link'],
-            $resellBudget = $data['resell_budget'] ?? null;
+            'resell_budget' => $data['resell_budget'] ?? null,
         ]);
 
         // $uploadedFile = Cloudinary::upload($data['file_path']->getRealPath(), [
