@@ -14,6 +14,8 @@ use App\Models\FundsRecord;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Validator;
 use App\Events\UserWalletUpdated;
+use App\Notifications\NewCampaignCreatedNotification;
+
 
 class AdvertiseController extends Controller
 {
