@@ -132,7 +132,7 @@ Route::post('/broadcasting/auth', function (Request $request) {
 //landing page route
 Route::get('/show-product-landing-page/{id}', [ProductController::class, 'show'])->name('product.show');
 Route::get('/landing-page-products/all', [ProductController::class, 'showAll'])->name('product.showAll');
-Route::post('/landing-page-track-conversion/{productId}', [ProductController::class, 'contactSeller'])->name('product.contactSeller');
+Route::get('/landing-page-track-conversion/{productId}', [ProductController::class, 'contactSeller'])->name('product.contactSeller');
     
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
