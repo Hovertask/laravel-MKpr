@@ -12,6 +12,10 @@ use App\Repository\ProductRepository;
 use Illuminate\Support\Facades\Validator;
 use App\Repository\ITrendingProductRepository;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Models\User;
+use App\Notifications\NewProductCreatedNotification;
+use Illuminate\Support\Facades\Notification;
+
 
 class ProductController extends Controller
 {
@@ -56,17 +60,7 @@ class ProductController extends Controller
             'media_type' => 'nullable|string|max:255',
         ]);
 
-        //$filePath = $request['file_path']->storeOnCloudinaryAs(‘lambogini’, ‘prosper’)->getSecurePath();
-
-
-        // if ($request->hasFile('file_path')) {
-        //     try {
-        //         $uploadedFileUrl = Cloudinary::upload($request->file('file_path')->getRealPath())->getSecurePath();
-        //         return response()->json(['cloudinary_url' => $uploadedFileUrl]);
-        //     } catch (\Exception $e) {
-        //         return response()->json(['error' => $e->getMessage()], 500);
-        //     }
-        // }
+      
 
         if ($validateProduct->fails()) {
             return response()->json([
@@ -95,6 +89,11 @@ class ProductController extends Controller
         $product = $this->product->create($validateProduct->validated(), $request);
 
         // At this point, you may create an email and notification for both admin and user
+
+        // Notify all users
+        $allUsers = User::all();
+        Notification::send($allUsers, new NewProductCreatedNotification($product->toArray()));
+
 
         return response()->json([
             'status' => true,

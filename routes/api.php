@@ -127,6 +127,11 @@ Route::post('/broadcasting/auth', function (Request $request) {
     Log::info('API Broadcasting auth attempt', ['ip' => $request->ip(), 'headers' => $request->headers->all(), 'body' => $request->all()]);
     return Broadcast::auth($request);
 })->middleware('auth:sanctum');
+
+
+//landing page route
+Route::get('/show-product-landing-page/{id}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/landing-page-products/all', [ProductController::class, 'showAll'])->name('product.showAll');
     
 //Dashboard Routes
 Route::prefix('v1')->group(function () {
