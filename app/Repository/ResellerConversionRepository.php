@@ -23,4 +23,15 @@ class ResellerConversionRepository
     {
         return ResellerConversion::create($data);
     }
+
+    //fetch covertions for a reseller
+
+    public function getConversionsForReseller(int $resellerId)
+    {
+        return ResellerConversion::query()
+            ->with(['product:id,name,price']) // Only required fields
+            ->where('reseller_id', $resellerId)
+            ->orderBy('id', 'DESC')
+            ->paginate(20); // Performance-friendly pagination
+    }
 }

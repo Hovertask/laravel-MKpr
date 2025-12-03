@@ -104,6 +104,7 @@ class ResellerConversionController extends Controller
         // -----------------------------------------
         $this->repo->create([
             'product_id'     => $productId,
+            'reseller_id'    => $resellerRecord->user_id,
             'reseller_code'  => $resellerCode,
             'visitor_cookie' => $visitor,
             'ip'             => $request->ip(),
@@ -142,6 +143,19 @@ class ResellerConversionController extends Controller
         return response()->json([
             'message' => 'ready',
             'whatsapp_url' => "https://wa.me/{$sellerPhone}?text={$msg}"
+        ]);
+    }
+
+
+    public function getConversionsForReseller(Request $request)
+    {
+        $reseller = $request->user();
+
+        $conversions = $this->repo->getConversionsForReseller($reseller->id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $conversions
         ]);
     }
 }

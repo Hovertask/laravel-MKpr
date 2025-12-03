@@ -242,7 +242,7 @@ public function resellerLink($id): array
         $commission = $existingLink->commission_rate;
     } else {
         $resellerIdentifier = $this->generateUniqueLink(); 
-        $commission = 10.0;
+        $commission = 500.0;
 
         $existingLink = ResellerLink::create([
             'user_id' => $userId,
