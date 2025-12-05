@@ -314,6 +314,7 @@ public function submitAdvert(Request $request, $id)
         
 $completedTask = CompletedTask::create([
     'user_id' => $userId,
+    'platforms' => $advert->platforms,
     'advert_id' => $advert->id,
     'social_media_url' => $request->input('social_media_url'),
     'screenshot' => $screenshotPath,

@@ -237,6 +237,7 @@ public function submitTask(Request $request, $id)
         // 🧩 Save completed task record
       $completedTask = CompletedTask::create([
             'user_id' => $userId,
+            'platforms' => $task->platforms,
             'task_id' => $task->id,
             'social_media_url' => $request->input('social_media_url'),
             'screenshot' => $screenshotPath,
