@@ -123,9 +123,13 @@ class TaskRepository implements ITaskRepository
 
     //track all available tasks for users to pick from
     public function showAll() 
-    {
-        $user = auth()->user();
-        $task = Task::all();
+{
+    $user = auth()->user();
+
+    return Task::where('status', 'success')
+        ->latest()
+        ->get();
+
         //rectify thid when i'm sure of user data
         // $task = Task::where('location', $user->state)
         // ->where('status', 'active')
@@ -136,9 +140,7 @@ class TaskRepository implements ITaskRepository
         // ->where('task_count_remaining', '>', 0)
         // ->orderBy('created_at', 'desc')
         // ->get();
-        return $task;
-    }
-
+}
 
     //track task by id for users to see details
     public function show($id) {

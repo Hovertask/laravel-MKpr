@@ -219,7 +219,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     //reseller conversion tracking route
     Route::get('/track-conversion/{productId}', [ResellerConversionController::class, 'track']);
-    Route::get('//reseller/conversions', [ResellerConversionController::class, 'getConversionsForReseller']);
+    Route::get('/reseller/conversions', [ResellerConversionController::class, 'getConversionsForReseller']);
     
     
     Route::prefix('wishlists')->group(function () {

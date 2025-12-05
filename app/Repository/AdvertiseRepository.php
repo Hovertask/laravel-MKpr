@@ -23,10 +23,15 @@ class AdvertiseRepository implements IAdvertiseRepository
 
     //track all available adverts for users to pick from
     public function showAll() 
-    {
-        $user = auth()->user();
-         return Advertise::with('advertiseImages')->latest()->get();
-    }
+{
+    $user = auth()->user();
+
+    return Advertise::with('advertiseImages')
+        ->where('status', 'success')
+        ->latest()
+        ->get();
+}
+
 
 
 
