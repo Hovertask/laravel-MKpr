@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\ResellerConversionController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\Api\PaystackController;
 use App\Http\Controllers\Api\V1\TransactionController;
+use App\Http\Controllers\Api\V1\ProductFeedbackController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
 
@@ -350,6 +351,16 @@ Route::middleware('auth:sanctum')->prefix('v1')->group(function () {
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });
 
+
+//product feedback routes for athenticated user
+
+Route::prefix('v1')->group(function () {
+   Route::prefix('products')->group(function () { 
+    Route::get('{productId}/feedback', [ProductFeedbackController::class, 'list']);
+
+    Route::post('{productId}/feedback', [ProductFeedbackController::class, 'store']);
+   });
+});
 
 
 //product routes
