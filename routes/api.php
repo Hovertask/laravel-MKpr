@@ -358,7 +358,7 @@ Route::prefix('v1')->group(function () {
    Route::prefix('products')->group(function () { 
     Route::get('{productId}/feedback', [ProductFeedbackController::class, 'list']);
 
-    Route::post('{productId}/feedback', [ProductFeedbackController::class, 'store']);
+    Route::post('{productId}/feedback-list', [ProductFeedbackController::class, 'store']);
    });
 });
 
