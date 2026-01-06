@@ -47,7 +47,7 @@ class ProductController extends Controller
             'meet_up_preference' => 'nullable|string|max:255',
             'delivery_fee' => 'nullable|numeric|min:0',
             'estimated_delivery_date' => 'nullable|string|max:255',
-            'phone_number' => 'nullable|string|max:255',
+            'phone_number' => 'required|string|max:255',
             'email' => 'nullable|string|email|max:255',
             'social_media_link' => 'nullable|string|max:255',
             'resell_budget' => 'nullable|numeric|min:0',

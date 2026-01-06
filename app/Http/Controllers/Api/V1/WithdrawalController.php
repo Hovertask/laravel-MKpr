@@ -145,6 +145,7 @@ class WithdrawalController extends Controller
                     'type'       => 'debit',
                     'status'     => 'success',
                     'description'=> 'Withdrawal successful to bank',
+                    'category'   => 'withdrawal-payout',
                 ]);
 
                 // Notify user and broadcast wallet update

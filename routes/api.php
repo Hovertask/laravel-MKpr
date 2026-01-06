@@ -367,3 +367,79 @@ Route::prefix('v1')->group(function () {
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Admin routes
+Route::prefix('v1')->group(function () {
+ Route::prefix('admin')->middleware(['auth:sanctum', 'role:superadministrator'])->group(function () {
+    // Dashboard
+    Route::get('dashboard', [\App\Http\Controllers\Api\V1\Admin\AdminDashboardController::class, 'index']);
+
+    // Users
+    Route::apiResource('users', \App\Http\Controllers\Api\V1\Admin\AdminUserController::class);
+    Route::post('users/{id}/ban', [\App\Http\Controllers\Api\V1\Admin\AdminUserController::class, 'ban']);
+    Route::post('users/{id}/unban', [\App\Http\Controllers\Api\V1\Admin\AdminUserController::class, 'unban']);
+    Route::get('users/role/{role}', [\App\Http\Controllers\Api\V1\Admin\AdminUserController::class, 'getByRole']);
+
+    // Products
+    Route::apiResource('products', \App\Http\Controllers\Api\V1\Admin\AdminProductController::class);
+    Route::get('products/category/{categoryId}', [\App\Http\Controllers\Api\V1\Admin\AdminProductController::class, 'getByCategory']);
+    Route::get('products/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminProductController::class, 'getByUser']);
+
+    // Orders
+    Route::apiResource('orders', \App\Http\Controllers\Api\V1\Admin\AdminOrderController::class);
+    Route::get('orders/status/{status}', [\App\Http\Controllers\Api\V1\Admin\AdminOrderController::class, 'getByStatus']);
+    Route::get('orders/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminOrderController::class, 'getByUser']);
+
+    // Categories
+    Route::apiResource('categories', \App\Http\Controllers\Api\V1\Admin\AdminCategoryController::class);
+    Route::get('categories/parent/{parentId}', [\App\Http\Controllers\Api\V1\Admin\AdminCategoryController::class, 'getByParent']);
+
+    // Withdrawals
+    Route::apiResource('withdrawals', \App\Http\Controllers\Api\V1\Admin\AdminWithdrawalController::class);
+    Route::get('withdrawals/status/{status}', [\App\Http\Controllers\Api\V1\Admin\AdminWithdrawalController::class, 'getByStatus']);
+    Route::get('withdrawals/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminWithdrawalController::class, 'getByUser']);
+
+    // Transactions
+    Route::apiResource('transactions', \App\Http\Controllers\Api\V1\Admin\AdminTransactionController::class);
+    Route::get('transactions/type/{type}', [\App\Http\Controllers\Api\V1\Admin\AdminTransactionController::class, 'getByType']);
+    Route::get('transactions/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminTransactionController::class, 'getByUser']);
+
+    // Advertises
+    Route::apiResource('advertises', \App\Http\Controllers\Api\V1\Admin\AdminAdvertiseController::class);
+    Route::post('advertises/{id}/approve', [\App\Http\Controllers\Api\V1\Admin\AdminAdvertiseController::class, 'approve']);
+    Route::post('advertises/{id}/reject', [\App\Http\Controllers\Api\V1\Admin\AdminAdvertiseController::class, 'reject']);
+    Route::get('advertises/status/{status}', [\App\Http\Controllers\Api\V1\Admin\AdminAdvertiseController::class, 'getByStatus']);
+    Route::get('advertises/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminAdvertiseController::class, 'getByUser']);
+
+    // Tasks
+    Route::apiResource('tasks', \App\Http\Controllers\Api\V1\Admin\AdminTaskController::class);
+    Route::get('tasks/status/{status}', [\App\Http\Controllers\Api\V1\Admin\AdminTaskController::class, 'getByStatus']);
+    Route::get('tasks/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminTaskController::class, 'getByUser']);
+    Route::get('tasks/type/{type}', [\App\Http\Controllers\Api\V1\Admin\AdminTaskController::class, 'getByType']);
+
+    // Completed Tasks
+    Route::apiResource('completed-tasks', \App\Http\Controllers\Api\V1\Admin\AdminCompletedTaskController::class);
+    Route::post('completed-tasks/{id}/approve', [\App\Http\Controllers\Api\V1\Admin\AdminCompletedTaskController::class, 'approve']);
+    Route::post('completed-tasks/{id}/reject', [\App\Http\Controllers\Api\V1\Admin\AdminCompletedTaskController::class, 'reject']);
+    Route::get('completed-tasks/status/{status}', [\App\Http\Controllers\Api\V1\Admin\AdminCompletedTaskController::class, 'getByStatus']);
+    Route::get('completed-tasks/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminCompletedTaskController::class, 'getByUser']);
+    Route::get('completed-tasks/advert/{advertId}', [\App\Http\Controllers\Api\V1\Admin\AdminCompletedTaskController::class, 'getByAdvert']);
+
+    // Referrals
+    Route::apiResource('referrals', \App\Http\Controllers\Api\V1\Admin\AdminReferralController::class);
+    Route::post('referrals/{id}/mark-paid', [\App\Http\Controllers\Api\V1\Admin\AdminReferralController::class, 'markAsPaid']);
+    Route::get('referrals/status/{status}', [\App\Http\Controllers\Api\V1\Admin\AdminReferralController::class, 'getByStatus']);
+    Route::get('referrals/referrer/{referrerId}', [\App\Http\Controllers\Api\V1\Admin\AdminReferralController::class, 'getByReferrer']);
+    Route::get('referrals/referee/{refereeId}', [\App\Http\Controllers\Api\V1\Admin\AdminReferralController::class, 'getByReferee']);
+
+    // Reseller Conversions
+    Route::apiResource('reseller-conversions', \App\Http\Controllers\Api\V1\Admin\AdminResellerConversionController::class);
+    Route::get('reseller-conversions/reseller/{resellerId}', [\App\Http\Controllers\Api\V1\Admin\AdminResellerConversionController::class, 'getByReseller']);
+    Route::get('reseller-conversions/product/{productId}', [\App\Http\Controllers\Api\V1\Admin\AdminResellerConversionController::class, 'getByProduct']);
+
+    // Reseller Links
+    Route::apiResource('reseller-links', \App\Http\Controllers\Api\V1\Admin\AdminResellerLinkController::class);
+    Route::get('reseller-links/user/{userId}', [\App\Http\Controllers\Api\V1\Admin\AdminResellerLinkController::class, 'getByUser']);
+    Route::get('reseller-links/product/{productId}', [\App\Http\Controllers\Api\V1\Admin\AdminResellerLinkController::class, 'getByProduct']);
+});
+});

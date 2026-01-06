@@ -24,7 +24,7 @@ class WalletRepository implements IWalletRepository
     }
 
 
-    public function initializePayment(int $userId, float $amount, ?string $type = null, ?int $recordId = null)
+    public function initializePayment(int $userId, float $amount, ?string $type = null, ?int $recordId = null, ?array $metadata = null)
 {
     try {
         $user = User::findOrFail($userId);
@@ -35,7 +35,7 @@ class WalletRepository implements IWalletRepository
         ])->post('https://api.paystack.co/transaction/initialize', [
             'email' => $user->email,
             'amount' => $amount * 100,
-            'metadata' => [
+            'metadata' => array_merge([
                 'user_id' => $userId,
                 'payment_category' => $type ?? 'deposit',
                 'source_id' => $recordId,
@@ -43,9 +43,10 @@ class WalletRepository implements IWalletRepository
                     'task' => 'paid for Task creation',
                     'advert' => 'paid for Advert creation',
                     'membership' => 'paid for Membership',
+                    'resell_budget' => 'paid budget fee to disribute for reselling the product',
                     default => 'Wallet Deposit',
                 },
-            ],
+            ], $metadata ?? []),
         ]);
 
         $responseData = $response->json();
@@ -210,6 +211,22 @@ public function verifyPayment(string $reference)
 
             $user->balance += $amount;
             $user->save();
+            
+
+        } elseif ($paymentCategory === 'resell_budget') {
+            /*
+            ───────────────────────────────────────────────
+            RESELL BUDGET PAYMENT
+            ───────────────────────────────────────────────
+            */
+            $products = $metadata['products'] ?? [];
+            foreach ($products as $productData) {
+                $product = \App\Models\Product::find($productData['id']);
+                if ($product) {
+                    $product->update(['resell_budget' => $productData['budget'], 'resell_budget_status' => 'paid']);
+                }
+            }
+
             
 
         } else {

@@ -25,7 +25,8 @@ class Product extends Model
         'email',
         'social_media_link',
         'image',
-        'resell_budget'
+        'resell_budget',
+        'resell_budget_status'
     ];
 
     public function user()

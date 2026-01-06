@@ -60,5 +60,8 @@ class Kernel extends HttpKernel
         'check.membership' => \App\Http\Middleware\CheckMembership::class,
         'api.verified' => \App\Http\Middleware\ApiEnsureEmailIsVerified::class,
         'api.check.membership' => \App\Http\Middleware\CheckMembership::class,
+        'role' => \Laratrust\Middleware\LaratrustRole::class,
+        'permission' => \Laratrust\Middleware\LaratrustPermission::class,
+        'ability' => \Laratrust\Middleware\LaratrustAbility::class,
     ];
 }

@@ -33,9 +33,14 @@ class WalletController extends Controller
     \Log::info('Method:', [request()->method()]);
 
     $request->validate([
-        'type' => 'nullable|string|in:task,advert,deposit,membership',
+        'type' => 'nullable|string|in:task,advert,deposit,membership,resell_budget',
         'advert_id' => 'nullable|integer', // task_id or advert_id
         'amount' => 'nullable|numeric|min:100',
+        'metadata' => 'nullable|array',
+        'metadata.products' => 'required_if:type,resell_budget|array|min:1',
+        'metadata.products.*.id' => 'required_if:type,resell_budget|integer|exists:products,id',
+        'metadata.products.*.name' => 'required_if:type,resell_budget|string',
+        'metadata.products.*.budget' => 'required_if:type,resell_budget|numeric|min:0',
     ]);
 
     $userId = Auth::id();
@@ -51,6 +56,18 @@ class WalletController extends Controller
         } elseif ($type === 'advert' && $recordId) {
             $advert = \App\Models\Advertise::findOrFail($recordId);
             $amount = $advert->estimated_cost;
+        } elseif ($type === 'resell_budget') {
+            // Validate products and calculate total amount
+            $products = $request->input('metadata.products', []);
+            $totalAmount = 0;
+            foreach ($products as $productData) {
+                $product = \App\Models\Product::findOrFail($productData['id']);
+                if ($product->name !== $productData['name']) {
+                    throw new Exception('Product name does not match for ID ' . $productData['id']);
+                }
+                $totalAmount += $productData['budget'];
+            }
+            $amount = $totalAmount;
         }
 
         if (!$amount) {
@@ -60,7 +77,7 @@ class WalletController extends Controller
         }
 
         // ✅ Initialize payment in repository
-        $paymentData = $this->walletRepository->initializePayment($userId, $amount, $type, $recordId);
+        $paymentData = $this->walletRepository->initializePayment($userId, $amount, $type, $recordId, $request->input('metadata'));
         
         // ✅ Record the transaction
         $transaction = InitializeDeposit::create([

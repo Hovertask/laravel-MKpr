@@ -42,8 +42,8 @@ class ProductRepository implements IProductRepository
             'delivery_fee' => $data['delivery_fee']?? null,
             'estimated_delivery_date' => $data['estimated_delivery_date']?? null,
             'phone_number' => $data['phone_number'],
-            'email' => $data['email'],
-            'social_media_link' => $data['social_media_link'],
+            'email' => $data['email'] ?? null,
+            'social_media_link' => $data['social_media_link'] ?? null,
             'resell_budget' => $data['resell_budget'] ?? null,
         ]);
 
