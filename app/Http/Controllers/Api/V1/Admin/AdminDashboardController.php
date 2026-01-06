@@ -11,7 +11,7 @@ class AdminDashboardController extends Controller
 
     public function __construct(AdminDashboardRepository $dashboardRepo)
     {
-        $this->middleware(['auth:sanctum', 'role:superadministrator']);
+        //$this->middleware(['auth:sanctum', 'role:superadministrator']);
         $this->dashboardRepo = $dashboardRepo;
     }
 
