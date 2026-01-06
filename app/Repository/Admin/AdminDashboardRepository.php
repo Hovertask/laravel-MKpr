@@ -119,6 +119,7 @@ class AdminDashboardRepository implements IAdminDashboardRepository
             'total_revenue' => (float) $totalRevenue,
             'total_expenses' => (float) $totalExpenses,
             'total_profit' => (float) $totalProfit,
+            'total_cash_in' => (float) $totalCashIn,
             'total_UFUM' => (float) $totalUFUM, // User Funds Under Management
             'pending_orders' => $pendingOrders,
             'pending_withdrawals' => $pendingWithdrawals,
