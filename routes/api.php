@@ -373,7 +373,7 @@ Route::prefix('v1')->group(function () {
  Route::prefix('admin')->middleware(['auth:sanctum', 'role:superadministrator'])->group(function () {
     // Dashboard
     Route::get('dashboard', [\App\Http\Controllers\Api\V1\Admin\AdminDashboardController::class, 'index']);
-
+    Route::get('/user', [DashboardController::class, 'userData'])->name('user.data');
     // Users
     Route::apiResource('users', \App\Http\Controllers\Api\V1\Admin\AdminUserController::class);
     Route::post('users/{id}/ban', [\App\Http\Controllers\Api\V1\Admin\AdminUserController::class, 'ban']);
