@@ -194,7 +194,7 @@ class WalletController extends Controller
     } catch (\Exception $e) {
         // A verification error does not prove that the payment failed. Preserve
         // existing settlement state for safe retry and reconciliation.
-        \\Log::warning('Wallet payment verification failed', ['reference' => $reference, 'error' => $e->getMessage()]);
+        \Log::warning('Wallet payment verification failed', ['reference' => $reference, 'error' => $e->getMessage()]);
 
         return response()->json([
             'success' => false,
