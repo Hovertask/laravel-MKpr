@@ -49,7 +49,7 @@ beforeEach(function () {
     ]);
 });
 
-function signedPaystackTransfer(string $event): \Illuminate\Testing\TestResponse
+function signedPaystackTransfer($case, string $event): \Illuminate\Testing\TestResponse
 {
     $json = json_encode([
         'event' => $event,
