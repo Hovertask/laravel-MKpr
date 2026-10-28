@@ -133,6 +133,14 @@ public function verifyPayment(string $reference)
             throw new Exception('Payment reference mismatch');
         }
 
+        // Reject incomplete gateway responses before any database settlement.
+        if (!isset($responseData['data']['amount'])
+            || !is_numeric($responseData['data']['amount'])
+            || $responseData['data']['amount'] <= 0
+            || !isset($responseData['data']['metadata']['user_id'])) {
+            throw new Exception('Invalid payment verification data');
+        }
+
         // Extract metadata
         $metadata         = $responseData['data']['metadata'] ?? [];
         $userId           = $metadata['user_id'] ?? null;
