@@ -23,6 +23,8 @@ jobs:
         run: composer validate --no-check-publish
       - name: Install locked dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Audit PHP dependencies for known vulnerabilities
+        run: composer audit --locked --no-interaction --format=summary
       - name: Generate locked PHP dependency license inventory
         run: composer licenses --format=json > php-dependency-licenses.json
       - name: Upload PHP dependency license inventory
@@ -37,6 +39,8 @@ jobs:
           cache: npm
       - name: Install locked frontend dependencies
         run: npm ci --no-audit --no-fund
+      - name: Audit JavaScript production dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Build production frontend assets
         run: npm run build
       - name: Prepare test environment
