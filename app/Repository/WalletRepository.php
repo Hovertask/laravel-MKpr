@@ -142,21 +142,35 @@ public function verifyPayment(string $reference)
         $amount           = $responseData['data']['amount'] / 100;
         $gatewayReference = $responseData['data']['reference']; // Paystack ref
 
+        DB::beginTransaction();
+
+        // Lock the original payment record before changing any balances or rewards.
+        // This serializes concurrent verification requests on databases that support
+        // row-level locking (production PostgreSQL).
+        $deposit = InitializeDeposit::where('reference', $gatewayReference)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $deposit || $deposit->status !== 'pending') {
+            throw new Exception('Payment is missing or already processed');
+        }
+
+        if ((int) $deposit->user_id !== (int) $userId
+            || abs((float) $deposit->amount - (float) $amount) > 0.001) {
+            throw new Exception('Payment does not match the initialized deposit');
+        }
+
+        $deposit->status = 'successful';
+        $deposit->save();
+
         // Generate platform reference (used for all internal distributions)
         $platformReference = 'PLAT-' . strtoupper(Str::random(12));
 
-        // Get super admin ID
-        $superAdminId = \DB::table('users')
+        $superAdminId = DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
             ->where('roles.name', 'superadministrator')
             ->value('users.id');
-
-        \Log::info('Super Admin ID for platform earnings:', [
-            'super_admin_id' => $superAdminId
-        ]);
-
-        DB::beginTransaction();
 
         /*
         ───────────────────────────────────────────────
