@@ -111,6 +111,10 @@ class WalletRepository implements IWalletRepository
 public function verifyPayment(string $reference)
 {
     try {
+        if (trim($reference) === '') {
+            throw new Exception('Payment reference is required');
+        }
+
         // Verify Paystack
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
