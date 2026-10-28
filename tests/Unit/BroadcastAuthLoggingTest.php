@@ -1,7 +1,7 @@
 <?php
 
 it('does not log broadcasting auth headers or request payloads', function () {
-    $routes = file_get_contents(base_path('routes/api.php'));
+    $routes = file_get_contents(dirname(__DIR__, 2) . '/routes/api.php');
     preg_match(
         "~Route::post\\('/broadcasting/auth', function \\(Request \\$request\\) \\{(.*?)\\}\\)->middleware\\('auth:sanctum'\\);~s",
         $routes,
