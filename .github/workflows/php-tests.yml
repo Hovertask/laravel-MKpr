@@ -23,6 +23,13 @@ jobs:
         run: composer validate --no-check-publish
       - name: Install locked dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Generate locked PHP dependency license inventory
+        run: composer licenses --format=json > php-dependency-licenses.json
+      - name: Upload PHP dependency license inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-dependency-licenses
+          path: php-dependency-licenses.json
       - name: Configure Node.js
         uses: actions/setup-node@v4
         with:
