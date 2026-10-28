@@ -47,16 +47,6 @@ Route::get('/roles', [AuthController::class, 'roles']);
 Route::post('/verify-email-code', [AuthController::class, 'verifyEmailCode'])->name('verify.email.code');
 Route::post('/resend-email-code', [AuthController::class, 'resendEmailVerificationCode'])->name('resend.email.code');
 
-Route::get('/test-mail', function () {
-    \Mail::raw('This is a test email', function ($message) {
-        $message->to('barnabas.ykolo@gmail.com')
-                ->subject('Test Email');
-    });
-
-    return 'Test email sent!';
-});
-
-
 Route::get('/ping', function() {
    return response()->json([
        
