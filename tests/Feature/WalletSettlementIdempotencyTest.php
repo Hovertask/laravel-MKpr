@@ -20,23 +20,21 @@ beforeEach(function () {
         'user_id' => 12,
         'reference' => 'pay-123',
         'amount' => 500,
-        'status' => 'successful',
+        'status' => 'pending',
     ]);
 
-    Http::fake([
-        'api.paystack.co/transaction/verify/*' => Http::response([
-            'status' => true,
-            'data' => [
-                'status' => 'success',
-                'reference' => 'pay-123',
-                'amount' => 50000,
-                'metadata' => ['user_id' => 12, 'payment_category' => 'deposit'],
-            ],
-        ]),
-    ]);
+
 });
 
 it('rejects verification for an already settled payment', function () {
+    DB::table('initialize_deposits')->update(['status' => 'successful']);
+    Http::fake([
+        'api.paystack.co/transaction/verify/*' => Http::response([
+            'status' => true,
+            'data' => ['status' => 'success', 'reference' => 'pay-123', 'amount' => 50000,
+                'metadata' => ['user_id' => 12, 'payment_category' => 'deposit']],
+        ]),
+    ]);
     expect(fn () => app(WalletRepository::class)->verifyPayment('pay-123'))
         ->toThrow(\Exception::class, 'already processed');
 
