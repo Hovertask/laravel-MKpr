@@ -115,7 +115,7 @@ Route::get('/wallet/verify-payment/{reference}', [WalletController::class, 'veri
 
 // Broadcasting auth endpoint for token-based SPA (Bearer token)
 Route::post('/broadcasting/auth', function (Request $request) {
-    Log::info('API Broadcasting auth attempt', ['ip' => $request->ip(), 'headers' => $request->headers->all(), 'body' => $request->all()]);
+    // Avoid logging Authorization headers or channel-auth payloads.
     return Broadcast::auth($request);
 })->middleware('auth:sanctum');
 
