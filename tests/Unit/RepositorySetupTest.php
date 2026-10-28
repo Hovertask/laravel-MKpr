@@ -1,7 +1,7 @@
 <?php
 
 test('composer autoload hooks do not run database migrations', function () {
-    $composer = json_decode(file_get_contents(base_path('composer.json')), true, 512, JSON_THROW_ON_ERROR);
+    $composer = json_decode(file_get_contents(dirname(__DIR__, 2).'/composer.json'), true, 512, JSON_THROW_ON_ERROR);
 
     $hooks = $composer['scripts']['post-autoload-dump'] ?? [];
     $commands = implode("\n", $hooks);
@@ -10,10 +10,10 @@ test('composer autoload hooks do not run database migrations', function () {
 });
 
 test('the example environment contains editable postgres defaults', function () {
-    $example = file_get_contents(base_path('.env.example'));
+    $example = file_get_contents(dirname(__DIR__, 2).'/.env.example');
 
     expect($example)->toContain('DB_CONNECTION=pgsql')
         ->toContain('DB_HOST=127.0.0.1')
         ->toContain('DB_PORT=5432')
-        ->not->toContain('\$\{\{Postgres.');
+        ->not->toContain('Postgres.PGHOST');
 });
