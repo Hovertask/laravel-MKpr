@@ -7,7 +7,11 @@ use Illuminate\Support\Facades\Schema;
 beforeEach(function () {
     config()->set('services.paystack.secret_key', 'webhook-test-secret');
 
-    foreach (['transactions', 'withdrawals', 'wallets', 'users'] as $table) {\n        Schema::dropIfExists($table);\n    }\n\n    Schema::create('users', function (Blueprint $table) {
+    foreach (['transactions', 'withdrawals', 'wallets', 'users'] as $table) {
+        Schema::dropIfExists($table);
+    }
+
+    Schema::create('users', function (Blueprint $table) {
         $table->id();
         $table->integer('balance')->default(0);
         $table->timestamps();
