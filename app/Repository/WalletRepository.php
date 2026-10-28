@@ -136,8 +136,11 @@ public function verifyPayment(string $reference)
         // Reject incomplete gateway responses before any database settlement.
         if (!isset($responseData['data']['amount'])
             || !is_numeric($responseData['data']['amount'])
-            || $responseData['data']['amount'] <= 0
-            || !isset($responseData['data']['metadata']['user_id'])) {
+            || !filter_var($responseData['data']['amount'], FILTER_VALIDATE_INT)
+            || (int) $responseData['data']['amount'] <= 0
+            || !isset($responseData['data']['metadata']['user_id'])
+            || !filter_var($responseData['data']['metadata']['user_id'], FILTER_VALIDATE_INT)
+            || (int) $responseData['data']['metadata']['user_id'] <= 0) {
             throw new Exception('Invalid payment verification data');
         }
 
