@@ -23,8 +23,10 @@ jobs:
           extensions: mbstring, xml, curl, zip, sqlite3, pdo_sqlite, pgsql, pdo_pgsql, gd, intl
           tools: composer:v2
           coverage: none
-      - name: Resolve compatible Laravel framework and Reverb patches
-        run: composer update laravel/framework laravel/reverb --with-all-dependencies --no-interaction --no-progress
+      - name: Propose Laravel 12 framework compatibility update
+        run: |
+          composer require 'laravel/framework:^12.0' --no-update --no-interaction
+          composer update laravel/framework laravel/reverb --with-all-dependencies --no-interaction --no-progress
       - name: Validate updated dependency lock
         run: |
           composer validate --no-check-publish
@@ -41,11 +43,13 @@ jobs:
         with:
           branch: security/refresh-laravel-dependencies
           base: chore/datafactor-readiness-20261028
-          commit-message: "chore(deps): refresh Laravel framework and Reverb lockfile"
+          commit-message: "chore(deps): propose Laravel 12 framework and Reverb dependency refresh"
           title: "chore(deps): refresh Laravel framework and Reverb"
           body: |
-            Targeted Composer update for Laravel framework and Reverb with transitive dependencies.
+            Proposed Laravel 12 major-version compatibility update with Reverb and transitive dependencies; requires careful application regression testing.
             Review the dependency diff, remaining advisories, CI, and staging smoke tests before merging.
             This PR does not claim all security advisories are resolved.
-          add-paths: composer.lock
+          add-paths: |
+            composer.json
+            composer.lock
           draft: true
