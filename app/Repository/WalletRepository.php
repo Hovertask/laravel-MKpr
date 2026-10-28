@@ -115,7 +115,7 @@ public function verifyPayment(string $reference)
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
             'Content-Type'  => 'application/json',
-        ])->get("https://api.paystack.co/transaction/verify/{$reference}");
+        ])->get("https://api.paystack.co/transaction/verify/" . rawurlencode($reference));
 
         $responseData = $response->json();
 
