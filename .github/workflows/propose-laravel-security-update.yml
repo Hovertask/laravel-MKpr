@@ -26,6 +26,7 @@ jobs:
       - name: Propose Laravel 13 and Pest 5 compatibility update
         run: |
           composer require 'php:^8.4' 'laravel/framework:^13.0' --no-update --no-interaction
+          composer require 'resend/resend-laravel:^1.7' --no-update --no-interaction
           composer require --dev 'pestphp/pest:^5.0' 'pestphp/pest-plugin-laravel:^5.0' --no-update --no-interaction
           composer update --with-all-dependencies --no-interaction --no-progress
       - name: Validate updated dependency lock
