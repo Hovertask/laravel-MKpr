@@ -119,12 +119,14 @@ public function verifyPayment(string $reference)
 
         $responseData = $response->json();
 
-        if (!$response->successful() || !$responseData['status']) {
-            throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+        if (!$response->successful() || !is_array($responseData)
+            || ($responseData['status'] ?? false) !== true
+            || !is_array($responseData['data'] ?? null)) {
+            throw new Exception('Invalid response from payment gateway');
         }
 
-        if ($responseData['data']['status'] !== 'success') {
-            throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+        if (($responseData['data']['status'] ?? null) !== 'success') {
+            throw new Exception('Payment not successful');
         }
 
         // The gateway must confirm the exact reference requested by our caller.
