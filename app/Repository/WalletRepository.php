@@ -160,17 +160,17 @@ public function verifyPayment(string $reference)
             throw new Exception('Payment does not match the initialized deposit');
         }
 
-        $deposit->status = 'successful';
-        $deposit->save();
-
-        // Generate platform reference (used for all internal distributions)
-        $platformReference = 'PLAT-' . strtoupper(Str::random(12));
-
         $superAdminId = DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
             ->where('roles.name', 'superadministrator')
             ->value('users.id');
+
+        $deposit->status = 'successful';
+        $deposit->save();
+
+        // Generate platform reference (used for all internal distributions)
+        $platformReference = 'PLAT-' . strtoupper(Str::random(12));
 
         /*
         ───────────────────────────────────────────────
