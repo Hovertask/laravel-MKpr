@@ -192,9 +192,9 @@ class WalletController extends Controller
             'data'    => $paymentData
         ], 200);
     } catch (\Exception $e) {
-        // If something fails, mark tx failed (best effort)
-        InitializeDeposit::where('reference', $reference)->update(['status' => 'failed']);
-        Transaction::where('gateway_reference', $reference)->update(['status' => 'failed']);
+        // A verification error does not prove that the payment failed. Preserve
+        // existing settlement state for safe retry and reconciliation.
+        \\Log::warning('Wallet payment verification failed', ['reference' => $reference, 'error' => $e->getMessage()]);
 
         return response()->json([
             'success' => false,
