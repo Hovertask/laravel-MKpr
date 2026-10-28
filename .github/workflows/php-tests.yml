@@ -117,6 +117,10 @@ jobs:
           tools: composer:v2
       - name: Save full Composer advisory report and fail on findings
         run: composer audit --locked --no-interaction --format=json > composer-security-audit.json
+      - name: Summarize dependency advisory counts
+        if: always()
+        run: |
+          php -r '$j = json_decode(file_get_contents("composer-security-audit.json"), true); if (!is_array($j)) { fwrite(STDERR, "Audit report missing or invalid\\n"); exit(1); } $a = $j["advisories"] ?? []; $count = 0; foreach ($a as $entries) { $count += count($entries); } file_put_contents(getenv("GITHUB_STEP_SUMMARY"), "### Composer security advisories\\nAffected packages: " . count($a) . "\\n\\nTotal advisories: " . $count . "\\n\\nSee the uploaded JSON artifact for details.\\n", FILE_APPEND);'
       - name: Upload Composer advisory report even on failure
         if: always()
         uses: actions/upload-artifact@v4
