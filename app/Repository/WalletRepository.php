@@ -127,6 +127,12 @@ public function verifyPayment(string $reference)
             throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
         }
 
+        // The gateway must confirm the exact reference requested by our caller.
+        // Never settle a different transaction based on an unrelated response.
+        if (($responseData['data']['reference'] ?? null) !== $reference) {
+            throw new Exception('Payment reference mismatch');
+        }
+
         // Extract metadata
         $metadata         = $responseData['data']['metadata'] ?? [];
         $userId           = $metadata['user_id'] ?? null;
