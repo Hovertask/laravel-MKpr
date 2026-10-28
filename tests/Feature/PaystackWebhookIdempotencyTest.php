@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 beforeEach(function () {
     config()->set('services.paystack.secret_key', 'webhook-test-secret');
 
-    Schema::create('users', function (Blueprint $table) {
+    foreach (['transactions', 'withdrawals', 'wallets', 'users'] as $table) {\n        Schema::dropIfExists($table);\n    }\n\n    Schema::create('users', function (Blueprint $table) {
         $table->id();
         $table->integer('balance')->default(0);
         $table->timestamps();
@@ -52,15 +52,15 @@ function signedPaystackTransfer(string $event): \Illuminate\Testing\TestResponse
         'data' => ['reference' => 'transfer-123'],
     ], JSON_THROW_ON_ERROR);
 
-    return test()->call('POST', '/api/webhook/paystack', [], [], [], [
+    return $case->call('POST', '/api/webhook/paystack', [], [], [], [
         'HTTP_CONTENT_TYPE' => 'application/json',
         'HTTP_X_PAYSTACK_SIGNATURE' => hash_hmac('sha512', $json, 'webhook-test-secret'),
     ], $json);
 }
 
 it('refunds a failed transfer once when the same webhook is delivered twice', function () {
-    signedPaystackTransfer('transfer.failed')->assertOk();
-    signedPaystackTransfer('transfer.failed')->assertOk();
+    signedPaystackTransfer($this, 'transfer.failed')->assertOk();
+    signedPaystackTransfer($this, 'transfer.failed')->assertOk();
 
     expect(DB::table('wallets')->value('balance'))->toBe(500)
         ->and(DB::table('users')->value('balance'))->toBe(500)
@@ -69,8 +69,8 @@ it('refunds a failed transfer once when the same webhook is delivered twice', fu
 });
 
 it('records a successful transfer once when the same webhook is delivered twice', function () {
-    signedPaystackTransfer('transfer.success')->assertOk();
-    signedPaystackTransfer('transfer.success')->assertOk();
+    signedPaystackTransfer($this, 'transfer.success')->assertOk();
+    signedPaystackTransfer($this, 'transfer.success')->assertOk();
 
     expect(DB::table('wallets')->value('balance'))->toBe(0)
         ->and(DB::table('users')->value('balance'))->toBe(0)
