@@ -34,7 +34,7 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
       - name: Run webhook security feature tests
-        run: php artisan test tests/Feature/PaystackWebhookSecurityTest.php tests/Feature/PaystackWebhookIdempotencyTest.php tests/Feature/PublicEndpointSecurityTest.php
+        run: php artisan test tests/Feature/PaystackWebhookSecurityTest.php tests/Feature/PaystackWebhookIdempotencyTest.php tests/Feature/PublicEndpointSecurityTest.php tests/Feature/WalletPaymentReferenceTest.php
         env:
           APP_ENV: testing
           DB_CONNECTION: sqlite
