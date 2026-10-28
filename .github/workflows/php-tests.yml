@@ -23,8 +23,6 @@ jobs:
         run: composer validate --no-check-publish
       - name: Install locked dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
-      - name: Audit PHP dependencies for known vulnerabilities
-        run: composer audit --locked --no-interaction --format=summary
       - name: Generate locked PHP dependency license inventory
         run: composer licenses --format=json > php-dependency-licenses.json
       - name: Upload PHP dependency license inventory
@@ -105,3 +103,24 @@ jobs:
           php artisan key:generate
       - name: Verify payment reference constraints on PostgreSQL
         run: php artisan test tests/Feature/PaymentReferenceUniquenessTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/WalletPaymentReferenceTest.php
+
+  dependency-security-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+      - name: Save full Composer advisory report and fail on findings
+        run: composer audit --locked --no-interaction --format=json > composer-security-audit.json
+      - name: Upload Composer advisory report even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: composer-security-audit
+          path: composer-security-audit.json
+          if-no-files-found: warn
