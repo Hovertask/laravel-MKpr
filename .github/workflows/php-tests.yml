@@ -27,6 +27,8 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate
+      - name: Check PHP syntax
+        run: find app tests -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Run database-independent regression tests
         run: php artisan test --testsuite=Unit
         env:
