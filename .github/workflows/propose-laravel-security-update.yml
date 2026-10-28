@@ -1,0 +1,51 @@
+name: Propose Laravel security dependency refresh
+
+on:
+  push:
+    branches:
+      - chore/datafactor-readiness-20261028
+    paths:
+      - .github/workflows/propose-laravel-security-update.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  propose-refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, curl, zip, sqlite3, pdo_sqlite, pgsql, pdo_pgsql, gd, intl
+          tools: composer:v2
+          coverage: none
+      - name: Resolve compatible Laravel framework and Reverb patches
+        run: composer update laravel/framework laravel/reverb --with-all-dependencies --no-interaction --no-progress
+      - name: Validate updated dependency lock
+        run: |
+          composer validate --no-check-publish
+          composer audit --locked --no-interaction --format=json > updated-composer-audit.json || true
+      - name: Upload remaining advisory inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-refresh-advisories
+          path: updated-composer-audit.json
+          if-no-files-found: ignore
+      - name: Propose lockfile update for review
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: security/refresh-laravel-dependencies
+          base: chore/datafactor-readiness-20261028
+          commit-message: "chore(deps): refresh Laravel framework and Reverb lockfile"
+          title: "chore(deps): refresh Laravel framework and Reverb"
+          body: |
+            Targeted Composer update for Laravel framework and Reverb with transitive dependencies.
+            Review the dependency diff, remaining advisories, CI, and staging smoke tests before merging.
+            This PR does not claim all security advisories are resolved.
+          add-paths: composer.lock
+          draft: true
