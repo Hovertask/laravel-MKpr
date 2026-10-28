@@ -38,7 +38,7 @@ jobs:
       - name: Validate updated dependency lock
         run: |
           composer validate --no-check-publish
-          composer audit --locked --no-interaction --format=json > updated-composer-audit.json || true
+          composer audit --locked --no-interaction --format=json > updated-composer-audit.json
       - name: Upload remaining advisory inventory
         if: always()
         uses: actions/upload-artifact@v4
@@ -51,12 +51,12 @@ jobs:
         with:
           branch: security/propose-laravel-13-upgrade
           base: chore/datafactor-readiness-20261028
-          commit-message: "chore(deps): propose Laravel 12 framework and Reverb dependency refresh"
+          commit-message: "chore(deps): propose Laravel 13 and Pest 5 dependency refresh"
           title: "chore(deps): propose Laravel 13 and Pest 5 upgrades"
           body: |
             Experimental major-version update to Laravel 13 and Pest 5 on PHP 8.4. Requires full application compatibility review, security audit, and staging tests before approval.
             Review the dependency diff, remaining advisories, CI, and staging smoke tests before merging.
-            This PR does not claim all security advisories are resolved.
+            The lockfile proposal must pass Composer's security audit before the PR is created. Do not merge without application compatibility and staging verification.
           add-paths: |
             composer.json
             composer.lock
