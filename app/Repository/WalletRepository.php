@@ -174,7 +174,7 @@ public function verifyPayment(string $reference)
             'payment_source'     => 'paystack',
             'category'           => $paymentCategory,
             'type' => Transaction::resolveTransactionType($type),
-            'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
+            'description'=> $metadata['description'] ?? 'Wallet funding',
 
         ]);
 
