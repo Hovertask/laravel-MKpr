@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use RuntimeException;
 
 return new class extends Migration
 {
@@ -18,7 +17,7 @@ return new class extends Migration
             ->first();
 
         if ($duplicate) {
-            throw new RuntimeException(
+            throw new \RuntimeException(
                 'Duplicate payment references exist in initialize_deposits. Reconcile them before applying the unique index.'
             );
         }
