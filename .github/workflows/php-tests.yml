@@ -41,3 +41,47 @@ jobs:
           APP_ENV: testing
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
+
+  postgres-payment-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hovertask_test
+          POSTGRES_USER: hovertask
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hovertask -d hovertask_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: hovertask_test
+      DB_USERNAME: hovertask
+      DB_PASSWORD: test_password
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, curl, zip, pdo_pgsql, pgsql, gd, intl
+          coverage: none
+          tools: composer:v2
+      - name: Install locked dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - name: Verify payment reference constraints on PostgreSQL
+        run: php artisan test tests/Feature/PaymentReferenceUniquenessTest.php
