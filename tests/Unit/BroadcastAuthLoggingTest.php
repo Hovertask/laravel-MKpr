@@ -2,14 +2,14 @@
 
 it('does not log broadcasting auth headers or request payloads', function () {
     $routes = file_get_contents(dirname(__DIR__, 2) . '/routes/api.php');
-    preg_match(
-        "~Route::post\\('/broadcasting/auth', function \\(Request \\$request\\) \\{(.*?)\\}\\)->middleware\\('auth:sanctum'\\);~s",
-        $routes,
-        $matches
-    );
+    $start = strpos($routes, "Route::post('/broadcasting/auth'");
+    expect($start)->not->toBeFalse();
 
-    expect($matches)->toHaveKey(1);
-    expect($matches[1])->not->toContain('headers->all()');
-    expect($matches[1])->not->toContain('request->all()');
-    expect($matches[1])->toContain('Broadcast::auth($request)');
+    $end = strpos($routes, "->middleware('auth:sanctum');", $start);
+    expect($end)->not->toBeFalse();
+
+    $route = substr($routes, $start, $end - $start);
+    expect($route)->not->toContain('headers->all()');
+    expect($route)->not->toContain('request->all()');
+    expect($route)->toContain('Broadcast::auth($request)');
 });
