@@ -19,14 +19,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: mbstring, xml, curl, zip, sqlite3, pdo_sqlite, pgsql, pdo_pgsql, gd, intl
           tools: composer:v2
           coverage: none
-      - name: Propose Laravel 12 framework compatibility update
+      - name: Propose Laravel 13 and Pest 5 compatibility update
         run: |
-          composer require 'laravel/framework:^12.0' --no-update --no-interaction
-          composer update laravel/framework laravel/reverb --with-all-dependencies --no-interaction --no-progress
+          composer require 'php:^8.4' 'laravel/framework:^13.0' --no-update --no-interaction
+          composer require --dev 'pestphp/pest:^5.0' 'pestphp/pest-plugin-laravel:^5.0' --no-update --no-interaction
+          composer update --with-all-dependencies --no-interaction --no-progress
       - name: Validate updated dependency lock
         run: |
           composer validate --no-check-publish
@@ -35,18 +36,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: laravel-refresh-advisories
+          name: laravel-13-refresh-advisories
           path: updated-composer-audit.json
           if-no-files-found: ignore
       - name: Propose lockfile update for review
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: security/refresh-laravel-dependencies
+          branch: security/propose-laravel-13-upgrade
           base: chore/datafactor-readiness-20261028
           commit-message: "chore(deps): propose Laravel 12 framework and Reverb dependency refresh"
-          title: "chore(deps): refresh Laravel framework and Reverb"
+          title: "chore(deps): propose Laravel 13 and Pest 5 upgrades"
           body: |
-            Proposed Laravel 12 major-version compatibility update with Reverb and transitive dependencies; requires careful application regression testing.
+            Experimental major-version update to Laravel 13 and Pest 5 on PHP 8.4. Requires full application compatibility review, security audit, and staging tests before approval.
             Review the dependency diff, remaining advisories, CI, and staging smoke tests before merging.
             This PR does not claim all security advisories are resolved.
           add-paths: |
