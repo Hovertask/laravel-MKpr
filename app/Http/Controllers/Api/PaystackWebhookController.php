@@ -43,17 +43,7 @@ class PaystackWebhookController extends Controller
                 ->first();
         }
 
-        // Fallback: try to find pending withdrawal by amount and user if available (best effort)
-        if (! $withdrawal && ! empty($data['amount']) && ! empty($data['recipient'])) {
-            $amount = $data['amount'] / 100; // kobo
-            $recipient = $data['recipient'];
-
-            // best-effort match: latest pending withdrawal with same amount
-            $withdrawal = Withdrawal::where('amount', $amount)
-                ->where('status', 'pending')
-                ->orderBy('created_at', 'desc')
-                ->first();
-        }
+        // Never infer a withdrawal from the amount: require a matching transfer reference.
 
         DB::transaction(function () use ($event, $data, $withdrawal, $reference) {
             if (! $withdrawal) {
