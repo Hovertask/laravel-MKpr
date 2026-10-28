@@ -84,4 +84,4 @@ jobs:
           cp .env.example .env
           php artisan key:generate
       - name: Verify payment reference constraints on PostgreSQL
-        run: php artisan test tests/Feature/PaymentReferenceUniquenessTest.php
+        run: php artisan test tests/Feature/PaymentReferenceUniquenessTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/WalletPaymentReferenceTest.php
