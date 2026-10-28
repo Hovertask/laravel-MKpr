@@ -23,6 +23,12 @@ jobs:
           extensions: mbstring, xml, curl, zip, sqlite3, pdo_sqlite, pgsql, pdo_pgsql, gd, intl
           tools: composer:v2
           coverage: none
+      - name: Check Cloudinary package support for Laravel 13
+        run: |
+          echo 'Blocked: cloudinary-labs/cloudinary-laravel 2.2 requires illuminate/support ^10|^11.'
+          echo 'The latest official 3.0.2 release supports Laravel 11/12, not 13.'
+          echo 'Review upstream compatibility or an approved replacement before upgrading.'
+          exit 1
       - name: Propose Laravel 13 and Pest 5 compatibility update
         run: |
           composer require 'php:^8.4' 'laravel/framework:^13.0' --no-update --no-interaction
