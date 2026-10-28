@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: "composer"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    target-branch: "chore/datafactor-readiness-20261028"
+    open-pull-requests-limit: 5
+    groups:
+      laravel-security-and-framework:
+        patterns:
+          - "laravel/*"
+          - "symfony/*"
+      php-runtime-dependencies:
+        patterns:
+          - "guzzlehttp/*"
+          - "league/*"
+          - "nesbot/*"
+          - "phpseclib/*"
+    labels:
+      - "dependencies"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    target-branch: "chore/datafactor-readiness-20261028"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
