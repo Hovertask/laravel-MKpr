@@ -34,3 +34,38 @@ it('rejects invalid priority and category before persisting a task', function ()
     $errors = $response->getData(true)['errors'];
     expect($errors)->toHaveKeys(['priority', 'category']);
 });
+
+it('returns a created task response after validating a complete request', function () {
+    \Illuminate\Support\Facades\Schema::dropIfExists('users');
+    \Illuminate\Support\Facades\Schema::create('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->id();
+    });
+    \Illuminate\Support\Facades\DB::table('users')->insert(['id' => 42]);
+
+    $task = new \App\Models\Task();
+    $task->id = 19;
+    $task->title = 'Verified task';
+
+    $repository = Mockery::mock(ITaskRepository::class);
+    $repository->shouldReceive('create')->once()->with(Mockery::on(function ($data) {
+        return ($data['user_id'] ?? null) === 42
+            && ($data['title'] ?? null) === 'Verified task'
+            && ($data['category'] ?? null) === 'social_media';
+    }))->andReturn($task);
+
+    $response = (new TaskController($repository))->createTask(Request::create('/api/task', 'POST', [
+        'user_id' => 42,
+        'title' => 'Verified task',
+        'description' => 'Complete a social media task',
+        'status' => 'open',
+        'priority' => 'medium',
+        'task_type' => 1,
+        'category' => 'social_media',
+    ]));
+
+    expect($response->getStatusCode())->toBe(201);
+    $body = $response->getData(true);
+    expect($body['status'])->toBeTrue();
+    expect($body['message'])->toBe('Task created successfully');
+    expect($body['data']['title'])->toBe('Verified task');
+});
