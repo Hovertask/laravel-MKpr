@@ -35,7 +35,7 @@ class WalletRepository implements IWalletRepository
         ])->post('https://api.paystack.co/transaction/initialize', [
             'email' => $user->email,
             'amount' => $amount * 100,
-            'metadata' => array_merge([
+            'metadata' => array_merge($metadata ?? [], [
                 'user_id' => $userId,
                 'payment_category' => $type ?? 'deposit',
                 'source_id' => $recordId,
@@ -46,7 +46,7 @@ class WalletRepository implements IWalletRepository
                     'resell_budget' => 'paid budget fee to disribute for reselling the product',
                     default => 'Wallet Deposit',
                 },
-            ], $metadata ?? []),
+            ]),
         ]);
 
         $responseData = $response->json();
