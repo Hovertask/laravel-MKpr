@@ -20,7 +20,7 @@ class WalletRepository implements IWalletRepository
 
     public function __construct()
     {
-        $this->paystackSecretKey = env('PAYSTACK_SECRET_KEY');
+        $this->paystackSecretKey = config('services.paystack.secret_key');
     }
 
 
