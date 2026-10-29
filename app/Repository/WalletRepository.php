@@ -51,8 +51,10 @@ class WalletRepository implements IWalletRepository
 
         $responseData = $response->json();
 
-        if (!$response->successful() || !$responseData['status']) {
-            throw new Exception("Failed to initialize payment: " . ($responseData['message'] ?? 'Unknown error'));
+        if (!$response->successful() || !is_array($responseData)
+            || ($responseData['status'] ?? false) !== true
+            || !is_array($responseData['data'] ?? null)) {
+            throw new Exception('Invalid payment initialization response');
         }
 
         return $responseData;
