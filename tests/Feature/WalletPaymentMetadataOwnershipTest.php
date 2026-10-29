@@ -3,8 +3,18 @@
 use App\Models\User;
 use App\Repository\WalletRepository;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 
 it('does not let custom metadata overwrite trusted payment ownership', function () {
+    Schema::dropIfExists('users');
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('email');
+        $table->string('name');
+        $table->string('password');
+        $table->timestamps();
+    });
     $user = User::factory()->create();
     config()->set('services.paystack.secret_key', 'test-secret');
 
