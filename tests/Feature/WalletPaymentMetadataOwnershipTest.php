@@ -13,6 +13,8 @@ it('does not let custom metadata overwrite trusted payment ownership', function 
         $table->string('email');
         $table->string('name');
         $table->string('password');
+        $table->timestamp('email_verified_at')->nullable();
+        $table->rememberToken();
         $table->timestamps();
     });
     $user = User::factory()->create();
