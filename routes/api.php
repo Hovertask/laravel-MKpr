@@ -47,16 +47,6 @@ Route::get('/roles', [AuthController::class, 'roles']);
 Route::post('/verify-email-code', [AuthController::class, 'verifyEmailCode'])->name('verify.email.code');
 Route::post('/resend-email-code', [AuthController::class, 'resendEmailVerificationCode'])->name('resend.email.code');
 
-Route::get('/test-mail', function () {
-    \Mail::raw('This is a test email', function ($message) {
-        $message->to('barnabas.ykolo@gmail.com')
-                ->subject('Test Email');
-    });
-
-    return 'Test email sent!';
-});
-
-
 Route::get('/ping', function() {
    return response()->json([
        
@@ -125,7 +115,7 @@ Route::get('/wallet/verify-payment/{reference}', [WalletController::class, 'veri
 
 // Broadcasting auth endpoint for token-based SPA (Bearer token)
 Route::post('/broadcasting/auth', function (Request $request) {
-    Log::info('API Broadcasting auth attempt', ['ip' => $request->ip(), 'headers' => $request->headers->all(), 'body' => $request->all()]);
+    // Avoid logging Authorization headers or channel-auth payloads.
     return Broadcast::auth($request);
 })->middleware('auth:sanctum');
 

@@ -1,0 +1,129 @@
+name: PHP checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  install-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, curl, zip, sqlite3, pdo_sqlite, pgsql, pdo_pgsql, gd, intl
+          coverage: none
+          tools: composer:v2
+      - name: Validate Composer metadata
+        run: composer validate --no-check-publish
+      - name: Install locked dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Generate locked PHP dependency license inventory
+        run: composer licenses --format=json > php-dependency-licenses.json
+      - name: Upload PHP dependency license inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-dependency-licenses
+          path: php-dependency-licenses.json
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked frontend dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Audit JavaScript production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Build production frontend assets
+        run: npm run build
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - name: Check PHP syntax
+        run: find app tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Run database-independent regression tests
+        run: php artisan test --testsuite=Unit
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+      - name: Run webhook security feature tests
+        run: php artisan test tests/Feature/PaystackWebhookSecurityTest.php tests/Feature/PaystackWebhookIdempotencyTest.php tests/Feature/PublicEndpointSecurityTest.php tests/Feature/WalletPaymentReferenceTest.php tests/Feature/WalletGatewayPayloadValidationTest.php tests/Feature/WalletGatewayResponseShapeTest.php tests/Feature/WalletReferenceEncodingTest.php tests/Feature/WalletConfiguredPaystackSecretTest.php tests/Feature/WalletPaymentMetadataOwnershipTest.php tests/Feature/WalletInitializationResponseTest.php tests/Feature/WalletVerificationFailureTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/PaymentReferenceUniquenessTest.php
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+
+  postgres-payment-integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hovertask_test
+          POSTGRES_USER: hovertask
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hovertask -d hovertask_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: testing
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: '5432'
+      DB_DATABASE: hovertask_test
+      DB_USERNAME: hovertask
+      DB_PASSWORD: test_password
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, curl, zip, pdo_pgsql, pgsql, gd, intl
+          coverage: none
+          tools: composer:v2
+      - name: Install locked dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - name: Verify payment reference constraints on PostgreSQL
+        run: php artisan test tests/Feature/PaymentReferenceUniquenessTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/WalletPaymentReferenceTest.php
+
+  dependency-security-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Configure PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+      - name: Save full Composer advisory report and fail on findings
+        run: composer audit --locked --no-interaction --format=json > composer-security-audit.json
+      - name: Summarize vulnerable packages and severity
+        if: always()
+        run: php scripts/summarize-composer-audit.php composer-security-audit.json
+      - name: Upload Composer advisory report even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: composer-security-audit
+          path: composer-security-audit.json
+          if-no-files-found: warn

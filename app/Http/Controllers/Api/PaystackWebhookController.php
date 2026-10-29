@@ -35,36 +35,40 @@ class PaystackWebhookController extends Controller
 
         Log::info('Paystack webhook received', ['event' => $event, 'reference' => $reference]);
 
-        // find matching withdrawal by paystack_reference or trx
-        $withdrawal = null;
-        if ($reference) {
-            $withdrawal = Withdrawal::where('paystack_reference', $reference)
-                ->orWhere('trx', $reference)
-                ->first();
-        }
+        DB::transaction(function () use ($event, $data, $reference) {
+            // Lock and re-read the record inside the transaction to prevent two
+            // simultaneous webhook deliveries from applying the same outcome twice.
+            $withdrawal = $reference
+                ? Withdrawal::where(function ($query) use ($reference) {
+                    $query->where('paystack_reference', $reference)
+                        ->orWhere('trx', $reference);
+                })->lockForUpdate()->first()
+                : null;
 
-        // Fallback: try to find pending withdrawal by amount and user if available (best effort)
-        if (! $withdrawal && ! empty($data['amount']) && ! empty($data['recipient'])) {
-            $amount = $data['amount'] / 100; // kobo
-            $recipient = $data['recipient'];
-
-            // best-effort match: latest pending withdrawal with same amount
-            $withdrawal = Withdrawal::where('amount', $amount)
-                ->where('status', 'pending')
-                ->orderBy('created_at', 'desc')
-                ->first();
-        }
-
-        DB::transaction(function () use ($event, $data, $withdrawal, $reference) {
             if (! $withdrawal) {
-                Log::info('Paystack webhook: no matching withdrawal found', ['event' => $event, 'data' => $data]);
-                return; // still return 200 to acknowledge
+                Log::info('Paystack webhook: no matching withdrawal found', [
+                    'event' => $event,
+                    'reference' => $reference,
+                ]);
+
+                return;
+            }
+
+            // Only an awaiting transfer may be settled or refunded.
+            // A previously settled transfer needs separate reversal reconciliation.
+            if ($withdrawal->status !== 'pending') {
+                Log::info('Paystack webhook: withdrawal already settled', [
+                    'reference' => $reference,
+                    'status' => $withdrawal->status,
+                ]);
+
+                return;
             }
 
             switch ($event) {
                 case 'transfer.success':
                 case 'transfer.completed':
-                    if ($withdrawal->status === 'success') {
+                    if ($withdrawal->status !== 'pending') {
                         return;
                     }
 
@@ -85,7 +89,7 @@ class PaystackWebhookController extends Controller
 
                 case 'transfer.failed':
                 case 'transfer.reversed':
-                    if ($withdrawal->status === 'failed') {
+                    if ($withdrawal->status !== 'pending') {
                         return;
                     }
 

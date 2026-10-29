@@ -20,7 +20,7 @@ class WalletRepository implements IWalletRepository
 
     public function __construct()
     {
-        $this->paystackSecretKey = env('PAYSTACK_SECRET_KEY');
+        $this->paystackSecretKey = config('services.paystack.secret_key');
     }
 
 
@@ -35,7 +35,7 @@ class WalletRepository implements IWalletRepository
         ])->post('https://api.paystack.co/transaction/initialize', [
             'email' => $user->email,
             'amount' => $amount * 100,
-            'metadata' => array_merge([
+            'metadata' => array_merge($metadata ?? [], [
                 'user_id' => $userId,
                 'payment_category' => $type ?? 'deposit',
                 'source_id' => $recordId,
@@ -46,13 +46,15 @@ class WalletRepository implements IWalletRepository
                     'resell_budget' => 'paid budget fee to disribute for reselling the product',
                     default => 'Wallet Deposit',
                 },
-            ], $metadata ?? []),
+            ]),
         ]);
 
         $responseData = $response->json();
 
-        if (!$response->successful() || !$responseData['status']) {
-            throw new Exception("Failed to initialize payment: " . ($responseData['message'] ?? 'Unknown error'));
+        if (!$response->successful() || !is_array($responseData)
+            || ($responseData['status'] ?? false) !== true
+            || !is_array($responseData['data'] ?? null)) {
+            throw new Exception('Invalid payment initialization response');
         }
 
         return $responseData;
@@ -111,20 +113,43 @@ class WalletRepository implements IWalletRepository
 public function verifyPayment(string $reference)
 {
     try {
+        if (trim($reference) === '') {
+            throw new Exception('Payment reference is required');
+        }
+
         // Verify Paystack
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->paystackSecretKey,
             'Content-Type'  => 'application/json',
-        ])->get("https://api.paystack.co/transaction/verify/{$reference}");
+        ])->get("https://api.paystack.co/transaction/verify/" . rawurlencode($reference));
 
         $responseData = $response->json();
 
-        if (!$response->successful() || !$responseData['status']) {
-            throw new Exception("Failed to verify payment: " . ($responseData['message'] ?? 'Unknown error'));
+        if (!$response->successful() || !is_array($responseData)
+            || ($responseData['status'] ?? false) !== true
+            || !is_array($responseData['data'] ?? null)) {
+            throw new Exception('Invalid response from payment gateway');
         }
 
-        if ($responseData['data']['status'] !== 'success') {
-            throw new Exception("Payment not successful: " . $responseData['data']['gateway_response']);
+        if (($responseData['data']['status'] ?? null) !== 'success') {
+            throw new Exception('Payment not successful');
+        }
+
+        // The gateway must confirm the exact reference requested by our caller.
+        // Never settle a different transaction based on an unrelated response.
+        if (($responseData['data']['reference'] ?? null) !== $reference) {
+            throw new Exception('Payment reference mismatch');
+        }
+
+        // Reject incomplete gateway responses before any database settlement.
+        if (!isset($responseData['data']['amount'])
+            || !is_numeric($responseData['data']['amount'])
+            || !filter_var($responseData['data']['amount'], FILTER_VALIDATE_INT)
+            || (int) $responseData['data']['amount'] <= 0
+            || !isset($responseData['data']['metadata']['user_id'])
+            || !filter_var($responseData['data']['metadata']['user_id'], FILTER_VALIDATE_INT)
+            || (int) $responseData['data']['metadata']['user_id'] <= 0) {
+            throw new Exception('Invalid payment verification data');
         }
 
         // Extract metadata
@@ -136,21 +161,35 @@ public function verifyPayment(string $reference)
         $amount           = $responseData['data']['amount'] / 100;
         $gatewayReference = $responseData['data']['reference']; // Paystack ref
 
-        // Generate platform reference (used for all internal distributions)
-        $platformReference = 'PLAT-' . strtoupper(Str::random(12));
+        DB::beginTransaction();
 
-        // Get super admin ID
-        $superAdminId = \DB::table('users')
+        // Lock the original payment record before changing any balances or rewards.
+        // This serializes concurrent verification requests on databases that support
+        // row-level locking (production PostgreSQL).
+        $deposit = InitializeDeposit::where('reference', $gatewayReference)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $deposit || $deposit->status !== 'pending') {
+            throw new Exception('Payment is missing or already processed');
+        }
+
+        if ((int) $deposit->user_id !== (int) $userId
+            || abs((float) $deposit->amount - (float) $amount) > 0.001) {
+            throw new Exception('Payment does not match the initialized deposit');
+        }
+
+        $superAdminId = DB::table('users')
             ->join('role_user', 'users.id', '=', 'role_user.user_id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
             ->where('roles.name', 'superadministrator')
             ->value('users.id');
 
-        \Log::info('Super Admin ID for platform earnings:', [
-            'super_admin_id' => $superAdminId
-        ]);
+        $deposit->status = 'successful';
+        $deposit->save();
 
-        DB::beginTransaction();
+        // Generate platform reference (used for all internal distributions)
+        $platformReference = 'PLAT-' . strtoupper(Str::random(12));
 
         /*
         ───────────────────────────────────────────────
@@ -168,7 +207,7 @@ public function verifyPayment(string $reference)
             'payment_source'     => 'paystack',
             'category'           => $paymentCategory,
             'type' => Transaction::resolveTransactionType($type),
-            'description'=> $paymentData['data']['metadata']['description'] ?? 'Wallet funding',
+            'description'=> $metadata['description'] ?? 'Wallet funding',
 
         ]);
 

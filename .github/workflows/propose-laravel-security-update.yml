@@ -1,0 +1,61 @@
+name: Propose Laravel security dependency refresh
+
+# Run manually after confirming an official Cloudinary release supports Laravel 13.
+# Do not create a failing upgrade attempt on every workflow edit.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  propose-refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, curl, zip, sqlite3, pdo_sqlite, pgsql, pdo_pgsql, gd, intl
+          tools: composer:v2
+          coverage: none
+      - name: Check Cloudinary package support for Laravel 13
+        run: |
+          echo 'Blocked: cloudinary-labs/cloudinary-laravel 2.2 requires illuminate/support ^10|^11.'
+          echo 'The latest official 3.0.2 release supports Laravel 11/12, not 13.'
+          echo 'Review upstream compatibility or an approved replacement before upgrading.'
+          exit 1
+      - name: Propose Laravel 13 and Pest 5 compatibility update
+        run: |
+          composer require 'php:^8.4' 'laravel/framework:^13.0' --no-update --no-interaction
+          composer require 'resend/resend-laravel:^1.7' --no-update --no-interaction
+          composer require --dev 'pestphp/pest:^5.0' 'pestphp/pest-plugin-laravel:^5.0' --no-update --no-interaction
+          composer update --with-all-dependencies --no-interaction --no-progress
+      - name: Validate updated dependency lock
+        run: |
+          composer validate --no-check-publish
+          composer audit --locked --no-interaction --format=json > updated-composer-audit.json
+      - name: Upload remaining advisory inventory
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-13-refresh-advisories
+          path: updated-composer-audit.json
+          if-no-files-found: ignore
+      - name: Propose lockfile update for review
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: security/propose-laravel-13-upgrade
+          base: chore/datafactor-readiness-20261028
+          commit-message: "chore(deps): propose Laravel 13 and Pest 5 dependency refresh"
+          title: "chore(deps): propose Laravel 13 and Pest 5 upgrades"
+          body: |
+            Experimental major-version update to Laravel 13 and Pest 5 on PHP 8.4. Requires full application compatibility review, security audit, and staging tests before approval.
+            Review the dependency diff, remaining advisories, CI, and staging smoke tests before merging.
+            The lockfile proposal must pass Composer's security audit before the PR is created. Do not merge without application compatibility and staging verification.
+          add-paths: |
+            composer.json
+            composer.lock
+          draft: true
