@@ -1,11 +1,9 @@
 name: Propose Laravel security dependency refresh
 
+# Run manually after confirming an official Cloudinary release supports Laravel 13.
+# Do not create a failing upgrade attempt on every workflow edit.
 on:
-  push:
-    branches:
-      - chore/datafactor-readiness-20261028
-    paths:
-      - .github/workflows/propose-laravel-security-update.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
