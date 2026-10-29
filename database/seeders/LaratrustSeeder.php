@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 
 class LaratrustSeeder extends Seeder
 {
@@ -63,16 +64,17 @@ class LaratrustSeeder extends Seeder
             if (Config::get('laratrust_seeder.create_users')) {
     $this->command->info("Creating '{$key}' user");
 
+    // Seed credentials must never be predictable or committed.
+    $plainPassword = env('SEED_ADMIN_PASSWORD') ?: Str::random(32);
+
     // Special credentials for superadministrator
     if ($key === 'superadministrator') {
         $email = 'superadmin@hovertask.com';
-        $plainPassword = 'hovertask';
         $fname = 'Superadministrator';
         $lname = 'superadmin';
         $username = 'superadmin';
     } else {
         $email = $key . '@app.com';
-        $plainPassword = 'password';
         $fname = ucwords(str_replace('_', ' ', $key));
         $lname = ucwords(str_replace('_', ' ', $key));
         $username = ucwords(str_replace('_', ' ', $key));
