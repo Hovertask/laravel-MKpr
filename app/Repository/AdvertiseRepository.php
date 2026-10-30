@@ -62,14 +62,18 @@ class AdvertiseRepository implements IAdvertiseRepository
 {
     $user = auth()->user();
 
-    // Reject underfunded wallet campaigns before creating an advert or uploading media.
-    // A separate transaction/row lock is still needed for concurrent spends.
-    if ($request->payment_method === 'wallet') {
-        $availableBalance = Wallet::where('user_id', $user->id)->value('balance') ?? 0;
-        if ($availableBalance < $data['estimated_cost']) {
-            throw new \Exception('Insufficient wallet balance to create advert.');
+    // Debit atomically inside the same transaction as advert and ledger creation.
+    // The conditional UPDATE prevents simultaneous requests spending the same funds.
+    return DB::transaction(function () use ($user, $request, $data) {
+        if ($request->payment_method === 'wallet') {
+            $debited = Wallet::where('user_id', $user->id)
+                ->where('balance', '>=', $data['estimated_cost'])
+                ->decrement('balance', $data['estimated_cost']);
+
+            if ($debited !== 1) {
+                throw new \Exception('Insufficient wallet balance to create advert.');
+            }
         }
-    }
 
     $createAds = Advertise::create([
     'user_id' => $user->id,
@@ -136,19 +140,7 @@ class AdvertiseRepository implements IAdvertiseRepository
     // ✅ Handle payment via wallet
 
     if ($request->payment_method === 'wallet') {
-    // Deduct estimated cost from user's wallet
-    $wallet = Wallet::firstOrCreate(
-        ['user_id' => $user->id],
-        ['balance' => 0]
-    );
-
-
-    if ($wallet->balance < $data['estimated_cost']) {
-        throw new \Exception('Insufficient wallet balance to create advert.');
-    }
-
-    $wallet->decrement('balance', $data['estimated_cost']);
-
+    // The wallet was debited with a conditional UPDATE at transaction start.
     // Also deduct from user's main balance
     $user->decrement('balance', $data['estimated_cost']);
 
@@ -178,6 +170,7 @@ class AdvertiseRepository implements IAdvertiseRepository
 }
 
     return $createAds;
+    });
 }
 
   //track all advert created by auth user for management/perfomance tracking
