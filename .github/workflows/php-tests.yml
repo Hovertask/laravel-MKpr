@@ -54,7 +54,7 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
       - name: Run webhook security feature tests
-        run: php artisan test tests/Feature/PaystackWebhookSecurityTest.php tests/Feature/PaystackWebhookIdempotencyTest.php tests/Feature/PublicEndpointSecurityTest.php tests/Feature/WalletPaymentReferenceTest.php tests/Feature/WalletGatewayPayloadValidationTest.php tests/Feature/WalletGatewayResponseShapeTest.php tests/Feature/WalletReferenceEncodingTest.php tests/Feature/WalletConfiguredPaystackSecretTest.php tests/Feature/WalletPaymentMetadataOwnershipTest.php tests/Feature/WalletInitializationResponseTest.php tests/Feature/WalletVerificationFailureTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/PaymentReferenceUniquenessTest.php tests/Feature/AdvertiseWalletInsufficientBalanceTest.php
+        run: php artisan test tests/Feature/PaystackWebhookSecurityTest.php tests/Feature/PaystackWebhookIdempotencyTest.php tests/Feature/PublicEndpointSecurityTest.php tests/Feature/WalletPaymentReferenceTest.php tests/Feature/WalletGatewayPayloadValidationTest.php tests/Feature/WalletGatewayResponseShapeTest.php tests/Feature/WalletReferenceEncodingTest.php tests/Feature/WalletConfiguredPaystackSecretTest.php tests/Feature/WalletPaymentMetadataOwnershipTest.php tests/Feature/WalletInitializationResponseTest.php tests/Feature/WalletVerificationFailureTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/PaymentReferenceUniquenessTest.php tests/Feature/AdvertiseWalletInsufficientBalanceTest.php tests/Feature/AdvertiseWalletAtomicityTest.php
         env:
           APP_ENV: testing
           DB_CONNECTION: sqlite
@@ -102,7 +102,7 @@ jobs:
           cp .env.example .env
           php artisan key:generate
       - name: Verify payment reference constraints on PostgreSQL
-        run: php artisan test tests/Feature/PaymentReferenceUniquenessTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/WalletPaymentReferenceTest.php
+        run: php artisan test tests/Feature/PaymentReferenceUniquenessTest.php tests/Feature/WalletSettlementIdempotencyTest.php tests/Feature/WalletPaymentReferenceTest.php tests/Feature/AdvertiseWalletAtomicityTest.php tests/Feature/AdvertiseWalletLockContentionTest.php
 
   dependency-security-audit:
     runs-on: ubuntu-latest
