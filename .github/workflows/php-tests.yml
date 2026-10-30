@@ -64,6 +64,39 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: ':memory:'
 
+  docker-compose-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Prepare isolated local environment
+        run: |
+          cp .env.example .env
+          echo 'DB_PASSWORD=ci_docker_only_password' >> .env
+          echo 'APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' >> .env
+      - name: Build Docker image
+        run: docker compose build app
+      - name: Start application and PostgreSQL
+        run: docker compose up -d --wait
+      - name: Apply database migrations
+        run: docker compose exec -T app php artisan migrate --force
+      - name: Verify application health endpoint
+        run: |
+          for i in $(seq 1 20); do
+            if curl --fail --silent --show-error http://localhost:8080/up; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+      - name: Print container logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail=150
+      - name: Stop containers
+        if: always()
+        run: docker compose down
+
   postgres-payment-integrity:
     runs-on: ubuntu-latest
     timeout-minutes: 15
