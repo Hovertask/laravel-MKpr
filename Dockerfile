@@ -1,5 +1,5 @@
 # Use the official PHP image with Apache
-FROM php:8.2-apache
+FROM php:8.3-apache
 
 # Set working directory
 WORKDIR /var/www/html
@@ -14,7 +14,12 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    && docker-php-ext-install pdo pdo_mysql zip gd
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip gd
+
+# Serve Laravel public/ rather than exposing application source files
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
