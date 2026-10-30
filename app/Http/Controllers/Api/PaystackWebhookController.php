@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use App\Models\Withdrawal;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Models\Withdrawal;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaystackWebhookController extends Controller
 {
@@ -25,6 +25,7 @@ class PaystackWebhookController extends Controller
 
         if (! $signature || ! hash_equals(hash_hmac('sha512', $payload, $secret), $signature)) {
             Log::warning('Paystack webhook signature mismatch', ['ip' => $request->ip()]);
+
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
