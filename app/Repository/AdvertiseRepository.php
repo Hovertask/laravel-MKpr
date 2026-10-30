@@ -62,6 +62,15 @@ class AdvertiseRepository implements IAdvertiseRepository
 {
     $user = auth()->user();
 
+    // Reject underfunded wallet campaigns before creating an advert or uploading media.
+    // A separate transaction/row lock is still needed for concurrent spends.
+    if ($request->payment_method === 'wallet') {
+        $availableBalance = Wallet::where('user_id', $user->id)->value('balance') ?? 0;
+        if ($availableBalance < $data['estimated_cost']) {
+            throw new \Exception('Insufficient wallet balance to create advert.');
+        }
+    }
+
     $createAds = Advertise::create([
     'user_id' => $user->id,
     'title' => $data['title'] ?? null,
