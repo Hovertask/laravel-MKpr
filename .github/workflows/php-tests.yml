@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+      - name: Validate Docker Compose configuration
+        run: |
+          cp .env.example .env
+          DB_PASSWORD=ci_only_password docker compose config --quiet
       - name: Configure PHP
         uses: shivammathur/setup-php@v2
         with:
