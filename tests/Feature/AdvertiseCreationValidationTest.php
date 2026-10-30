@@ -44,3 +44,37 @@ it('rejects engagement campaigns with invalid participants, payment and deadline
     expect($response->getData(true)['error'])
         ->toHaveKeys(['number_of_participants', 'payment_per_task', 'deadline']);
 });
+
+it('creates a valid advert and returns the expected success response', function () {
+    // An empty user table avoids sending notifications to unrelated accounts.
+    \Illuminate\Support\Facades\Schema::dropIfExists('users');
+    \Illuminate\Support\Facades\Schema::create('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+        $table->id();
+    });
+
+    $advert = Mockery::mock(IAdvertiseRepository::class);
+    $advert->shouldReceive('create')->once()->with(
+        Mockery::on(fn ($data) => ($data['type'] ?? null) === 'advert'
+            && ($data['title'] ?? null) === 'Summer promotion'),
+        Mockery::type(Request::class)
+    )->andReturn(['id' => 7, 'title' => 'Summer promotion']);
+
+    $tasks = Mockery::mock(TaskRepository::class);
+    $tasks->shouldNotReceive('create');
+
+    $request = Request::create('/api/advertise', 'POST', [
+        'type' => 'advert',
+        'title' => 'Summer promotion',
+        'platforms' => 'instagram',
+        'estimated_cost' => 1500,
+        'file_path' => 'campaign-image.jpg',
+    ]);
+    $response = (new AdvertiseController($advert, $tasks))->create($request);
+
+    expect($response->getStatusCode())->toBe(200);
+    $body = $response->getData(true);
+    expect($body['status'])->toBeTrue();
+    expect($body['message'])->toBe('Advert created successfully');
+    expect($body['data']['advert']['title'])->toBe('Summer promotion');
+    expect($body['data']['task'])->toBeNull();
+});
