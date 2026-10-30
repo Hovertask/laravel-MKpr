@@ -62,14 +62,16 @@ class AdvertiseRepository implements IAdvertiseRepository
 {
     $user = auth()->user();
 
-    // Reject underfunded wallet campaigns before creating an advert or uploading media.
-    // A separate transaction/row lock is still needed for concurrent spends.
-    if ($request->payment_method === 'wallet') {
-        $availableBalance = Wallet::where('user_id', $user->id)->value('balance') ?? 0;
-        if ($availableBalance < $data['estimated_cost']) {
-            throw new \Exception('Insufficient wallet balance to create advert.');
+    // Serialize wallet-funded campaigns before any record is created.
+    // The transaction also rolls back the advert, debit and ledger on database errors.
+    return DB::transaction(function () use ($user, $data, $request) {
+        $wallet = null;
+        if ($request->payment_method === 'wallet') {
+            $wallet = Wallet::where('user_id', $user->id)->lockForUpdate()->first();
+            if (! $wallet || $wallet->balance < $data['estimated_cost']) {
+                throw new \Exception('Insufficient wallet balance to create advert.');
+            }
         }
-    }
 
     $createAds = Advertise::create([
     'user_id' => $user->id,
@@ -136,17 +138,7 @@ class AdvertiseRepository implements IAdvertiseRepository
     // ✅ Handle payment via wallet
 
     if ($request->payment_method === 'wallet') {
-    // Deduct estimated cost from user's wallet
-    $wallet = Wallet::firstOrCreate(
-        ['user_id' => $user->id],
-        ['balance' => 0]
-    );
-
-
-    if ($wallet->balance < $data['estimated_cost']) {
-        throw new \Exception('Insufficient wallet balance to create advert.');
-    }
-
+    // Wallet was checked and locked before creating the advert.
     $wallet->decrement('balance', $data['estimated_cost']);
 
     // Also deduct from user's main balance
@@ -178,6 +170,7 @@ class AdvertiseRepository implements IAdvertiseRepository
 }
 
     return $createAds;
+    });
 }
 
   //track all advert created by auth user for management/perfomance tracking
