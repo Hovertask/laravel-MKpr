@@ -31,7 +31,10 @@ jobs:
           name: php-dependency-licenses
           path: php-dependency-licenses.json
       - name: Enforce code style for critical payment and security changes
-        run: vendor/bin/pint --test app/Http/Controllers/Api/PaystackWebhookController.php app/Repository/WalletRepository.php
+        run: |
+          vendor/bin/pint app/Http/Controllers/Api/PaystackWebhookController.php app/Repository/WalletRepository.php
+          git diff -- app/Http/Controllers/Api/PaystackWebhookController.php app/Repository/WalletRepository.php
+          git diff --exit-code -- app/Http/Controllers/Api/PaystackWebhookController.php app/Repository/WalletRepository.php
 
       - name: Configure Node.js
         uses: actions/setup-node@v4
