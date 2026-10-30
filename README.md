@@ -28,6 +28,32 @@ php artisan serve
 
 Composer installation intentionally **does not** migrate the database. Database changes should be run explicitly after configuration.
 
+## Isolated Docker Compose setup (local development only)
+
+Install Docker Engine/Desktop with Docker Compose v2, then run:
+
+```bash
+cp .env.example .env
+```
+
+Set a **unique nonempty** `DB_PASSWORD` in your local `.env`. Do not reuse production credentials. Build the image and generate an application key (prints it without modifying the image):
+
+```bash
+docker compose build
+docker compose run --rm app php artisan key:generate --show
+```
+
+Copy that generated value into `APP_KEY=` in your local `.env`, then start the services and run migrations explicitly:
+
+```bash
+docker compose up -d
+docker compose exec app php artisan migrate
+```
+
+The API is available at `http://localhost:8080` by default (override `APP_PORT` if needed). The PostgreSQL database is reachable from the app at hostname `db`, port `5432`. No third-party API credentials are required for basic startup, but features such as live payments, Cloudinary uploads and email require their own configuration. This setup does not create or start additional external services or background queue workers. Use `docker compose down` to stop the stack; `docker compose down -v` **deletes** the local database volume.
+
+For configuration validation before building, run `docker compose config -q`. This Compose setup is for local development, **not production deployment**.
+
 ## Tests and code quality
 
 ```bash
